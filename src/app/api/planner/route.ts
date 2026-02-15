@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
             content: `Generate a training plan for my ${raceDistance} race on ${raceDate}.${raceGoal ? ` My goal: ${raceGoal}` : ''} Return ONLY valid JSON, no markdown.`,
           },
         ],
-        max_tokens: 2048,
+        max_tokens: 8192,
         temperature: 0.7,
       }),
     });
@@ -71,8 +71,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid AI response' }, { status: 502 });
     }
 
-    const plan = JSON.parse(jsonMatch[0]);
-    return NextResponse.json({ plan });
+    let plan;
+    try {
+      plan = JSON.parse(jsonMatch[0]);
+    } catch {
+      console.error('Planner JSON parse failed. Raw length:', raw.length, 'Truncated:', raw.slice(-100));
+      return NextResponse.json({ error: 'AI response was incomplete. Please try again.' }, { status: 502 });
+    }
+    return NextResponse.json({ plan, remaining: usage.remaining });
   } catch (err) {
     console.error('Planner API error:', err);
     return NextResponse.json({ error: 'Internal error' }, { status: 500 });

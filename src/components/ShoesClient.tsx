@@ -78,9 +78,9 @@ export default function ShoesClient() {
 }
 
 function ShoeCard({ shoe, lang, isGraveyard }: { shoe: ShoeData; lang: 'en' | 'ko'; isGraveyard?: boolean }) {
-  const healthColor = shoe.healthPercent > 50 ? '#10b981'
-    : shoe.healthPercent > 25 ? '#f59e0b'
-    : '#ef4444';
+  const healthColor = shoe.healthPercent > 50 ? 'var(--color-primary)'
+    : shoe.healthPercent > 25 ? 'var(--color-warm)'
+    : 'var(--color-danger)';
 
   const formatPace = (secs: number) => {
     if (!secs) return '--:--';

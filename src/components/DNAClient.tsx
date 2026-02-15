@@ -277,26 +277,26 @@ export default function DNAClient({ userName }: Props) {
 
       {/* Hidden Instagram Story Card (9:16) — lazy rendered */}
       {showStory && <div className="fixed -left-[9999px] top-0">
-        <div ref={storyRef} className="w-[1080px] h-[1920px] bg-[#060a0e] flex flex-col items-center justify-center p-16 relative overflow-hidden">
+        <div ref={storyRef} className="w-[1080px] h-[1920px] bg-bg flex flex-col items-center justify-center p-16 relative overflow-hidden">
           {/* Background pattern */}
-          <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 50% 30%, #10b981 0%, transparent 50%)' }} />
+          <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 50% 30%, var(--color-primary) 0%, transparent 50%)' }} />
 
           <div className="text-[80px] mb-8">🧬</div>
-          <p className="text-[28px] text-[#7d8590] mb-4">{userName}&apos;s Running DNA</p>
-          <h2 className="text-[56px] font-extrabold text-[#10b981] text-center mb-4">{personality.type}</h2>
-          <div className="inline-flex items-center gap-3 px-6 py-2 rounded-full bg-[#10b981]/10 border border-[#10b981]/20 mb-6">
-            <span className="text-[28px] font-bold text-[#10b981]">Top {personality.percentile}%</span>
-            <span className="text-[22px] text-[#7d8590]">of runners</span>
+          <p className="text-[28px] text-text-muted mb-4">{userName}&apos;s Running DNA</p>
+          <h2 className="text-[56px] font-extrabold text-primary text-center mb-4">{personality.type}</h2>
+          <div className="inline-flex items-center gap-3 px-6 py-2 rounded-full bg-primary/10 border border-primary/20 mb-6">
+            <span className="text-[28px] font-bold text-primary">Top {personality.percentile}%</span>
+            <span className="text-[22px] text-text-muted">of runners</span>
           </div>
-          <p className="text-[24px] text-[#7d8590] text-center max-w-[800px] mb-16 leading-relaxed">{personality.description}</p>
+          <p className="text-[24px] text-text-muted text-center max-w-[800px] mb-16 leading-relaxed">{personality.description}</p>
 
           {/* Trait Bars */}
           <div className="w-full max-w-[800px] space-y-6 mb-16">
             {traitLabels.map((label, i) => (
               <div key={label} className="flex items-center gap-6">
                 <span className="text-[36px] w-12 text-center">{TRAIT_ICONS[i]}</span>
-                <span className="text-[28px] font-medium text-[#e6edf3] w-40">{label}</span>
-                <div className="flex-1 h-8 rounded-full bg-[#1e2a3a] overflow-hidden">
+                <span className="text-[28px] font-medium text-text w-40">{label}</span>
+                <div className="flex-1 h-8 rounded-full bg-border overflow-hidden">
                   <div className="h-full rounded-full" style={{ width: `${(scoreArr[i] / 5) * 100}%`, backgroundColor: TRAIT_COLORS[i] }} />
                 </div>
                 <span className="text-[32px] font-mono font-bold w-12 text-right" style={{ color: TRAIT_COLORS[i] }}>{scoreArr[i]}</span>
@@ -306,16 +306,16 @@ export default function DNAClient({ userName }: Props) {
 
           {/* Stats row */}
           <div className="flex gap-8 mb-16">
-            <div className="bg-[#0d1117] border border-[#1e2a3a] rounded-2xl px-8 py-6 text-center">
-              <p className="text-[20px] text-[#7d8590]">Total Runs</p>
-              <p className="text-[36px] font-bold font-mono text-[#e6edf3]">{totalRuns}</p>
+            <div className="bg-surface border border-border rounded-2xl px-8 py-6 text-center">
+              <p className="text-[20px] text-text-muted">Total Runs</p>
+              <p className="text-[36px] font-bold font-mono text-text">{totalRuns}</p>
             </div>
-            <div className="bg-[#0d1117] border border-[#1e2a3a] rounded-2xl px-8 py-6 text-center">
-              <p className="text-[20px] text-[#7d8590]">Total KM</p>
-              <p className="text-[36px] font-bold font-mono text-[#e6edf3]">{totalKm.toFixed(0)}</p>
+            <div className="bg-surface border border-border rounded-2xl px-8 py-6 text-center">
+              <p className="text-[20px] text-text-muted">Total KM</p>
+              <p className="text-[36px] font-bold font-mono text-text">{totalKm.toFixed(0)}</p>
             </div>
-            <div className="bg-[#0d1117] border border-[#1e2a3a] rounded-2xl px-8 py-6 text-center">
-              <p className="text-[20px] text-[#7d8590]">ACWR</p>
+            <div className="bg-surface border border-border rounded-2xl px-8 py-6 text-center">
+              <p className="text-[20px] text-text-muted">ACWR</p>
               <p className="text-[36px] font-bold font-mono" style={{ color: trainingLoad.zoneColor }}>{trainingLoad.ratio.toFixed(2)}</p>
             </div>
           </div>
@@ -324,8 +324,8 @@ export default function DNAClient({ userName }: Props) {
           <div className="absolute bottom-16 flex items-center gap-4">
             <img src="/logo.png" alt="" className="w-10 h-10 rounded-lg" />
             <div>
-              <p className="text-[28px] font-bold text-[#e6edf3]">RunDNA</p>
-              <p className="text-[20px] text-[#7d8590]">rundna.online</p>
+              <p className="text-[28px] font-bold text-text">RunDNA</p>
+              <p className="text-[20px] text-text-muted">rundna.online</p>
             </div>
           </div>
         </div>
@@ -360,13 +360,13 @@ function RadarChart({ scores, labels }: { scores: number[]; labels: string[] }) 
       {gridLevels.map((level) => {
         const pts = Array.from({ length: n }, (_, i) => point(i, level));
         const path = pts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ') + ' Z';
-        return <path key={level} d={path} fill="none" stroke="#1e2a3a" strokeWidth={level === 5 ? 1.5 : 0.5} />;
+        return <path key={level} d={path} fill="none" stroke="var(--color-border)" strokeWidth={level === 5 ? 1.5 : 0.5} />;
       })}
       {Array.from({ length: n }, (_, i) => {
         const p = point(i, 5);
-        return <line key={i} x1={cx} y1={cy} x2={p.x} y2={p.y} stroke="#1e2a3a" strokeWidth={0.5} />;
+        return <line key={i} x1={cx} y1={cy} x2={p.x} y2={p.y} stroke="var(--color-border)" strokeWidth={0.5} />;
       })}
-      <path d={dataPath} fill="#10b98125" stroke="#10b981" strokeWidth={2} />
+      <path d={dataPath} fill="var(--color-primary-dim)" stroke="var(--color-primary)" strokeWidth={2} />
       {dataPoints.map((p, i) => (
         <circle key={i} cx={p.x} cy={p.y} r={4} fill={TRAIT_COLORS[i]} />
       ))}

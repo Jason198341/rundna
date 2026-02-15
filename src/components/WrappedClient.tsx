@@ -73,12 +73,12 @@ function computeYearStats(runs: EnrichedRunData['runs'], year: number): YearStat
 }
 
 const CARD_GRADIENTS = [
-  'from-[#10b981]/20 via-[#060a0e] to-[#060a0e]',
-  'from-[#22d3ee]/20 via-[#060a0e] to-[#060a0e]',
-  'from-[#818cf8]/20 via-[#060a0e] to-[#060a0e]',
-  'from-[#f59e0b]/20 via-[#060a0e] to-[#060a0e]',
-  'from-[#ef4444]/20 via-[#060a0e] to-[#060a0e]',
-  'from-[#10b981]/20 via-[#818cf8]/10 to-[#060a0e]',
+  'from-primary/20 via-bg to-bg',
+  'from-accent/20 via-bg to-bg',
+  'from-[#818cf8]/20 via-bg to-bg',
+  'from-warm/20 via-bg to-bg',
+  'from-danger/20 via-bg to-bg',
+  'from-primary/20 via-[#818cf8]/10 to-bg',
 ];
 
 export default function WrappedClient({ userName, avatarUrl }: Props) {
@@ -162,17 +162,17 @@ function WrappedCards({
       shareText: `I ran ${stats.totalKm.toFixed(0)}km in ${currentYear}!`,
       content: (
         <>
-          <p className="text-sm text-[#7d8590] mb-4">{lang === 'ko' ? `${currentYear}년 총 거리` : `${currentYear} Total Distance`}</p>
-          <div className="text-6xl sm:text-7xl font-extrabold font-mono text-[#10b981] mb-1">{stats.totalKm.toFixed(0)}</div>
-          <p className="text-xl font-bold text-[#e6edf3] mb-6">kilometers</p>
+          <p className="text-sm text-text-muted mb-4">{lang === 'ko' ? `${currentYear}년 총 거리` : `${currentYear} Total Distance`}</p>
+          <div className="text-6xl sm:text-7xl font-extrabold font-mono text-primary mb-1">{stats.totalKm.toFixed(0)}</div>
+          <p className="text-xl font-bold text-text mb-6">kilometers</p>
           <div className="flex gap-8">
             <div className="text-center">
-              <p className="text-2xl font-bold font-mono text-[#e6edf3]">{stats.totalRuns}</p>
-              <p className="text-xs text-[#7d8590]">{lang === 'ko' ? '회 러닝' : 'runs'}</p>
+              <p className="text-2xl font-bold font-mono text-text">{stats.totalRuns}</p>
+              <p className="text-xs text-text-muted">{lang === 'ko' ? '회 러닝' : 'runs'}</p>
             </div>
             <div className="text-center">
-              <p className="text-2xl font-bold font-mono text-[#e6edf3]">{stats.totalHours.toFixed(0)}</p>
-              <p className="text-xs text-[#7d8590]">{lang === 'ko' ? '시간' : 'hours'}</p>
+              <p className="text-2xl font-bold font-mono text-text">{stats.totalHours.toFixed(0)}</p>
+              <p className="text-xs text-text-muted">{lang === 'ko' ? '시간' : 'hours'}</p>
             </div>
           </div>
         </>
@@ -185,17 +185,17 @@ function WrappedCards({
       shareText: `My fastest pace: ${stats.fastestPace}/km`,
       content: (
         <>
-          <p className="text-sm text-[#7d8590] mb-4">{lang === 'ko' ? '최고 페이스' : 'Fastest Pace'}</p>
-          <div className="text-6xl font-extrabold font-mono text-[#22d3ee] mb-1">{stats.fastestPace}</div>
-          <p className="text-lg text-[#7d8590] mb-6">/km</p>
+          <p className="text-sm text-text-muted mb-4">{lang === 'ko' ? '최고 페이스' : 'Fastest Pace'}</p>
+          <div className="text-6xl font-extrabold font-mono text-accent mb-1">{stats.fastestPace}</div>
+          <p className="text-lg text-text-muted mb-6">/km</p>
           <div className="flex gap-8">
             <div className="text-center">
-              <p className="text-xl font-bold font-mono text-[#e6edf3]">{stats.avgPace}</p>
-              <p className="text-xs text-[#7d8590]">{lang === 'ko' ? '평균 페이스' : 'avg pace'}</p>
+              <p className="text-xl font-bold font-mono text-text">{stats.avgPace}</p>
+              <p className="text-xs text-text-muted">{lang === 'ko' ? '평균 페이스' : 'avg pace'}</p>
             </div>
             <div className="text-center">
-              <p className="text-xl font-bold font-mono text-[#e6edf3]">{stats.longestRun.toFixed(1)}</p>
-              <p className="text-xs text-[#7d8590]">{lang === 'ko' ? '최장 km' : 'longest km'}</p>
+              <p className="text-xl font-bold font-mono text-text">{stats.longestRun.toFixed(1)}</p>
+              <p className="text-xs text-text-muted">{lang === 'ko' ? '최장 km' : 'longest km'}</p>
             </div>
           </div>
         </>
@@ -208,17 +208,17 @@ function WrappedCards({
       shareText: `My best running month: ${stats.topMonth} (${stats.topMonthKm.toFixed(0)}km)`,
       content: (
         <>
-          <p className="text-sm text-[#7d8590] mb-4">{lang === 'ko' ? '최고의 달' : 'Best Month'}</p>
-          <div className="text-5xl font-extrabold text-[#f59e0b] mb-1">{stats.topMonth}</div>
-          <p className="text-lg text-[#7d8590] mb-6">{stats.topMonthKm.toFixed(0)} km</p>
+          <p className="text-sm text-text-muted mb-4">{lang === 'ko' ? '최고의 달' : 'Best Month'}</p>
+          <div className="text-5xl font-extrabold text-warm mb-1">{stats.topMonth}</div>
+          <p className="text-lg text-text-muted mb-6">{stats.topMonthKm.toFixed(0)} km</p>
           <div className="flex gap-8">
             <div className="text-center">
-              <p className="text-xl font-bold font-mono text-[#e6edf3]">{stats.uniqueLocations}</p>
-              <p className="text-xs text-[#7d8590]">{lang === 'ko' ? '장소' : 'locations'}</p>
+              <p className="text-xl font-bold font-mono text-text">{stats.uniqueLocations}</p>
+              <p className="text-xs text-text-muted">{lang === 'ko' ? '장소' : 'locations'}</p>
             </div>
             <div className="text-center">
-              <p className="text-xl font-bold font-mono text-[#e6edf3]">{stats.runsPerWeek.toFixed(1)}</p>
-              <p className="text-xs text-[#7d8590]">{lang === 'ko' ? '주당 러닝' : 'runs/week'}</p>
+              <p className="text-xl font-bold font-mono text-text">{stats.runsPerWeek.toFixed(1)}</p>
+              <p className="text-xs text-text-muted">{lang === 'ko' ? '주당 러닝' : 'runs/week'}</p>
             </div>
           </div>
         </>
@@ -231,12 +231,12 @@ function WrappedCards({
       shareText: `My Running DNA: ${personality.type} (Top ${personality.percentile}%)`,
       content: (
         <>
-          <p className="text-sm text-[#7d8590] mb-4">{lang === 'ko' ? '러닝 DNA' : 'Running DNA'}</p>
-          <div className="text-2xl sm:text-3xl font-extrabold text-[#10b981] mb-3">{personality.type}</div>
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#10b981]/10 border border-[#10b981]/20 mb-4">
-            <span className="text-xs font-bold text-[#10b981]">Top {personality.percentile}%</span>
+          <p className="text-sm text-text-muted mb-4">{lang === 'ko' ? '러닝 DNA' : 'Running DNA'}</p>
+          <div className="text-2xl sm:text-3xl font-extrabold text-primary mb-3">{personality.type}</div>
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 mb-4">
+            <span className="text-xs font-bold text-primary">Top {personality.percentile}%</span>
           </div>
-          <p className="text-sm text-[#7d8590] max-w-xs">{personality.description}</p>
+          <p className="text-sm text-text-muted max-w-xs">{personality.description}</p>
         </>
       ),
     },
@@ -262,14 +262,14 @@ function WrappedCards({
             {/* Shareable card */}
             <div
               ref={cardRefs.current[i]}
-              className={`rounded-2xl border border-[#1e2a3a] bg-gradient-to-b ${card.gradient} p-8 flex flex-col items-center text-center`}
+              className={`rounded-2xl border border-border bg-gradient-to-b ${card.gradient} p-8 flex flex-col items-center text-center`}
             >
               <div className="text-5xl mb-4">{card.emoji}</div>
               {card.content}
               {/* Branding footer */}
-              <div className="mt-6 pt-4 border-t border-[#1e2a3a] w-full flex items-center justify-center gap-2">
+              <div className="mt-6 pt-4 border-t border-border w-full flex items-center justify-center gap-2">
                 <img src="/logo.png" alt="" className="w-4 h-4 rounded-sm" />
-                <span className="text-[10px] text-[#7d8590]">RunDNA — rundna.online</span>
+                <span className="text-[10px] text-text-muted">RunDNA — rundna.online</span>
               </div>
             </div>
 

@@ -110,13 +110,13 @@ export function DNARadar({ intel, lang }: { intel: IntelligenceData; lang: Lang 
         {[1,2,3,4,5].map(level => {
           const pts = Array.from({ length: n }, (_, i) => point(i, level));
           const path = pts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ') + ' Z';
-          return <path key={level} d={path} fill="none" stroke="#1e2a3a" strokeWidth={level === 5 ? 1 : 0.5} />;
+          return <path key={level} d={path} fill="none" stroke="var(--color-border)" strokeWidth={level === 5 ? 1 : 0.5} />;
         })}
         {Array.from({ length: n }, (_, i) => {
           const p = point(i, 5);
-          return <line key={i} x1={cx} y1={cy} x2={p.x} y2={p.y} stroke="#1e2a3a" strokeWidth={0.5} />;
+          return <line key={i} x1={cx} y1={cy} x2={p.x} y2={p.y} stroke="var(--color-border)" strokeWidth={0.5} />;
         })}
-        <path d={dataPath} fill="#10b98120" stroke="#10b981" strokeWidth={2} />
+        <path d={dataPath} fill="var(--color-primary-dim)" stroke="var(--color-primary)" strokeWidth={2} />
         {dataPoints.map((p, i) => <circle key={i} cx={p.x} cy={p.y} r={3} fill={colors[i]} />)}
         {labels.map((label, i) => {
           const p = point(i, 6.5);
@@ -332,7 +332,7 @@ export function YearComparison({ intel }: { intel: IntelligenceData }) {
     <div>
       <div className="flex gap-3 mb-2">
         {years.map((y, i) => (
-          <span key={y.year} className="text-xs font-mono" style={{ color: colors[i] || '#e6edf3' }}>
+          <span key={y.year} className="text-xs font-mono" style={{ color: colors[i] || 'var(--color-text)' }}>
             {y.year}: {y.totalKm.toFixed(0)} km ({y.totalRuns} runs)
           </span>
         ))}
@@ -345,7 +345,7 @@ export function YearComparison({ intel }: { intel: IntelligenceData }) {
               {years.map((y, yi) => {
                 const km = y.months[m]?.cumulativeKm ?? 0;
                 const h = (km / maxKm) * 100;
-                return <div key={y.year} className="flex-1 rounded-t" style={{ height: `${h}%`, backgroundColor: colors[yi] || '#e6edf3', opacity: 0.7 }} />;
+                return <div key={y.year} className="flex-1 rounded-t" style={{ height: `${h}%`, backgroundColor: colors[yi] || 'var(--color-text)', opacity: 0.7 }} />;
               })}
             </div>
           );

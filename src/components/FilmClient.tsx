@@ -244,18 +244,18 @@ export default function FilmClient() {
         <svg
           viewBox="0 0 600 400"
           className="w-full h-auto"
-          style={{ background: 'radial-gradient(ellipse at center, #0d1117 0%, #060a0e 100%)' }}
+          style={{ background: 'radial-gradient(ellipse at center, var(--color-surface) 0%, var(--color-bg) 100%)' }}
         >
           {/* Grid lines */}
           {Array.from({ length: 7 }, (_, i) => (
-            <line key={`h${i}`} x1={0} y1={i * 67} x2={600} y2={i * 67} stroke="#1e2a3a" strokeWidth={0.3} />
+            <line key={`h${i}`} x1={0} y1={i * 67} x2={600} y2={i * 67} stroke="var(--color-border)" strokeWidth={0.3} />
           ))}
           {Array.from({ length: 10 }, (_, i) => (
-            <line key={`v${i}`} x1={i * 67} y1={0} x2={i * 67} y2={400} stroke="#1e2a3a" strokeWidth={0.3} />
+            <line key={`v${i}`} x1={i * 67} y1={0} x2={i * 67} y2={400} stroke="var(--color-border)" strokeWidth={0.3} />
           ))}
 
           {/* Ghost trail (full route) */}
-          <path d={fullPath} fill="none" stroke="#1e2a3a" strokeWidth={2} strokeLinecap="round" />
+          <path d={fullPath} fill="none" stroke="var(--color-border)" strokeWidth={2} strokeLinecap="round" />
 
           {/* Active trail (neon glow) */}
           <path d={trailPath} fill="none" stroke="var(--color-primary)" strokeWidth={3} strokeLinecap="round" filter="url(#glow)" />
@@ -374,7 +374,7 @@ export default function FilmClient() {
                 className="flex-1 rounded-t transition-colors"
                 style={{
                   height: `${ep.height}%`,
-                  backgroundColor: isActive ? 'var(--color-primary)' : '#1e2a3a',
+                  backgroundColor: isActive ? 'var(--color-primary)' : 'var(--color-border)',
                   opacity: isActive ? 0.8 : 0.4,
                 }}
               />

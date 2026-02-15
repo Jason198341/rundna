@@ -36,11 +36,28 @@ export async function shareCard(element: HTMLElement, filename: string, text: st
   link.click();
 }
 
+// Read current CSS variable values from :root for screenshot rendering
+function getCurrentThemeColors(): Record<string, string> {
+  const root = document.documentElement;
+  const cs = getComputedStyle(root);
+  const vars = [
+    'bg', 'surface', 'surface-hover', 'border', 'text', 'text-muted',
+    'primary', 'primary-hover', 'primary-dim', 'accent', 'accent-dim',
+    'warm', 'danger', 'glow',
+  ];
+  const colors: Record<string, string> = {};
+  for (const v of vars) {
+    colors[v] = cs.getPropertyValue(`--color-${v}`).trim() || '';
+  }
+  return colors;
+}
+
 async function renderCanvas(element: HTMLElement): Promise<HTMLCanvasElement> {
   const html2canvas = (await import('html2canvas')).default;
+  const theme = getCurrentThemeColors();
 
   return html2canvas(element, {
-    backgroundColor: '#060a0e',
+    backgroundColor: theme.bg || '#f8fafc',
     scale: 2,
     useCORS: true,
     logging: false,
@@ -61,21 +78,24 @@ async function renderCanvas(element: HTMLElement): Promise<HTMLCanvasElement> {
         } catch { /* cross-origin stylesheets */ }
       }
 
-      // 2. Inject CSS custom properties with hex colors
+      // 2. Inject current theme CSS custom properties (hex safe for html2canvas)
       const style = doc.createElement('style');
       style.textContent = `
         *, *::before, *::after {
-          --color-bg: #060a0e !important;
-          --color-surface: #0d1117 !important;
-          --color-surface-hover: #161b22 !important;
-          --color-border: #1e2a3a !important;
-          --color-text: #e6edf3 !important;
-          --color-text-muted: #7d8590 !important;
-          --color-primary: #10b981 !important;
-          --color-primary-hover: #34d399 !important;
-          --color-accent: #22d3ee !important;
-          --color-warm: #f59e0b !important;
-          --color-danger: #ef4444 !important;
+          --color-bg: ${theme.bg || '#f8fafc'} !important;
+          --color-surface: ${theme.surface || '#ffffff'} !important;
+          --color-surface-hover: ${theme['surface-hover'] || '#f1f5f9'} !important;
+          --color-border: ${theme.border || '#e2e8f0'} !important;
+          --color-text: ${theme.text || '#0f172a'} !important;
+          --color-text-muted: ${theme['text-muted'] || '#64748b'} !important;
+          --color-primary: ${theme.primary || '#10b981'} !important;
+          --color-primary-hover: ${theme['primary-hover'] || '#059669'} !important;
+          --color-primary-dim: ${theme['primary-dim'] || '#10b98112'} !important;
+          --color-accent: ${theme.accent || '#0ea5e9'} !important;
+          --color-accent-dim: ${theme['accent-dim'] || '#0ea5e912'} !important;
+          --color-warm: ${theme.warm || '#f59e0b'} !important;
+          --color-danger: ${theme.danger || '#ef4444'} !important;
+          --color-glow: ${theme.glow || '#10b98120'} !important;
           --font-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
           --font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, monospace !important;
         }

@@ -198,30 +198,30 @@ export default function CoachClient({ userName }: Props) {
       {/* Hidden share card — last Q&A pair */}
       {messages.length >= 2 && (
         <div className="fixed -left-[9999px] top-0">
-          <div ref={shareRef} className="w-[540px] bg-[#060a0e] p-8 rounded-2xl border border-[#1e2a3a]">
+          <div ref={shareRef} className="w-[540px] bg-bg p-8 rounded-2xl border border-border">
             <div className="flex items-center gap-2 mb-6">
               <span className="text-2xl">🤖</span>
               <div>
-                <p className="text-sm font-bold text-[#e6edf3]">RunDNA Coach</p>
-                <p className="text-[10px] text-[#7d8590]">AI Running Intelligence</p>
+                <p className="text-sm font-bold text-text">RunDNA Coach</p>
+                <p className="text-[10px] text-text-muted">AI Running Intelligence</p>
               </div>
             </div>
             <div className="mb-4">
-              <p className="text-[10px] text-[#7d8590] mb-1">{userName.split(' ')[0]} asked:</p>
-              <p className="text-sm text-[#e6edf3]/80 italic">
+              <p className="text-[10px] text-text-muted mb-1">{userName.split(' ')[0]} asked:</p>
+              <p className="text-sm text-text/80 italic">
                 &ldquo;{messages.filter(m => m.role === 'user').slice(-1)[0]?.content}&rdquo;
               </p>
             </div>
-            <div className="bg-[#0d1117] border border-[#1e2a3a] rounded-xl p-4 mb-6">
-              <p className="text-sm text-[#e6edf3] leading-relaxed whitespace-pre-wrap">
+            <div className="bg-surface border border-border rounded-xl p-4 mb-6">
+              <p className="text-sm text-text leading-relaxed whitespace-pre-wrap">
                 {messages.filter(m => m.role === 'assistant').slice(-1)[0]?.content}
               </p>
             </div>
-            <div className="border-t border-[#1e2a3a] pt-3 flex items-center justify-between">
-              <p className="text-[10px] text-[#7d8590]">
+            <div className="border-t border-border pt-3 flex items-center justify-between">
+              <p className="text-[10px] text-text-muted">
                 <img src="/logo.png" alt="" className="inline w-4 h-4 rounded-sm align-text-bottom" /> RunDNA — rundna.online
               </p>
-              <p className="text-[10px] text-[#7d8590]">
+              <p className="text-[10px] text-text-muted">
                 {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
               </p>
             </div>

@@ -26,7 +26,7 @@ export default function LandingPage() {
       <nav className="fixed top-0 inset-x-0 z-50 border-b border-border/50 bg-bg/80 backdrop-blur-xl">
         <div className="mx-auto max-w-5xl flex items-center justify-between px-6 h-14">
           <a href="/" className="flex items-center gap-2 font-bold text-lg">
-            <span className="text-primary">🧬</span> RunDNA
+            <img src="/logo.png" alt="RunDNA" className="w-7 h-7 rounded" /> RunDNA
           </a>
           <div className="flex items-center gap-3">
             <LangToggle />
@@ -46,7 +46,7 @@ export default function LandingPage() {
           <div className="relative mx-auto w-20 h-20 mb-8">
             <div className="absolute inset-0 rounded-full bg-primary/20 animate-pulse-glow" />
             <div className="absolute inset-2 rounded-full bg-primary/10 flex items-center justify-center">
-              <span className="text-4xl">🧬</span>
+              <img src="/logo.png" alt="RunDNA" className="w-12 h-12 rounded-lg" />
             </div>
           </div>
 

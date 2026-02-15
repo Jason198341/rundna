@@ -166,7 +166,7 @@ export default function DNAClient({ userName }: Props) {
         {/* Branding */}
         <div className="border-t border-border pt-4 mt-6 text-center">
           <p className="text-xs text-text-muted">
-            <span className="text-primary">🧬</span> RunDNA — AI Running Intelligence
+            <img src="/logo.png" alt="" className="inline w-4 h-4 rounded-sm align-text-bottom" /> RunDNA — AI Running Intelligence
           </p>
         </div>
       </div>

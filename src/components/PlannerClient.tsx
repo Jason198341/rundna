@@ -318,7 +318,7 @@ export default function PlannerClient({ userName }: Props) {
 
           <div className="border-t border-border pt-3 text-center">
             <p className="text-[10px] text-text-muted">
-              <span className="text-primary">🧬</span> RunDNA — AI Running Intelligence
+              <img src="/logo.png" alt="" className="inline w-4 h-4 rounded-sm align-text-bottom" /> RunDNA — AI Running Intelligence
             </p>
           </div>
         </div>

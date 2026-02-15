@@ -213,7 +213,7 @@ export default function CoachClient({ userName }: Props) {
             </div>
             <div className="border-t border-[#1e2a3a] pt-3 flex items-center justify-between">
               <p className="text-[10px] text-[#7d8590]">
-                <span className="text-[#10b981]">🧬</span> RunDNA — rundna.vercel.app
+                <img src="/logo.png" alt="" className="inline w-4 h-4 rounded-sm align-text-bottom" /> RunDNA — rundna.vercel.app
               </p>
               <p className="text-[10px] text-[#7d8590]">
                 {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}

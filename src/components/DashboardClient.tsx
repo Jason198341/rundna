@@ -1,45 +1,120 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import dynamic from 'next/dynamic';
 import type { EnrichedRunData } from '@/lib/strava';
+import type { IntelligenceData } from '@/lib/strava-analytics';
+import type { WidgetId } from '@/lib/widget-types';
+import { getWidgetDef } from '@/lib/widget-types';
+import type { WidgetPreferences } from '@/lib/widget-store';
+import { loadPreferences, savePreferences, applySkin } from '@/lib/widget-store';
 import { t } from '@/lib/i18n';
 import { useLang } from '@/lib/useLang';
-import AdBanner from '@/components/AdBanner';
+import WidgetShell from '@/components/widgets/WidgetShell';
+import {
+  StatsOverview, PersonalRecords, FeatureNav, RecentActivities,
+  DNARadar, TraitBars, TrainingLoadWidget, RacePredictions,
+  RecoveryStats, CoachAdvice, TodaysPlanWidget, PaceTrend,
+  ConditionsWidget, YearComparison, DistributionWidget,
+  RouteFamiliarityWidget, MilestonesWidget, WeeklyChallenge,
+} from '@/components/widgets/CoreWidgets';
+
+// Lazy-load the customize panel (bundle-dynamic-imports best practice)
+const CustomizePanel = dynamic(() => import('@/components/widgets/CustomizePanel'), {
+  ssr: false,
+});
 
 interface Props {
   userName: string;
 }
 
+// Data source types
+interface DataSources {
+  runData: EnrichedRunData | null;
+  intelligence: IntelligenceData | null;
+}
+
 export default function DashboardClient({ userName }: Props) {
   const [lang] = useLang();
-  const [data, setData] = useState<EnrichedRunData | null>(null);
+  const [prefs, setPrefs] = useState<WidgetPreferences>(() => loadPreferences());
+  const [showCustomize, setShowCustomize] = useState(false);
+  const [data, setData] = useState<DataSources>({ runData: null, intelligence: null });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
 
+  // Apply skin on mount
+  useEffect(() => {
+    applySkin(prefs.skin);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Compute which data sources are needed (js-set-map-lookups best practice)
+  const neededDeps = new Set(
+    prefs.widgetOrder
+      .filter(id => prefs.enabledWidgets.includes(id))
+      .flatMap(id => getWidgetDef(id)?.dataDeps ?? [])
+  );
+
+  // Fetch data based on widget dependencies (async-parallel best practice)
   useEffect(() => {
     const interval = setInterval(() => {
-      setProgress((p) => Math.min(p + Math.random() * 15, 90));
+      setProgress(p => Math.min(p + Math.random() * 15, 90));
     }, 200);
 
-    fetch('/api/strava/data')
-      .then((r) => {
-        if (!r.ok) throw new Error('Failed to load');
+    const fetches: Promise<void>[] = [];
+
+    // Always fetch runData if any widget needs it or intelligence (intelligence is derived from runData server-side)
+    const needsRun = neededDeps.has('runData') || neededDeps.has('intelligence');
+
+    if (needsRun) {
+      // Fetch both in parallel — intelligence API fetches its own data server-side
+      const runPromise = fetch('/api/strava/data').then(r => {
+        if (!r.ok) throw new Error('Failed to load run data');
         return r.json();
-      })
-      .then((d) => {
-        setData(d);
-        setProgress(100);
-      })
-      .catch((e) => setError(e.message))
+      });
+      const intelPromise = fetch('/api/strava/intelligence').then(r => {
+        if (!r.ok) throw new Error('Failed to load intelligence');
+        return r.json();
+      });
+
+      // async-parallel: start both, await together
+      fetches.push(
+        Promise.all([runPromise, intelPromise]).then(([runData, intelligence]) => {
+          setData({ runData, intelligence });
+        })
+      );
+    }
+
+    Promise.all(fetches)
+      .then(() => setProgress(100))
+      .catch(e => setError(e.message))
       .finally(() => {
         clearInterval(interval);
         setLoading(false);
       });
 
     return () => clearInterval(interval);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handlePrefsUpdate = useCallback((next: WidgetPreferences) => {
+    setPrefs(next);
+    savePreferences(next);
   }, []);
 
+  const handleRemoveWidget = useCallback((id: WidgetId) => {
+    setPrefs(prev => {
+      const next: WidgetPreferences = {
+        ...prev,
+        enabledWidgets: prev.enabledWidgets.filter(w => w !== id),
+        widgetOrder: prev.widgetOrder.filter(w => w !== id),
+        preset: 'custom',
+      };
+      savePreferences(next);
+      return next;
+    });
+  }, []);
+
+  // ── Loading State ──
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-32">
@@ -72,7 +147,7 @@ export default function DashboardClient({ userName }: Props) {
     );
   }
 
-  if (!data || data.runs.length === 0) {
+  if (!data.runData || data.runData.runs.length === 0) {
     return (
       <div className="text-center py-32">
         <p className="text-2xl mb-2">🏃‍♂️</p>
@@ -82,117 +157,147 @@ export default function DashboardClient({ userName }: Props) {
     );
   }
 
-  const { runs, stats, prs } = data;
+  // Build ordered list of enabled widgets
+  const orderedWidgets = prefs.widgetOrder.filter(id => prefs.enabledWidgets.includes(id));
 
   return (
     <div>
-      {/* Welcome */}
-      <div className="mb-8">
-        <h1 className="text-2xl sm:text-3xl font-bold">
-          {t('dash.welcome', lang)} {userName.split(' ')[0]}
-        </h1>
-        <p className="text-text-muted mt-1">{t('dash.overview', lang)}</p>
+      {/* Welcome + Customize Button */}
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold">
+            {t('dash.welcome', lang)} {userName.split(' ')[0]}
+          </h1>
+          <p className="text-text-muted mt-1">{t('dash.overview', lang)}</p>
+        </div>
+        <button
+          onClick={() => setShowCustomize(true)}
+          className="flex items-center gap-2 px-3 py-2 rounded-xl border border-border hover:border-primary/30 bg-surface text-sm font-medium transition-all hover:bg-primary/5"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+          </svg>
+          <span className="hidden sm:inline">{t('widget.customize', lang)}</span>
+        </button>
       </div>
 
-      {/* Stats overview */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
-        <StatCard label={t('dash.totalRuns', lang)} value={stats.totalRuns.toString()} />
-        <StatCard label={t('dash.totalDist', lang)} value={`${stats.totalDistance} km`} />
-        <StatCard label={t('dash.avgPace', lang)} value={stats.avgPace} />
-        <StatCard label={t('dash.locations', lang)} value={data.locations.length.toString()} />
+      {/* Widget Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {orderedWidgets.map(id => (
+          <WidgetShell
+            key={id}
+            id={id}
+            size={prefs.widgetSizes[id]}
+            lang={lang}
+            onRemove={handleRemoveWidget}
+          >
+            {renderWidget(id, data, lang)}
+          </WidgetShell>
+        ))}
       </div>
 
-      {/* Personal Records */}
-      {prs.length > 0 && (
-        <div className="mb-8">
-          <h2 className="text-lg font-semibold mb-4">{t('dash.prs', lang)}</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            {prs.map((pr) => (
-              <div key={pr.label}>
-                <p className="text-xs text-text-muted mb-1">{pr.label}</p>
-                <p className="text-lg font-bold text-primary font-mono">{pr.time}</p>
-                <p className="text-xs text-text-muted">{pr.pace} · {pr.date}</p>
-              </div>
-            ))}
-          </div>
+      {/* Empty state */}
+      {orderedWidgets.length === 0 && (
+        <div className="text-center py-20 border border-dashed border-border rounded-2xl">
+          <p className="text-3xl mb-3">🎨</p>
+          <p className="text-base font-semibold mb-1">{t('widget.customize', lang)}</p>
+          <p className="text-sm text-text-muted mb-4">
+            {lang === 'ko' ? '위젯을 추가하여 나만의 대시보드를 만드세요' : 'Add widgets to build your perfect dashboard'}
+          </p>
+          <button
+            onClick={() => setShowCustomize(true)}
+            className="px-4 py-2 rounded-lg bg-primary text-white text-sm font-medium"
+          >
+            {t('widget.addWidget', lang)}
+          </button>
         </div>
       )}
 
-      {/* Feature Navigation */}
-      <div className="rounded-xl border border-border bg-surface divide-y divide-border overflow-hidden mb-8">
-        <FeatureCard icon="🧬" title={t('dash.dna', lang)} desc={t('dash.dnaDesc', lang)} href="/dna" color="primary" />
-        <FeatureCard icon="🤖" title={t('dash.coach', lang)} desc={t('dash.coachDesc', lang)} href="/coach" color="accent" />
-        <FeatureCard icon="🏁" title={t('dash.planner', lang)} desc={t('dash.plannerDesc', lang)} href="/planner" color="warm" />
-        <FeatureCard icon="📊" title={t('dash.report', lang)} desc={t('dash.reportDesc', lang)} href="/report" color="primary" />
-        <FeatureCard icon="🎁" title={t('dash.wrapped', lang)} desc={t('dash.wrappedDesc', lang)} href="/wrapped" color="accent" />
-      </div>
-
-      {/* Ad */}
-      <AdBanner format="horizontal" />
-
-      {/* Recent Activities */}
-      <div>
-        <h2 className="text-lg font-semibold mb-4">{t('dash.recent', lang)}</h2>
-        <div className="rounded-xl border border-border bg-surface overflow-hidden">
-          <div className="grid grid-cols-[1fr_auto_auto] sm:grid-cols-[1fr_auto_auto_auto] gap-3 px-4 py-2.5 border-b border-border text-xs font-medium text-text-muted uppercase tracking-wider">
-            <span>{t('dash.activity', lang)}</span>
-            <span className="w-16 sm:w-20 text-right">{t('dash.distance', lang)}</span>
-            <span className="w-16 sm:w-20 text-right hidden sm:block">{t('dash.pace', lang)}</span>
-            <span className="w-16 sm:w-20 text-right">{t('dash.time', lang)}</span>
-          </div>
-          {runs.slice(0, 15).map((r, i) => (
-            <div
-              key={i}
-              className={`grid grid-cols-[1fr_auto_auto] sm:grid-cols-[1fr_auto_auto_auto] gap-3 px-4 py-3 text-sm ${
-                i < Math.min(runs.length, 15) - 1 ? 'border-b border-border' : ''
-              }`}
-            >
-              <div className="min-w-0">
-                <p className="font-medium truncate">{r.name}</p>
-                <p className="text-xs text-text-muted truncate">{r.date} · {r.locationFlag} {r.location}</p>
-              </div>
-              <span className="w-16 sm:w-20 text-right font-mono text-text-muted">{r.distance}</span>
-              <span className="w-16 sm:w-20 text-right font-mono text-text-muted hidden sm:block">{r.pace}</span>
-              <span className="w-16 sm:w-20 text-right font-mono text-text-muted">{r.time}</span>
-            </div>
-          ))}
-        </div>
-      </div>
+      {/* Customize Panel */}
+      {showCustomize && (
+        <CustomizePanel
+          lang={lang}
+          prefs={prefs}
+          onUpdate={handlePrefsUpdate}
+          onClose={() => setShowCustomize(false)}
+        />
+      )}
     </div>
   );
 }
 
-function StatCard({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <p className="text-xs text-text-muted mb-1">{label}</p>
-      <p className="text-xl font-bold font-mono">{value}</p>
-    </div>
-  );
+// ── Widget Renderer ──
+// Maps each WidgetId to its component with correct data
+function renderWidget(id: WidgetId, data: DataSources, lang: 'en' | 'ko'): React.ReactNode {
+  const { runData, intelligence } = data;
+
+  switch (id) {
+    // ── Core widgets ──
+    case 'stats-overview':
+      return runData ? <StatsOverview data={runData} lang={lang} /> : null;
+    case 'personal-records':
+      return runData ? <PersonalRecords data={runData} lang={lang} /> : null;
+    case 'feature-nav':
+      return <FeatureNav lang={lang} />;
+    case 'recent-activities':
+      return runData ? <RecentActivities data={runData} lang={lang} /> : null;
+    case 'dna-radar':
+      return intelligence ? <DNARadar intel={intelligence} lang={lang} /> : null;
+    case 'trait-bars':
+      return intelligence ? <TraitBars intel={intelligence} lang={lang} /> : null;
+    case 'training-load':
+      return intelligence ? <TrainingLoadWidget intel={intelligence} lang={lang} /> : null;
+    case 'race-predictions':
+      return intelligence ? <RacePredictions intel={intelligence} /> : null;
+    case 'recovery-stats':
+      return intelligence ? <RecoveryStats intel={intelligence} lang={lang} /> : null;
+    case 'coach-advice':
+      return intelligence ? <CoachAdvice intel={intelligence} lang={lang} /> : null;
+    case 'todays-plan':
+      return intelligence ? <TodaysPlanWidget intel={intelligence} lang={lang} /> : null;
+    case 'pace-trend':
+      return intelligence ? <PaceTrend intel={intelligence} /> : null;
+    case 'conditions':
+      return intelligence ? <ConditionsWidget intel={intelligence} lang={lang} /> : null;
+    case 'year-comparison':
+      return intelligence ? <YearComparison intel={intelligence} /> : null;
+    case 'distance-distribution':
+      return intelligence ? <DistributionWidget intel={intelligence} /> : null;
+    case 'route-familiarity':
+      return intelligence ? <RouteFamiliarityWidget intel={intelligence} /> : null;
+    case 'milestones':
+      return intelligence ? <MilestonesWidget intel={intelligence} /> : null;
+    case 'weekly-challenge':
+      return intelligence ? <WeeklyChallenge intel={intelligence} lang={lang} /> : null;
+
+    // ── Level 1-5 widgets (placeholder until implemented) ──
+    case 'run-film':
+    case 'ghost-comparison':
+    case 'monthly-highlight':
+    case 'hidden-crowns':
+    case 'snipe-missions':
+    case 'segment-xray':
+    case 'shoe-health':
+    case 'shoe-graveyard':
+    case 'dna-battle':
+    case 'training-twin':
+    case 'race-simulation':
+    case 'pacing-card':
+    case 'what-if':
+      return <ComingSoon lang={lang} />;
+
+    default:
+      return null;
+  }
 }
 
-function FeatureCard({ icon, title, desc, href, color }: {
-  icon: string; title: string; desc: string; href: string; color: string;
-}) {
+function ComingSoon({ lang }: { lang: 'en' | 'ko' }) {
   return (
-    <a
-      href={href}
-      className="flex items-center gap-4 px-4 py-4 hover:bg-white/[0.02] transition-colors group block"
-    >
-      <span className="text-2xl shrink-0">{icon}</span>
-      <div className="flex-1 min-w-0">
-        <h3 className={`font-semibold text-sm transition-colors ${
-          color === 'primary' ? 'text-primary group-hover:text-primary-hover' :
-          color === 'accent' ? 'text-accent group-hover:text-accent' :
-          color === 'warm' ? 'text-warm group-hover:text-warm' : 'text-primary group-hover:text-primary-hover'
-        }`}>
-          {title}
-        </h3>
-        <p className="text-xs text-text-muted truncate">{desc}</p>
-      </div>
-      <svg className="w-4 h-4 text-text-muted shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-      </svg>
-    </a>
+    <div className="text-center py-4">
+      <p className="text-2xl mb-2">🚧</p>
+      <p className="text-sm text-text-muted">
+        {lang === 'ko' ? '곧 출시됩니다' : 'Coming Soon'}
+      </p>
+    </div>
   );
 }

@@ -38,6 +38,7 @@ interface StravaActivity {
 }
 
 export interface RunEntry {
+  id: number;           // Strava activity ID
   date: string;
   dateFull: string;
   distance: string;
@@ -265,6 +266,7 @@ export async function fetchUserRunData(userId: string): Promise<EnrichedRunData>
     const km = r.distance / 1000;
     const paceSpk = km > 0 ? r.moving_time / km : 0;
     return {
+      id: r.id,
       date: formatDate(r.start_date_local),
       dateFull: r.start_date_local,
       distance: `${km.toFixed(2)} km`,

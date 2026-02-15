@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import type { IntelligenceData } from '@/lib/strava-analytics';
 import type { EnrichedRunData } from '@/lib/strava';
 import { shareCard } from '@/lib/share';
@@ -121,12 +121,13 @@ export default function ReportClient({ userName, avatarUrl }: Props) {
     );
   }
 
-  const thisWeek = getWeekStats(runData.runs, 0);
-  const lastWeek = getWeekStats(runData.runs, 1);
-  const distChange = pctChange(thisWeek.distance, lastWeek.distance);
+  // rerender-memo: avoid recomputing week stats on every render
+  const thisWeek = useMemo(() => getWeekStats(runData.runs, 0), [runData.runs]);
+  const lastWeek = useMemo(() => getWeekStats(runData.runs, 1), [runData.runs]);
+  const distChange = useMemo(() => pctChange(thisWeek.distance, lastWeek.distance), [thisWeek.distance, lastWeek.distance]);
   const { trainingLoad, todaysPlan, paceTrend, personality, coachAdvice } = data;
 
-  const recentTrend = paceTrend.slice(-8);
+  const recentTrend = useMemo(() => paceTrend.slice(-8), [paceTrend]);
   const maxDist = Math.max(...recentTrend.map(p => p.distance), 1);
 
   const weekLabel = (() => {

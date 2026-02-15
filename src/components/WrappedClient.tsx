@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, createRef } from 'react';
+import { useState, useEffect, useRef, useMemo, createRef } from 'react';
 import type { IntelligenceData } from '@/lib/strava-analytics';
 import type { EnrichedRunData } from '@/lib/strava';
 import { shareCard } from '@/lib/share';
@@ -119,7 +119,7 @@ export default function WrappedClient({ userName, avatarUrl }: Props) {
   }
 
   const currentYear = new Date().getFullYear();
-  const stats = computeYearStats(runData.runs, currentYear);
+  const stats = useMemo(() => computeYearStats(runData.runs, currentYear), [runData.runs, currentYear]);
   const { personality } = data;
 
   return (

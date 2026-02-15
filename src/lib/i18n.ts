@@ -188,6 +188,118 @@ const dict: Record<string, { en: string; ko: string }> = {
   'common.noRunsSub': { en: 'Start running with Strava and come back to see your DNA!', ko: 'Strava로 뛰고 와서 DNA를 확인하세요!' },
   'common.saving': { en: 'Saving...', ko: '저장 중...' },
   'common.sharing': { en: 'Sharing...', ko: '공유 중...' },
+
+  // ── Widget System ──
+  'widget.customize': { en: 'Customize Dashboard', ko: '대시보드 커스터마이징' },
+  'widget.presets': { en: 'Presets', ko: '프리셋' },
+  'widget.skins': { en: 'Skins', ko: '스킨' },
+  'widget.widgets': { en: 'Widgets', ko: '위젯' },
+  'widget.addWidget': { en: 'Add Widget', ko: '위젯 추가' },
+  'widget.removeWidget': { en: 'Remove', ko: '제거' },
+  'widget.shareSetup': { en: 'Share My Setup', ko: '내 셋업 공유' },
+  'widget.importSetup': { en: 'Import Setup', ko: '셋업 가져오기' },
+  'widget.copied': { en: 'Setup code copied!', ko: '셋업 코드 복사됨!' },
+  'widget.applied': { en: 'Setup applied!', ko: '셋업 적용됨!' },
+  'widget.aiSuggest': { en: 'AI Suggests', ko: 'AI 추천' },
+
+  // Widget titles
+  'widget.statsOverview': { en: 'Stats Overview', ko: '통계 요약' },
+  'widget.personalRecords': { en: 'Personal Records', ko: '개인 기록' },
+  'widget.featureNav': { en: 'Quick Access', ko: '빠른 접근' },
+  'widget.recentActivities': { en: 'Recent Activities', ko: '최근 활동' },
+  'widget.dnaRadar': { en: 'DNA Radar', ko: 'DNA 레이더' },
+  'widget.traitBars': { en: 'Trait Bars', ko: '특성 바' },
+  'widget.trainingLoad': { en: 'Training Load', ko: '훈련 부하' },
+  'widget.racePredictions': { en: 'Race Predictions', ko: '레이스 예측' },
+  'widget.recoveryStats': { en: 'Recovery Stats', ko: '회복 통계' },
+  'widget.coachAdvice': { en: 'Coach Advice', ko: '코치 조언' },
+  'widget.todaysPlan': { en: "Today's Plan", ko: '오늘의 플랜' },
+  'widget.paceTrend': { en: 'Pace Trend', ko: '페이스 추이' },
+  'widget.conditions': { en: 'Best Conditions', ko: '최적 조건' },
+  'widget.yearComparison': { en: 'Year Comparison', ko: '연도 비교' },
+  'widget.distDistribution': { en: 'Distance Distribution', ko: '거리 분포' },
+  'widget.routeFamiliarity': { en: 'Route Familiarity', ko: '루트 친숙도' },
+  'widget.milestones': { en: 'Milestones', ko: '마일스톤' },
+
+  // Level 1: Run Film
+  'widget.runFilm': { en: 'Run Film', ko: '런 필름' },
+  'widget.ghostComparison': { en: 'Ghost Race', ko: '고스트 레이스' },
+  'widget.monthlyHighlight': { en: 'Monthly Highlight', ko: '월간 하이라이트' },
+  'film.selectRun': { en: 'Select a run to replay', ko: '리플레이할 러닝 선택' },
+  'film.replay': { en: 'Replay', ko: '리플레이' },
+  'film.speed': { en: 'Speed', ko: '속도' },
+  'film.elevation': { en: 'Elevation', ko: '고도' },
+  'film.shareFilm': { en: 'Share Run Film', ko: '런 필름 공유' },
+
+  // Level 2: Segment Sniper
+  'widget.hiddenCrowns': { en: 'Hidden Crowns', ko: '숨겨진 왕관' },
+  'widget.snipeMissions': { en: 'Snipe Missions', ko: '스나이프 미션' },
+  'widget.segmentXray': { en: 'Segment X-Ray', ko: '세그먼트 엑스레이' },
+  'segment.crown': { en: 'Crown', ko: '왕관' },
+  'segment.yourRank': { en: 'Your Rank', ko: '내 순위' },
+  'segment.mission': { en: 'This Week\'s Mission', ko: '이번 주 미션' },
+  'segment.explore': { en: 'Explore Segments', ko: '세그먼트 탐색' },
+
+  // Level 3: Shoe Graveyard
+  'widget.shoeHealth': { en: 'Shoe Health', ko: '신발 건강' },
+  'widget.shoeGraveyard': { en: 'Shoe Graveyard', ko: '슈즈 묘지' },
+  'shoe.health': { en: 'Health', ko: '건강' },
+  'shoe.retired': { en: 'Retired', ko: '은퇴' },
+  'shoe.active': { en: 'Active', ko: '활성' },
+  'shoe.mileage': { en: 'Mileage', ko: '주행 거리' },
+  'shoe.retirement': { en: 'Retirement Ceremony', ko: '은퇴식' },
+  'shoe.replaceIn': { en: 'Replace in ~', ko: '교체 예상 ~' },
+
+  // Level 4: DNA Battle
+  'widget.dnaBattle': { en: 'DNA Battle', ko: 'DNA 배틀' },
+  'widget.trainingTwin': { en: 'Training Twin', ko: '트레이닝 쌍둥이' },
+  'widget.weeklyChallenge': { en: 'Weekly Challenge', ko: '주간 챌린지' },
+  'battle.vs': { en: 'vs', ko: 'vs' },
+  'battle.winner': { en: 'Predicted Winner', ko: '예상 승자' },
+  'battle.compare': { en: 'Compare DNA', ko: 'DNA 비교' },
+  'battle.challenge': { en: 'This Week\'s Challenge', ko: '이번 주 챌린지' },
+  'battle.twin': { en: 'Your Running Twin', ko: '러닝 쌍둥이' },
+
+  // Level 5: Digital Twin
+  'widget.raceSimulation': { en: 'Race Simulation', ko: '레이스 시뮬레이션' },
+  'widget.pacingCard': { en: 'Pacing Card', ko: '페이싱 카드' },
+  'widget.whatIf': { en: 'What-If Analysis', ko: '만약에 분석' },
+  'twin.simulate': { en: 'Simulate Race', ko: '레이스 시뮬레이션' },
+  'twin.conservative': { en: 'Conservative', ko: '보수적' },
+  'twin.even': { en: 'Even Split', ko: '이븐 스플릿' },
+  'twin.aggressive': { en: 'Aggressive', ko: '공격적' },
+  'twin.predicted': { en: 'Predicted Finish', ko: '예상 완주' },
+  'twin.paceCard': { en: 'Race Day Pacing Card', ko: '레이스 당일 페이싱 카드' },
+
+  // Presets
+  'preset.speedDemon': { en: 'Speed Demon', ko: '스피드 데몬' },
+  'preset.ultraBeast': { en: 'Ultra Beast', ko: '울트라 비스트' },
+  'preset.dataNerd': { en: 'Data Nerd', ko: '데이터 덕후' },
+  'preset.beginner': { en: 'Beginner', ko: '입문 러너' },
+  'preset.custom': { en: 'Custom', ko: '커스텀' },
+
+  // Skins
+  'skin.darkRunner': { en: 'Dark Runner', ko: '다크 러너' },
+  'skin.dawnPatrol': { en: 'Dawn Patrol', ko: '새벽 순찰' },
+  'skin.oceanMile': { en: 'Ocean Mile', ko: '오션 마일' },
+  'skin.lavaFlow': { en: 'Lava Flow', ko: '라바 플로우' },
+  'skin.trailSpirit': { en: 'Trail Spirit', ko: '트레일 스피릿' },
+  'skin.iceBreaker': { en: 'Ice Breaker', ko: '아이스 브레이커' },
+
+  // Categories
+  'cat.core': { en: 'Core', ko: '기본' },
+  'cat.film': { en: 'Run Film', ko: '런 필름' },
+  'cat.segment': { en: 'Segments', ko: '세그먼트' },
+  'cat.shoe': { en: 'Shoes', ko: '신발' },
+  'cat.battle': { en: 'Battle', ko: '배틀' },
+  'cat.twin': { en: 'Digital Twin', ko: '디지털 트윈' },
+
+  // New pages
+  'nav.film': { en: 'Run Film', ko: '런 필름' },
+  'nav.segments': { en: 'Segments', ko: '세그먼트' },
+  'nav.shoes': { en: 'Shoes', ko: '신발' },
+  'nav.battle': { en: 'DNA Battle', ko: 'DNA 배틀' },
+  'nav.simulation': { en: 'Race Sim', ko: '레이스 시뮬' },
 };
 
 export function t(key: string, lang: Lang): string {

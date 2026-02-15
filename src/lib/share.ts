@@ -1,5 +1,4 @@
 export async function downloadCard(element: HTMLElement, filename: string) {
-  // Dynamic import — html2canvas only works in browser
   const html2canvas = (await import('html2canvas')).default;
 
   const canvas = await html2canvas(element, {
@@ -7,19 +6,63 @@ export async function downloadCard(element: HTMLElement, filename: string) {
     scale: 2,
     useCORS: true,
     logging: false,
-    // Resolve CSS custom properties for Tailwind v4
     onclone: (doc) => {
+      // 1. Remove lab()/oklch()/oklab() from all stylesheets — html2canvas can't parse them
+      for (const sheet of Array.from(doc.styleSheets)) {
+        try {
+          for (let i = sheet.cssRules.length - 1; i >= 0; i--) {
+            const text = sheet.cssRules[i].cssText;
+            if (text.match(/(ok)?(lab|lch)\(/i)) {
+              const fixed = text.replace(/(ok)?(lab|lch)\([^)]+\)/gi, '#808080');
+              try {
+                sheet.deleteRule(i);
+                sheet.insertRule(fixed, i);
+              } catch { /* skip malformed rules */ }
+            }
+          }
+        } catch { /* cross-origin stylesheets */ }
+      }
+
+      // 2. Inject CSS custom properties with hex colors (overrides Tailwind v4)
       const style = doc.createElement('style');
       style.textContent = `
-        * {
-          --color-bg: #060a0e; --color-surface: #0d1117; --color-surface-hover: #161b22;
-          --color-border: #1e2a3a; --color-text: #e6edf3; --color-text-muted: #7d8590;
-          --color-primary: #10b981; --color-primary-hover: #34d399; --color-primary-dim: #10b98120;
-          --color-accent: #22d3ee; --color-accent-dim: #22d3ee20;
-          --color-warm: #f59e0b; --color-danger: #ef4444; --color-glow: #10b98140;
+        *, *::before, *::after {
+          --color-bg: #060a0e !important;
+          --color-surface: #0d1117 !important;
+          --color-surface-hover: #161b22 !important;
+          --color-border: #1e2a3a !important;
+          --color-text: #e6edf3 !important;
+          --color-text-muted: #7d8590 !important;
+          --color-primary: #10b981 !important;
+          --color-primary-hover: #34d399 !important;
+          --color-accent: #22d3ee !important;
+          --color-warm: #f59e0b !important;
+          --color-danger: #ef4444 !important;
+          --font-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+          --font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, monospace !important;
         }
       `;
       doc.head.appendChild(style);
+
+      // 3. Force inline colors on elements with computed lab/oklch values
+      doc.querySelectorAll('*').forEach((el) => {
+        const htmlEl = el as HTMLElement;
+        const cs = getComputedStyle(htmlEl);
+        const props = ['color', 'backgroundColor', 'borderColor', 'borderTopColor', 'borderBottomColor', 'borderLeftColor', 'borderRightColor'] as const;
+        for (const prop of props) {
+          const val = cs[prop];
+          if (val && (val.includes('lab(') || val.includes('oklch(') || val.includes('oklab('))) {
+            // Use canvas 2D context to convert to hex
+            const cvs = document.createElement('canvas');
+            const ctx = cvs.getContext('2d');
+            if (ctx) {
+              ctx.fillStyle = '#808080';
+              ctx.fillStyle = val;
+              htmlEl.style[prop] = ctx.fillStyle;
+            }
+          }
+        }
+      });
     },
   });
 

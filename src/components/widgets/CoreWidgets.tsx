@@ -91,7 +91,7 @@ export function DNARadar({ intel, lang }: { intel: IntelligenceData; lang: Lang 
   const labels = ['dna.consistency', 'dna.speed', 'dna.endurance', 'dna.variety', 'dna.volume'].map(k => t(k, lang));
   const colors = ['#10b981', '#22d3ee', '#818cf8', '#f59e0b', '#ef4444'];
 
-  const cx = 100, cy = 100, maxR = 75;
+  const cx = 120, cy = 120, maxR = 80;
   const n = 5;
   const angleStep = (2 * Math.PI) / n;
   const startAngle = -Math.PI / 2;
@@ -109,7 +109,7 @@ export function DNARadar({ intel, lang }: { intel: IntelligenceData; lang: Lang 
       <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/10 border border-primary/20 mb-3">
         <span className="text-[10px] font-bold text-primary">Top {personality.percentile}%</span>
       </div>
-      <svg width="200" height="200" viewBox="0 0 200 200" className="mx-auto">
+      <svg viewBox="0 0 240 240" className="mx-auto w-full max-w-[200px]">
         {[1,2,3,4,5].map(level => {
           const pts = Array.from({ length: n }, (_, i) => point(i, level));
           const path = pts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ') + ' Z';
@@ -122,8 +122,8 @@ export function DNARadar({ intel, lang }: { intel: IntelligenceData; lang: Lang 
         <path d={dataPath} fill="var(--color-primary-dim)" stroke="var(--color-primary)" strokeWidth={2} />
         {dataPoints.map((p, i) => <circle key={i} cx={p.x} cy={p.y} r={3} fill={colors[i]} />)}
         {labels.map((label, i) => {
-          const p = point(i, 6.5);
-          return <text key={label} x={p.x} y={p.y} textAnchor="middle" dominantBaseline="middle" className="text-[9px] fill-text-muted">{label}</text>;
+          const p = point(i, 6.2);
+          return <text key={label} x={p.x} y={p.y} textAnchor="middle" dominantBaseline="middle" style={{ fontSize: '9px', fill: 'var(--color-text-muted)' }}>{label}</text>;
         })}
       </svg>
     </div>
@@ -159,6 +159,11 @@ export function TraitBars({ intel, lang }: { intel: IntelligenceData; lang: Lang
 // ── Training Load ──
 export function TrainingLoadWidget({ intel, lang }: { intel: IntelligenceData; lang: Lang }) {
   const { trainingLoad } = intel;
+  // Scale: max 2.5 to give headroom above 2.0
+  const scaleMax = 2.5;
+  const barPct = Math.min((trainingLoad.ratio / scaleMax) * 100, 100);
+  // Zone line positions (proportional to scaleMax)
+  const zonePct = (v: number) => `${(v / scaleMax) * 100}%`;
   return (
     <div>
       <div className="flex justify-between items-center mb-2">
@@ -168,14 +173,15 @@ export function TrainingLoadWidget({ intel, lang }: { intel: IntelligenceData; l
         </span>
       </div>
       <div className="h-2.5 rounded-full bg-bg overflow-hidden relative">
-        <div className="absolute inset-y-0 left-[40%] w-px bg-border" />
-        <div className="absolute inset-y-0 left-[50%] w-px bg-border" />
-        <div className="absolute inset-y-0 left-[65%] w-px bg-border" />
-        <div className="absolute inset-y-0 left-[75%] w-px bg-border" />
-        <div className="h-full rounded-full transition-all duration-700" style={{ width: `${Math.min((trainingLoad.ratio / 2) * 100, 100)}%`, backgroundColor: trainingLoad.zoneColor }} />
+        <div className="absolute inset-y-0 w-px bg-border" style={{ left: zonePct(0.8) }} />
+        <div className="absolute inset-y-0 w-px bg-border" style={{ left: zonePct(1.0) }} />
+        <div className="absolute inset-y-0 w-px bg-border" style={{ left: zonePct(1.3) }} />
+        <div className="absolute inset-y-0 w-px bg-border" style={{ left: zonePct(1.5) }} />
+        <div className="absolute inset-y-0 w-px bg-border" style={{ left: zonePct(2.0) }} />
+        <div className="h-full rounded-full transition-all duration-700" style={{ width: `${barPct}%`, backgroundColor: trainingLoad.zoneColor }} />
       </div>
       <div className="flex justify-between text-[10px] text-text-muted mt-1">
-        <span>0.0</span><span>0.8</span><span>1.0</span><span>1.3</span><span>1.5</span><span>2.0</span>
+        <span>0</span><span>0.8</span><span>1.0</span><span>1.3</span><span>2.0</span>
       </div>
       <div className="grid grid-cols-2 gap-2 mt-3">
         <Stat label={t('dna.acute', lang)} value={trainingLoad.acute.toFixed(0)} />
@@ -280,23 +286,37 @@ export function PaceTrend({ intel }: { intel: IntelligenceData }) {
   const maxPace = Math.max(...points.map(p => p.avgPace));
   const minPace = Math.min(...points.map(p => p.avgPace));
   const range = maxPace - minPace || 1;
+  // Faster pace = taller bar (invert: subtract from max)
+  const fmtPace = (s: number) => `${Math.floor(s / 60)}:${String(Math.round(s % 60)).padStart(2, '0')}`;
+  const bestIdx = points.reduce((bi, p, i, arr) => p.avgPace < arr[bi].avgPace ? i : bi, 0);
 
   return (
     <div>
       <p className="text-xs text-text-muted mb-2">{intel.paceImprovement}</p>
       <div className="flex items-end gap-1 h-24">
         {points.map((p, i) => {
-          const height = Math.max(((maxPace - p.avgPace) / range) * 100, 5);
+          // Faster (lower pace number) = taller bar
+          const height = Math.max(((maxPace - p.avgPace) / range) * 85 + 15, 8);
           const isLast = i === points.length - 1;
+          const isBest = i === bestIdx;
           return (
-            <div key={p.weekKey} className="flex-1 flex flex-col items-center gap-0.5">
+            <div key={p.weekKey} className="flex-1 flex flex-col items-center gap-0.5 group relative">
+              {isBest && <span className="text-[8px] font-bold text-accent mb-0.5">{fmtPace(p.avgPace)}</span>}
               <div className="w-full relative h-full">
-                <div className={`absolute bottom-0 w-full rounded-t ${isLast ? 'bg-primary' : 'bg-border'}`} style={{ height: `${height}%` }} />
+                <div
+                  className={`absolute bottom-0 w-full rounded-t transition-colors ${isLast ? 'bg-primary' : isBest ? 'bg-accent' : 'bg-primary/30'}`}
+                  style={{ height: `${height}%` }}
+                  title={`${p.week}: ${fmtPace(p.avgPace)}/km — ${p.distance.toFixed(1)}km`}
+                />
               </div>
               {i % 3 === 0 && <span className="text-[8px] text-text-muted">{p.week.split(' ').pop()}</span>}
             </div>
           );
         })}
+      </div>
+      <div className="flex justify-between text-[10px] text-text-muted mt-1">
+        <span>{fmtPace(maxPace)}/km</span>
+        <span className="text-accent font-medium">{fmtPace(minPace)}/km</span>
       </div>
     </div>
   );
@@ -330,32 +350,30 @@ export function ConditionsWidget({ intel, lang }: { intel: IntelligenceData; lan
 export function YearComparison({ intel }: { intel: IntelligenceData }) {
   const years = intel.yearComparison.slice(-3);
   if (years.length === 0) return <p className="text-sm text-text-muted">No year data</p>;
-  const colors = ['#9ca3af', '#22d3ee', '#10b981'];
+  const colors = ['#9ca3af', '#22d3ee', '#10b981', '#f59e0b', '#818cf8'];
+  const maxKm = Math.max(...years.flatMap(y => y.months.map(mo => mo.cumulativeKm)), 1);
   return (
     <div>
-      <div className="flex gap-3 mb-2">
+      <div className="flex gap-3 mb-2 flex-wrap">
         {years.map((y, i) => (
-          <span key={y.year} className="text-xs font-mono" style={{ color: colors[i] || 'var(--color-text)' }}>
+          <span key={y.year} className="text-xs font-mono" style={{ color: colors[i % colors.length] }}>
             {y.year}: {y.totalKm.toFixed(0)} km ({y.totalRuns} runs)
           </span>
         ))}
       </div>
       <div className="h-20 flex items-end">
-        {Array.from({ length: 12 }, (_, m) => {
-          const maxKm = Math.max(...years.flatMap(y => y.months.map(mo => mo.cumulativeKm)), 1);
-          return (
-            <div key={m} className="flex-1 flex items-end gap-px">
-              {years.map((y, yi) => {
-                const km = y.months[m]?.cumulativeKm ?? 0;
-                const h = (km / maxKm) * 100;
-                return <div key={y.year} className="flex-1 rounded-t" style={{ height: `${h}%`, backgroundColor: colors[yi] || 'var(--color-text)', opacity: 0.7 }} />;
-              })}
-            </div>
-          );
-        })}
+        {Array.from({ length: 12 }, (_, m) => (
+          <div key={m} className="flex-1 flex items-end gap-px">
+            {years.map((y, yi) => {
+              const km = y.months[m]?.cumulativeKm ?? 0;
+              const h = km > 0 ? Math.max((km / maxKm) * 100, 2) : 0;
+              return <div key={y.year} className="flex-1 rounded-t" style={{ height: `${h}%`, backgroundColor: colors[yi % colors.length], opacity: 0.8 }} />;
+            })}
+          </div>
+        ))}
       </div>
       <div className="flex justify-between text-[8px] text-text-muted mt-1">
-        {['J','F','M','A','M','J','J','A','S','O','N','D'].map(m => <span key={m}>{m}</span>)}
+        {['J','F','M','A','M','J','J','A','S','O','N','D'].map((m, i) => <span key={i}>{m}</span>)}
       </div>
     </div>
   );
@@ -464,9 +482,9 @@ export function RunHeatmap({ data }: { data: EnrichedRunData }) {
   const today = new Date();
   const weeks: { date: string; km: number }[][] = [];
 
-  // Find the most recent Sunday
+  // Go back 52 weeks, align to Sunday
   const startDay = new Date(today);
-  startDay.setDate(startDay.getDate() - startDay.getDay() - 52 * 7 + 1);
+  startDay.setDate(startDay.getDate() - startDay.getDay() - (52 * 7 - 1));
 
   let currentWeek: { date: string; km: number }[] = [];
   const cursor = new Date(startDay);
@@ -486,13 +504,14 @@ export function RunHeatmap({ data }: { data: EnrichedRunData }) {
   const allKms = weeks.flat().map(d => d.km);
   const maxKm = Math.max(...allKms, 1);
 
-  function getColor(km: number): string {
-    if (km === 0) return 'var(--color-border)';
+  function getColor(km: number): React.CSSProperties {
+    if (km === 0) return { backgroundColor: 'var(--color-border)' };
     const intensity = Math.min(km / maxKm, 1);
-    if (intensity < 0.25) return 'var(--color-primary-dim)';
-    if (intensity < 0.5) return 'color-mix(in srgb, var(--color-primary) 40%, transparent)';
-    if (intensity < 0.75) return 'color-mix(in srgb, var(--color-primary) 70%, transparent)';
-    return 'var(--color-primary)';
+    // Use opacity on primary color — works in all browsers
+    if (intensity < 0.25) return { backgroundColor: 'var(--color-primary)', opacity: 0.2 };
+    if (intensity < 0.5) return { backgroundColor: 'var(--color-primary)', opacity: 0.4 };
+    if (intensity < 0.75) return { backgroundColor: 'var(--color-primary)', opacity: 0.7 };
+    return { backgroundColor: 'var(--color-primary)', opacity: 1 };
   }
 
   const totalDaysRun = allKms.filter(k => k > 0).length;
@@ -509,7 +528,7 @@ export function RunHeatmap({ data }: { data: EnrichedRunData }) {
               <div
                 key={di}
                 className="w-[10px] h-[10px] rounded-[2px] transition-colors"
-                style={{ backgroundColor: getColor(day.km) }}
+                style={getColor(day.km)}
                 title={`${day.date}: ${day.km > 0 ? day.km.toFixed(1) + ' km' : 'Rest'}`}
               />
             ))}
@@ -519,7 +538,7 @@ export function RunHeatmap({ data }: { data: EnrichedRunData }) {
       <div className="flex items-center gap-1 mt-2 text-[10px] text-text-muted">
         <span>Less</span>
         {[0, 0.25, 0.5, 0.75, 1].map(i => (
-          <div key={i} className="w-[10px] h-[10px] rounded-[2px]" style={{ backgroundColor: getColor(i * maxKm) }} />
+          <div key={i} className="w-[10px] h-[10px] rounded-[2px]" style={getColor(i * maxKm)} />
         ))}
         <span>More</span>
       </div>
@@ -534,11 +553,10 @@ function Sparkline({ data, color = 'var(--color-primary)' }: { data: number[]; c
   const max = Math.max(...data);
   const min = Math.min(...data);
   const range = max - min || 1;
-  const w = 40;
-  const h = 16;
-  const points = data.map((v, i) => `${(i / (data.length - 1)) * w},${h - ((v - min) / range) * h}`).join(' ');
+  const w = 40, h = 16, pad = 1;
+  const points = data.map((v, i) => `${pad + (i / (data.length - 1)) * (w - pad * 2)},${pad + (h - pad * 2) - ((v - min) / range) * (h - pad * 2)}`).join(' ');
   return (
-    <svg width={w} height={h} className="shrink-0">
+    <svg viewBox={`0 0 ${w} ${h}`} width={w} height={h} className="shrink-0">
       <polyline points={points} fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );

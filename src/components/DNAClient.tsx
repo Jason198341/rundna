@@ -340,7 +340,7 @@ export default function DNAClient({ userName }: Props) {
 // ── Radar Chart (SVG) ──
 
 function RadarChart({ scores, labels }: { scores: number[]; labels: string[] }) {
-  const cx = 120, cy = 120, maxR = 90;
+  const cx = 140, cy = 140, maxR = 100;
   const n = 5;
   const angleStep = (2 * Math.PI) / n;
   const startAngle = -Math.PI / 2;
@@ -356,7 +356,7 @@ function RadarChart({ scores, labels }: { scores: number[]; labels: string[] }) 
   const dataPath = dataPoints.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ') + ' Z';
 
   return (
-    <svg width="240" height="240" viewBox="0 0 240 240">
+    <svg viewBox="0 0 280 280" className="w-full max-w-[260px] mx-auto">
       {gridLevels.map((level) => {
         const pts = Array.from({ length: n }, (_, i) => point(i, level));
         const path = pts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ') + ' Z';
@@ -368,12 +368,12 @@ function RadarChart({ scores, labels }: { scores: number[]; labels: string[] }) 
       })}
       <path d={dataPath} fill="var(--color-primary-dim)" stroke="var(--color-primary)" strokeWidth={2} />
       {dataPoints.map((p, i) => (
-        <circle key={i} cx={p.x} cy={p.y} r={4} fill={TRAIT_COLORS[i]} />
+        <circle key={i} cx={p.x} cy={p.y} r={4} fill={TRAIT_COLORS[i % TRAIT_COLORS.length]} />
       ))}
       {labels.map((label, i) => {
         const p = point(i, 6.2);
         return (
-          <text key={label} x={p.x} y={p.y} textAnchor="middle" dominantBaseline="middle" className="text-[11px] fill-text-muted">
+          <text key={label} x={p.x} y={p.y} textAnchor="middle" dominantBaseline="middle" style={{ fontSize: '11px', fill: 'var(--color-text-muted)' }}>
             {label}
           </text>
         );

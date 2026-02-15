@@ -101,7 +101,7 @@ export default function CoachClient({ userName }: Props) {
                 <button
                   key={s}
                   onClick={() => sendMessage(s)}
-                  className="text-left px-4 py-3 rounded-xl border border-border bg-surface text-sm text-text-muted hover:border-primary/30 hover:text-text transition-all"
+                  className="text-left px-4 py-3 rounded-xl border border-border/50 text-sm text-text-muted hover:border-primary/30 hover:bg-surface/50 hover:text-text transition-all"
                 >
                   {s}
                 </button>

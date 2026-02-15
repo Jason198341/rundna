@@ -347,11 +347,11 @@ export default function PlannerClient({ userName }: Props) {
       {/* Weekly Breakdown */}
       <div className="mb-6">
         <h2 className="text-lg font-semibold mb-4">{t('plan.weeklyPlan', lang)}</h2>
-        <div className="space-y-3">
+        <div className="rounded-xl border border-border bg-surface divide-y divide-border overflow-hidden">
           {plan.weeks?.map((week) => {
             const isExpanded = expandedWeek === week.week;
             return (
-              <div key={week.week} className="rounded-xl border border-border bg-surface overflow-hidden">
+              <div key={week.week} className="overflow-hidden">
                 <button
                   onClick={() => setExpandedWeek(isExpanded ? null : week.week)}
                   className="w-full flex items-center justify-between px-4 py-3 hover:bg-surface-hover transition-colors"

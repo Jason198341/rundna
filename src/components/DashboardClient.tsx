@@ -106,9 +106,9 @@ export default function DashboardClient({ userName }: Props) {
       {prs.length > 0 && (
         <div className="mb-8">
           <h2 className="text-lg font-semibold mb-4">{t('dash.prs', lang)}</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             {prs.map((pr) => (
-              <div key={pr.label} className="rounded-xl border border-border bg-surface p-4">
+              <div key={pr.label}>
                 <p className="text-xs text-text-muted mb-1">{pr.label}</p>
                 <p className="text-lg font-bold text-primary font-mono">{pr.time}</p>
                 <p className="text-xs text-text-muted">{pr.pace} · {pr.date}</p>
@@ -118,8 +118,8 @@ export default function DashboardClient({ userName }: Props) {
         </div>
       )}
 
-      {/* Feature Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+      {/* Feature Navigation */}
+      <div className="rounded-xl border border-border bg-surface divide-y divide-border overflow-hidden mb-8">
         <FeatureCard icon="🧬" title={t('dash.dna', lang)} desc={t('dash.dnaDesc', lang)} href="/dna" color="primary" />
         <FeatureCard icon="🤖" title={t('dash.coach', lang)} desc={t('dash.coachDesc', lang)} href="/coach" color="accent" />
         <FeatureCard icon="🏁" title={t('dash.planner', lang)} desc={t('dash.plannerDesc', lang)} href="/planner" color="warm" />
@@ -164,7 +164,7 @@ export default function DashboardClient({ userName }: Props) {
 
 function StatCard({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-xl border border-border bg-surface p-4">
+    <div>
       <p className="text-xs text-text-muted mb-1">{label}</p>
       <p className="text-xl font-bold font-mono">{value}</p>
     </div>
@@ -177,17 +177,22 @@ function FeatureCard({ icon, title, desc, href, color }: {
   return (
     <a
       href={href}
-      className="rounded-xl border border-border bg-surface p-5 hover:border-primary/30 transition-all group block"
+      className="flex items-center gap-4 px-4 py-4 hover:bg-white/[0.02] transition-colors group block"
     >
-      <span className="text-2xl mb-2 block">{icon}</span>
-      <h3 className={`font-semibold mb-1 transition-colors ${
-        color === 'primary' ? 'text-primary group-hover:text-primary-hover' :
-        color === 'accent' ? 'text-accent group-hover:text-accent' :
-        color === 'warm' ? 'text-warm group-hover:text-warm' : 'text-primary group-hover:text-primary-hover'
-      }`}>
-        {title}
-      </h3>
-      <p className="text-sm text-text-muted">{desc}</p>
+      <span className="text-2xl shrink-0">{icon}</span>
+      <div className="flex-1 min-w-0">
+        <h3 className={`font-semibold text-sm transition-colors ${
+          color === 'primary' ? 'text-primary group-hover:text-primary-hover' :
+          color === 'accent' ? 'text-accent group-hover:text-accent' :
+          color === 'warm' ? 'text-warm group-hover:text-warm' : 'text-primary group-hover:text-primary-hover'
+        }`}>
+          {title}
+        </h3>
+        <p className="text-xs text-text-muted truncate">{desc}</p>
+      </div>
+      <svg className="w-4 h-4 text-text-muted shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+      </svg>
     </a>
   );
 }

@@ -149,7 +149,7 @@ export default function DNAClient({ userName }: Props) {
             <h3 className="text-sm font-semibold mb-3">{t('dna.predictions', lang)}</h3>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               {racePredictions.map((rp) => (
-                <div key={rp.label} className="rounded-lg bg-bg p-3 text-center">
+                <div key={rp.label} className="text-center py-2">
                   <p className="text-xs text-text-muted">{rp.label}</p>
                   <p className="text-sm font-bold font-mono text-accent">{rp.time}</p>
                   <p className="text-[10px] text-text-muted">{rp.pace}</p>
@@ -169,6 +169,61 @@ export default function DNAClient({ userName }: Props) {
             <MiniStat label={t('dna.longestRest', lang)} value={`${recovery.longestRest}d`} />
           </div>
         </div>
+
+        {/* Training Load */}
+        <div className="border-t border-border pt-5 mt-5">
+          <h3 className="text-sm font-semibold mb-3">{t('dna.trainingLoad', lang)}</h3>
+          <div className="flex items-center gap-4 mb-3">
+            <div className="flex-1">
+              <div className="flex justify-between text-sm mb-1">
+                <span className="text-text-muted">{t('dna.acwr', lang)}</span>
+                <span className="font-mono font-bold" style={{ color: trainingLoad.zoneColor }}>
+                  {trainingLoad.ratio.toFixed(2)} — {trainingLoad.zoneLabel}
+                </span>
+              </div>
+              <div className="h-3 rounded-full bg-bg overflow-hidden relative">
+                <div className="absolute inset-y-0 left-[40%] w-px bg-border" />
+                <div className="absolute inset-y-0 left-[50%] w-px bg-border" />
+                <div className="absolute inset-y-0 left-[65%] w-px bg-border" />
+                <div className="absolute inset-y-0 left-[75%] w-px bg-border" />
+                <div
+                  className="h-full rounded-full transition-all duration-1000"
+                  style={{
+                    width: `${Math.min((trainingLoad.ratio / 2) * 100, 100)}%`,
+                    backgroundColor: trainingLoad.zoneColor,
+                  }}
+                />
+              </div>
+              <div className="flex justify-between text-[10px] text-text-muted mt-1">
+                <span>0.0</span><span>0.8</span><span>1.0</span><span>1.3</span><span>1.5</span><span>2.0</span>
+              </div>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <MiniStat label={t('dna.acute', lang)} value={trainingLoad.acute.toFixed(0)} />
+            <MiniStat label={t('dna.chronic', lang)} value={trainingLoad.chronic.toFixed(0)} />
+          </div>
+        </div>
+
+        {/* Coach Advice */}
+        {data.coachAdvice.length > 0 && (
+          <div className="border-t border-border pt-5 mt-5">
+            <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+              <span>🤖</span> {t('dna.coachSays', lang)}
+            </h3>
+            <ul className="space-y-2">
+              {data.coachAdvice.map((advice, i) => (
+                <li key={i} className="text-sm text-text-muted flex items-start gap-2">
+                  <span className="text-primary shrink-0 mt-0.5">•</span>
+                  {advice}
+                </li>
+              ))}
+            </ul>
+            <a href="/coach" className="inline-block mt-4 text-sm text-primary hover:text-primary-hover transition-colors">
+              {t('dna.chatCoach', lang)} →
+            </a>
+          </div>
+        )}
 
         {/* Branding */}
         <div className="border-t border-border pt-4 mt-6 text-center">
@@ -276,67 +331,6 @@ export default function DNAClient({ userName }: Props) {
         </div>
       </div>}
 
-      {/* Training Load Detail */}
-      <div className={`rounded-xl border border-border bg-surface p-5 mb-6 transition-all duration-700 delay-300 ${revealed ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-        <h2 className="text-lg font-semibold mb-4">{t('dna.trainingLoad', lang)}</h2>
-        <div className="flex items-center gap-4 mb-4">
-          <div className="flex-1">
-            <div className="flex justify-between text-sm mb-1">
-              <span className="text-text-muted">{t('dna.acwr', lang)}</span>
-              <span className="font-mono font-bold" style={{ color: trainingLoad.zoneColor }}>
-                {trainingLoad.ratio.toFixed(2)} — {trainingLoad.zoneLabel}
-              </span>
-            </div>
-            <div className="h-3 rounded-full bg-bg overflow-hidden relative">
-              <div className="absolute inset-y-0 left-[40%] w-px bg-border" />
-              <div className="absolute inset-y-0 left-[50%] w-px bg-border" />
-              <div className="absolute inset-y-0 left-[65%] w-px bg-border" />
-              <div className="absolute inset-y-0 left-[75%] w-px bg-border" />
-              <div
-                className="h-full rounded-full transition-all duration-1000"
-                style={{
-                  width: `${Math.min((trainingLoad.ratio / 2) * 100, 100)}%`,
-                  backgroundColor: trainingLoad.zoneColor,
-                }}
-              />
-            </div>
-            <div className="flex justify-between text-[10px] text-text-muted mt-1">
-              <span>0.0</span><span>0.8</span><span>1.0</span><span>1.3</span><span>1.5</span><span>2.0</span>
-            </div>
-          </div>
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          <div className="rounded-lg bg-bg p-3">
-            <p className="text-xs text-text-muted">{t('dna.acute', lang)}</p>
-            <p className="text-lg font-bold font-mono">{trainingLoad.acute.toFixed(0)}</p>
-          </div>
-          <div className="rounded-lg bg-bg p-3">
-            <p className="text-xs text-text-muted">{t('dna.chronic', lang)}</p>
-            <p className="text-lg font-bold font-mono">{trainingLoad.chronic.toFixed(0)}</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Coach Advice */}
-      {data.coachAdvice.length > 0 && (
-        <div className={`rounded-xl border border-border bg-surface p-5 mb-6 transition-all duration-700 delay-500 ${revealed ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-          <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
-            <span>🤖</span> {t('dna.coachSays', lang)}
-          </h2>
-          <ul className="space-y-2">
-            {data.coachAdvice.map((advice, i) => (
-              <li key={i} className="text-sm text-text-muted flex items-start gap-2">
-                <span className="text-primary shrink-0 mt-0.5">•</span>
-                {advice}
-              </li>
-            ))}
-          </ul>
-          <a href="/coach" className="inline-block mt-4 text-sm text-primary hover:text-primary-hover transition-colors">
-            {t('dna.chatCoach', lang)} →
-          </a>
-        </div>
-      )}
-
       {/* Ad */}
       <AdBanner format="rectangle" className="mt-6" />
     </div>
@@ -390,7 +384,7 @@ function RadarChart({ scores, labels }: { scores: number[]; labels: string[] }) 
 
 function MiniStat({ label, value, color }: { label: string; value: string; color?: string }) {
   return (
-    <div className="rounded-lg bg-bg p-3 text-center">
+    <div className="text-center">
       <p className="text-xs text-text-muted">{label}</p>
       <p className="text-sm font-bold font-mono" style={color ? { color } : undefined}>{value}</p>
     </div>

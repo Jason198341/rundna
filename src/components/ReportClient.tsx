@@ -193,7 +193,7 @@ export default function ReportClient({ userName, avatarUrl }: Props) {
           </div>
 
           {/* Training Load Gauge */}
-          <div className="rounded-xl bg-bg p-4 mb-5">
+          <div className="border-t border-border pt-4 mt-4">
             <div className="flex justify-between items-center mb-2">
               <span className="text-sm font-medium">{t('report.trainingLoad', lang)}</span>
               <span className="text-sm font-mono font-bold" style={{ color: trainingLoad.zoneColor }}>
@@ -224,7 +224,7 @@ export default function ReportClient({ userName, avatarUrl }: Props) {
 
           {/* Volume Trend */}
           {recentTrend.length > 1 && (
-            <div className="rounded-xl bg-bg p-4 mb-5">
+            <div className="border-t border-border pt-4 mt-4">
               <p className="text-sm font-medium mb-3">{t('report.volume', lang)}</p>
               <div className="flex items-end gap-1.5 h-20">
                 {recentTrend.map((w, i) => {
@@ -253,7 +253,7 @@ export default function ReportClient({ userName, avatarUrl }: Props) {
           )}
 
           {/* Today's Plan */}
-          <div className="rounded-xl bg-bg p-4 mb-5">
+          <div className="border-t border-border pt-4 mt-4">
             <p className="text-sm font-medium mb-2">{t('report.today', lang)}</p>
             <div className="flex items-center gap-3">
               <div
@@ -275,7 +275,7 @@ export default function ReportClient({ userName, avatarUrl }: Props) {
 
           {/* Coach Advice */}
           {coachAdvice.length > 0 && (
-            <div className="rounded-xl bg-bg p-4">
+            <div className="border-t border-border pt-4 mt-4">
               <p className="text-sm font-medium mb-2">🤖 {t('report.coachNotes', lang)}</p>
               <ul className="space-y-1.5">
                 {coachAdvice.slice(0, 3).map((a, i) => (

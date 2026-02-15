@@ -87,15 +87,17 @@ export default function LandingPage() {
             {t('landing.features', lang)}
           </h2>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div className="space-y-10 sm:grid sm:grid-cols-2 sm:gap-x-12 sm:gap-y-10 sm:space-y-0">
             {FEATURES.map((f, i) => (
               <div
                 key={f.title}
-                className={`rounded-xl border border-border bg-surface p-6 hover:border-primary/30 transition-all animate-fade-in-up delay-${i + 1}`}
+                className={`flex items-start gap-4 animate-fade-in-up delay-${i + 1}`}
               >
-                <span className="text-3xl mb-3 block">{f.icon}</span>
-                <h3 className={`text-lg font-semibold mb-2 ${f.color}`}>{f.title}</h3>
-                <p className="text-sm text-text-muted">{f.desc}</p>
+                <span className="text-3xl shrink-0">{f.icon}</span>
+                <div>
+                  <h3 className={`text-lg font-semibold mb-1 ${f.color}`}>{f.title}</h3>
+                  <p className="text-sm text-text-muted">{f.desc}</p>
+                </div>
               </div>
             ))}
           </div>

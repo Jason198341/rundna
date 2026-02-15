@@ -189,6 +189,7 @@ function computeTrainingLoad(runs: RunEntry[]): TrainingLoad {
     dayLoad.set(key, (dayLoad.get(key) || 0) + load);
   }
 
+  // Acute: days 0-6 (this week)
   let acute = 0;
   for (let i = 0; i < 7; i++) {
     const d = new Date(today);
@@ -196,20 +197,29 @@ function computeTrainingLoad(runs: RunEntry[]): TrainingLoad {
     acute += dayLoad.get(toDateKey(d)) || 0;
   }
 
+  // Chronic: days 7-34 (weeks 2-5, UNCOUPLED — excludes acute window)
+  // Uncoupled ACWR avoids inflating ratio when returning from inactivity
   let chronic = 0;
-  for (let i = 0; i < 42; i++) {
+  for (let i = 7; i < 35; i++) {
     const d = new Date(today);
     d.setDate(d.getDate() - i);
     chronic += dayLoad.get(toDateKey(d)) || 0;
   }
 
-  const chronicWeekly = chronic / 6;
+  const chronicWeekly = chronic / 4; // 4 weeks (days 7-34)
   const ratio = chronicWeekly > 0 ? acute / chronicWeekly : 0;
+
+  // Low volume guard: if absolute load is low, ratio-based zones are misleading
+  // 200 ≈ ~15km/week at casual pace — below this, ACWR injury risk isn't meaningful
+  const lowVolume = acute < 200 && chronicWeekly < 200;
 
   let zone: TrainingLoad['zone'];
   let zoneLabel: string;
   let zoneColor: string;
-  if (ratio < 0.8) { zone = 'detraining'; zoneLabel = 'Detraining'; zoneColor = '#9ca3af'; }
+  if (lowVolume && ratio >= 1.3) {
+    // Absolute volume is too low for meaningful injury risk
+    zone = 'recovery'; zoneLabel = 'Low Volume'; zoneColor = '#3b82f6';
+  } else if (ratio < 0.8) { zone = 'detraining'; zoneLabel = 'Detraining'; zoneColor = '#9ca3af'; }
   else if (ratio < 1.0) { zone = 'recovery'; zoneLabel = 'Recovery'; zoneColor = '#3b82f6'; }
   else if (ratio < 1.3) { zone = 'optimal'; zoneLabel = 'Optimal'; zoneColor = '#22c55e'; }
   else if (ratio < 1.5) { zone = 'overreaching'; zoneLabel = 'Overreaching'; zoneColor = '#f59e0b'; }

@@ -1,54 +1,48 @@
-import Link from 'next/link';
+'use client';
 
-const FEATURES = [
-  {
-    icon: '🧬',
-    title: 'Running DNA',
-    desc: 'Discover your unique runner personality with 5-axis analysis',
-    color: 'text-primary',
-  },
-  {
-    icon: '🤖',
-    title: 'AI Coach',
-    desc: 'Chat with an AI that knows your training history inside out',
-    color: 'text-accent',
-  },
-  {
-    icon: '🏁',
-    title: 'Race Planner',
-    desc: 'Set a goal race and get a week-by-week training plan',
-    color: 'text-warm',
-  },
-  {
-    icon: '📊',
-    title: 'Weekly Report',
-    desc: 'Beautiful shareable cards with your weekly running insights',
-    color: 'text-primary',
-  },
-];
+import { t } from '@/lib/i18n';
+import { useLang } from '@/lib/useLang';
+import LangToggle from '@/components/LangToggle';
 
 export default function LandingPage() {
+  const [lang] = useLang();
+
+  const FEATURES = [
+    { icon: '🧬', title: t('landing.f1.title', lang), desc: t('landing.f1.desc', lang), color: 'text-primary' },
+    { icon: '🤖', title: t('landing.f2.title', lang), desc: t('landing.f2.desc', lang), color: 'text-accent' },
+    { icon: '🏁', title: t('landing.f3.title', lang), desc: t('landing.f3.desc', lang), color: 'text-warm' },
+    { icon: '📊', title: t('landing.f4.title', lang), desc: t('landing.f4.desc', lang), color: 'text-primary' },
+  ];
+
+  const STEPS = [
+    { step: '1', title: t('landing.step1', lang), desc: t('landing.step1d', lang) },
+    { step: '2', title: t('landing.step2', lang), desc: t('landing.step2d', lang) },
+    { step: '3', title: t('landing.step3', lang), desc: t('landing.step3d', lang) },
+  ];
+
   return (
     <div className="min-h-screen bg-bg">
       {/* Nav */}
       <nav className="fixed top-0 inset-x-0 z-50 border-b border-border/50 bg-bg/80 backdrop-blur-xl">
         <div className="mx-auto max-w-5xl flex items-center justify-between px-6 h-14">
-          <Link href="/" className="flex items-center gap-2 font-bold text-lg">
+          <a href="/" className="flex items-center gap-2 font-bold text-lg">
             <span className="text-primary">🧬</span> RunDNA
-          </Link>
-          <a
-            href="/api/auth/strava"
-            className="px-4 py-2 rounded-lg bg-strava text-white text-sm font-semibold hover:bg-strava/90 transition-colors"
-          >
-            Connect Strava
           </a>
+          <div className="flex items-center gap-3">
+            <LangToggle />
+            <a
+              href="/api/auth/strava"
+              className="px-4 py-2 rounded-lg bg-strava text-white text-sm font-semibold hover:bg-strava/90 transition-colors"
+            >
+              {lang === 'ko' ? 'Strava 연결' : 'Connect Strava'}
+            </a>
+          </div>
         </div>
       </nav>
 
       {/* Hero */}
       <section className="pt-32 pb-20 px-6">
         <div className="mx-auto max-w-3xl text-center">
-          {/* DNA helix decoration */}
           <div className="relative mx-auto w-20 h-20 mb-8">
             <div className="absolute inset-0 rounded-full bg-primary/20 animate-pulse-glow" />
             <div className="absolute inset-2 rounded-full bg-primary/10 flex items-center justify-center">
@@ -57,14 +51,12 @@ export default function LandingPage() {
           </div>
 
           <h1 className="text-4xl sm:text-6xl font-bold tracking-tight animate-fade-in-up">
-            Your Running,{' '}
-            <span className="text-primary">Decoded</span>
+            {t('landing.hero', lang)}{' '}
+            <span className="text-primary">{t('landing.heroAccent', lang)}</span>
           </h1>
 
           <p className="mt-6 text-lg sm:text-xl text-text-muted max-w-2xl mx-auto animate-fade-in-up delay-1">
-            Connect your Strava and let AI reveal your Running DNA.
-            Personalized coaching, race planning, and insights
-            that make you a better runner.
+            {t('landing.sub', lang)}
           </p>
 
           <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-in-up delay-2">
@@ -76,14 +68,13 @@ export default function LandingPage() {
               <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169" />
               </svg>
-              Connect with Strava
+              {t('landing.cta', lang)}
             </a>
-            <span className="text-sm text-text-muted">Free forever for personal use</span>
+            <span className="text-sm text-text-muted">{t('landing.free', lang)}</span>
           </div>
 
-          {/* Social proof placeholder */}
           <p className="mt-8 text-sm text-text-muted/60 animate-fade-in-up delay-3">
-            Analyze your runs in seconds. No credit card required.
+            {t('landing.proof', lang)}
           </p>
         </div>
       </section>
@@ -92,7 +83,7 @@ export default function LandingPage() {
       <section className="py-20 px-6 border-t border-border/50">
         <div className="mx-auto max-w-4xl">
           <h2 className="text-2xl sm:text-3xl font-bold text-center mb-12">
-            Everything your running data can tell you
+            {t('landing.features', lang)}
           </h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -113,14 +104,10 @@ export default function LandingPage() {
       {/* How it works */}
       <section className="py-20 px-6 border-t border-border/50">
         <div className="mx-auto max-w-3xl text-center">
-          <h2 className="text-2xl sm:text-3xl font-bold mb-12">How it works</h2>
+          <h2 className="text-2xl sm:text-3xl font-bold mb-12">{t('landing.howTitle', lang)}</h2>
 
           <div className="flex flex-col sm:flex-row items-start justify-center gap-8">
-            {[
-              { step: '1', title: 'Connect Strava', desc: 'One-click OAuth. We read your activities (read-only).' },
-              { step: '2', title: 'AI Analyzes', desc: 'Your entire running history is crunched in seconds.' },
-              { step: '3', title: 'Get Your DNA', desc: 'Personality, coaching, race plans — all personalized.' },
-            ].map((s) => (
+            {STEPS.map((s) => (
               <div key={s.step} className="flex-1 text-center">
                 <div className="w-10 h-10 rounded-full bg-primary/20 text-primary font-bold text-lg flex items-center justify-center mx-auto mb-3">
                   {s.step}
@@ -136,7 +123,7 @@ export default function LandingPage() {
               href="/api/auth/strava"
               className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-primary text-white font-semibold hover:bg-primary-hover transition-colors"
             >
-              Get Started — It&apos;s Free
+              {t('landing.getStarted', lang)}
             </a>
           </div>
         </div>
@@ -145,9 +132,9 @@ export default function LandingPage() {
       {/* Footer */}
       <footer className="border-t border-border/50 py-8 px-6">
         <div className="mx-auto max-w-4xl flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-text-muted">
-          <span>RunDNA — AI Running Intelligence</span>
+          <span>RunDNA — {t('landing.footer', lang)}</span>
           <div className="flex items-center gap-4">
-            <span>Powered by Strava API</span>
+            <span>{t('landing.powered', lang)}</span>
           </div>
         </div>
       </footer>

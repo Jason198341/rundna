@@ -2,6 +2,8 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { downloadCard } from '@/lib/share';
+import { t } from '@/lib/i18n';
+import { useLang } from '@/lib/useLang';
 
 interface Props {
   userName: string;
@@ -62,6 +64,7 @@ const TYPE_COLORS: Record<string, { bg: string; text: string; label: string }> =
 };
 
 export default function PlannerClient({ userName }: Props) {
+  const [lang] = useLang();
   const [step, setStep] = useState<'form' | 'loading' | 'result'>('form');
   const [raceDistance, setRaceDistance] = useState('');
   const [raceDate, setRaceDate] = useState('');
@@ -76,7 +79,6 @@ export default function PlannerClient({ userName }: Props) {
 
   const minDate = new Date(Date.now() + 14 * 86400000).toISOString().split('T')[0];
 
-  // Fetch initial usage
   useEffect(() => {
     fetch('/api/usage?feature=planner')
       .then(r => r.json())
@@ -87,7 +89,7 @@ export default function PlannerClient({ userName }: Props) {
   async function generatePlan() {
     if (!raceDistance || !raceDate) return;
     if (remaining !== null && remaining <= 0) {
-      setError("You've used all 3 plan generations today. Resets at midnight UTC.");
+      setError(lang === 'ko' ? '오늘 3회 플랜 생성을 모두 사용했습니다. UTC 자정에 초기화됩니다.' : "You've used all 3 plan generations today. Resets at midnight UTC.");
       return;
     }
 
@@ -103,7 +105,7 @@ export default function PlannerClient({ userName }: Props) {
       const res = await fetch('/api/planner', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ raceDistance, raceDate, raceGoal }),
+        body: JSON.stringify({ raceDistance, raceDate, raceGoal, lang }),
       });
 
       if (res.status === 429) {
@@ -120,7 +122,7 @@ export default function PlannerClient({ userName }: Props) {
       if (remaining !== null) setRemaining(remaining - 1);
       setTimeout(() => setStep('result'), 400);
     } catch {
-      setError('Failed to generate your plan. Please try again.');
+      setError(lang === 'ko' ? '플랜 생성에 실패했습니다. 다시 시도해주세요.' : 'Failed to generate your plan. Please try again.');
       setStep('form');
     } finally {
       clearInterval(interval);
@@ -135,21 +137,18 @@ export default function PlannerClient({ userName }: Props) {
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
-          Dashboard
+          {t('nav.back', lang)}
         </a>
 
         <div className="text-center mb-10">
           <div className="text-5xl mb-3">🏁</div>
-          <h1 className="text-2xl sm:text-3xl font-bold">Race Planner</h1>
-          <p className="text-sm text-text-muted mt-2 max-w-md mx-auto">
-            Tell us about your upcoming race and we&apos;ll create a personalized training plan based on your Strava data.
-          </p>
+          <h1 className="text-2xl sm:text-3xl font-bold">{t('plan.title', lang)}</h1>
+          <p className="text-sm text-text-muted mt-2 max-w-md mx-auto">{t('plan.sub', lang)}</p>
         </div>
 
         <div className="rounded-2xl border border-border bg-surface p-6 sm:p-8 max-w-lg mx-auto space-y-6">
-          {/* Distance */}
           <div>
-            <label className="block text-sm font-medium mb-3">Race Distance</label>
+            <label className="block text-sm font-medium mb-3">{t('plan.distance', lang)}</label>
             <div className="grid grid-cols-4 gap-2">
               {RACE_OPTIONS.map(opt => (
                 <button
@@ -168,9 +167,8 @@ export default function PlannerClient({ userName }: Props) {
             </div>
           </div>
 
-          {/* Date */}
           <div>
-            <label className="block text-sm font-medium mb-2">Race Date</label>
+            <label className="block text-sm font-medium mb-2">{t('plan.date', lang)}</label>
             <input
               type="date"
               value={raceDate}
@@ -180,39 +178,36 @@ export default function PlannerClient({ userName }: Props) {
             />
             {raceDate && (
               <p className="text-xs text-text-muted mt-1">
-                {Math.round((new Date(raceDate).getTime() - Date.now()) / (7 * 86400000))} weeks away
+                {Math.round((new Date(raceDate).getTime() - Date.now()) / (7 * 86400000))} {t('plan.weeksAway', lang)}
               </p>
             )}
           </div>
 
-          {/* Goal (optional) */}
           <div>
             <label className="block text-sm font-medium mb-2">
-              Goal <span className="text-text-muted font-normal">(optional)</span>
+              {t('plan.goal', lang)} <span className="text-text-muted font-normal">({t('plan.goalHint', lang)})</span>
             </label>
             <input
               type="text"
               value={raceGoal}
               onChange={(e) => setRaceGoal(e.target.value)}
-              placeholder="e.g. Sub 25 minutes, Finish without walking..."
+              placeholder={t('plan.goalPlaceholder', lang)}
               className="w-full px-4 py-2.5 rounded-xl border border-border bg-bg text-text text-sm placeholder:text-text-muted/50 focus:outline-none focus:border-primary"
             />
           </div>
 
-          {error && (
-            <p className="text-sm text-danger">{error}</p>
-          )}
+          {error && <p className="text-sm text-danger">{error}</p>}
 
           <button
             onClick={generatePlan}
             disabled={!raceDistance || !raceDate || (remaining !== null && remaining <= 0)}
             className="w-full py-3 rounded-xl bg-primary text-white font-semibold text-sm hover:bg-primary-hover transition-colors disabled:opacity-40"
           >
-            {remaining !== null && remaining <= 0 ? 'Daily Limit Reached' : 'Generate My Plan'}
+            {remaining !== null && remaining <= 0 ? t('plan.limitReached', lang) : t('plan.generate', lang)}
           </button>
           {remaining !== null && (
             <p className="text-[10px] text-text-muted text-center mt-2">
-              {remaining} of 3 generations remaining today
+              {remaining} {t('plan.remaining', lang)}
             </p>
           )}
         </div>
@@ -229,9 +224,9 @@ export default function PlannerClient({ userName }: Props) {
           <div className="absolute inset-3 rounded-full border-2 border-primary/30 animate-dna-spin" style={{ animationDirection: 'reverse', animationDuration: '15s' }} />
           <div className="absolute inset-0 flex items-center justify-center text-4xl">🏁</div>
         </div>
-        <p className="text-lg font-semibold mb-2">Building your training plan...</p>
+        <p className="text-lg font-semibold mb-2">{t('plan.generating', lang)}</p>
         <p className="text-sm text-text-muted mb-6">
-          Analyzing {raceDistance} preparation for {userName.split(' ')[0]}
+          {raceDistance} {t('plan.analyzing', lang)} {userName.split(' ')[0]}
         </p>
         <div className="w-64 h-2 rounded-full bg-surface overflow-hidden">
           <div className="h-full rounded-full bg-warm transition-all duration-300" style={{ width: `${progress}%` }} />
@@ -249,66 +244,61 @@ export default function PlannerClient({ userName }: Props) {
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
         </svg>
-        Dashboard
+        {t('nav.back', lang)}
       </a>
 
       {/* Shareable Plan Summary */}
       <div ref={shareRef} className="rounded-2xl border border-border bg-surface overflow-hidden mb-6">
         <div className="p-6 sm:p-8">
-          {/* Header */}
           <div className="text-center mb-6">
             <div className="text-4xl mb-2">🏁</div>
-            <h1 className="text-2xl font-bold">{raceDistance} Training Plan</h1>
+            <h1 className="text-2xl font-bold">{raceDistance} {t('plan.trainingPlan', lang)}</h1>
             <p className="text-sm text-text-muted mt-1">{plan.totalWeeks} weeks · Race Day: {raceDate}</p>
             <p className="text-sm text-text-muted mt-2 max-w-lg mx-auto">{plan.summary}</p>
           </div>
 
-          {/* Warnings */}
           {plan.warnings?.length > 0 && (
             <div className="rounded-xl border border-warm/30 bg-warm/5 p-4 mb-6">
-              <p className="text-sm font-medium text-warm mb-2">⚠️ Heads Up</p>
+              <p className="text-sm font-medium text-warm mb-2">⚠️ {t('plan.headsUp', lang)}</p>
               {plan.warnings.map((w, i) => (
                 <p key={i} className="text-sm text-text-muted">{w}</p>
               ))}
             </div>
           )}
 
-          {/* Phase Overview */}
           <div className="mb-6">
-        <h2 className="text-sm font-semibold mb-3 text-text-muted uppercase tracking-wider">Training Phases</h2>
-        <div className="space-y-3">
-          {plan.phases?.map((phase, i) => (
-            <div key={i} className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-primary/15 flex items-center justify-center text-primary text-xs font-bold shrink-0">
-                {i + 1}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium">{phase.name}</span>
-                  <span className="text-xs text-text-muted">Wk {phase.weeks}</span>
+            <h2 className="text-sm font-semibold mb-3 text-text-muted uppercase tracking-wider">{t('plan.phases', lang)}</h2>
+            <div className="space-y-3">
+              {plan.phases?.map((phase, i) => (
+                <div key={i} className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-primary/15 flex items-center justify-center text-primary text-xs font-bold shrink-0">
+                    {i + 1}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium">{phase.name}</span>
+                      <span className="text-xs text-text-muted">Wk {phase.weeks}</span>
+                    </div>
+                    <p className="text-xs text-text-muted">{phase.focus} · {phase.weeklyKm} km/wk</p>
+                  </div>
                 </div>
-                <p className="text-xs text-text-muted">{phase.focus} · {phase.weeklyKm} km/wk</p>
-              </div>
+              ))}
             </div>
-          ))}
-        </div>
           </div>
 
-          {/* Race Day (in share card) */}
           {plan.raceDay && (
             <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 mb-4">
-              <p className="text-sm font-semibold mb-2">🏆 Race Day</p>
+              <p className="text-sm font-semibold mb-2">🏆 {t('plan.raceDay', lang)}</p>
               <div className="grid grid-cols-2 gap-2 text-xs">
-                <div><span className="text-text-muted">Pace: </span><span className="font-mono font-bold text-primary">{plan.raceDay.targetPace}</span></div>
-                <div><span className="text-text-muted">Strategy: </span>{plan.raceDay.strategy}</div>
+                <div><span className="text-text-muted">{t('plan.pace', lang)}: </span><span className="font-mono font-bold text-primary">{plan.raceDay.targetPace}</span></div>
+                <div><span className="text-text-muted">{t('plan.strategy', lang)}: </span>{plan.raceDay.strategy}</div>
               </div>
             </div>
           )}
 
-          {/* Volume Chart */}
           {plan.weeks?.length > 0 && (
             <div className="mb-4">
-              <p className="text-xs text-text-muted mb-2">Weekly Volume</p>
+              <p className="text-xs text-text-muted mb-2">{t('plan.weeklyVolume', lang)}</p>
               <div className="flex items-end gap-1 h-16">
                 {plan.weeks.map((w) => {
                   const maxKm = plan.weeks.reduce((m, wk) => Math.max(m, wk.totalKm), 1);
@@ -326,7 +316,6 @@ export default function PlannerClient({ userName }: Props) {
             </div>
           )}
 
-          {/* Branding */}
           <div className="border-t border-border pt-3 text-center">
             <p className="text-[10px] text-text-muted">
               <span className="text-primary">🧬</span> RunDNA — AI Running Intelligence
@@ -350,19 +339,18 @@ export default function PlannerClient({ userName }: Props) {
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
           </svg>
-          {saving ? 'Saving...' : 'Download Plan Card'}
+          {saving ? t('common.saving', lang) : t('plan.download', lang)}
         </button>
       </div>
 
       {/* Weekly Breakdown */}
       <div className="mb-6">
-        <h2 className="text-lg font-semibold mb-4">Weekly Plan</h2>
+        <h2 className="text-lg font-semibold mb-4">{t('plan.weeklyPlan', lang)}</h2>
         <div className="space-y-3">
           {plan.weeks?.map((week) => {
             const isExpanded = expandedWeek === week.week;
             return (
               <div key={week.week} className="rounded-xl border border-border bg-surface overflow-hidden">
-                {/* Week header */}
                 <button
                   onClick={() => setExpandedWeek(isExpanded ? null : week.week)}
                   className="w-full flex items-center justify-between px-4 py-3 hover:bg-surface-hover transition-colors"
@@ -377,7 +365,6 @@ export default function PlannerClient({ userName }: Props) {
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    {/* Mini km bar */}
                     <div className="hidden sm:block w-24 h-1.5 rounded-full bg-bg overflow-hidden">
                       <div
                         className="h-full rounded-full bg-primary"
@@ -393,7 +380,6 @@ export default function PlannerClient({ userName }: Props) {
                   </div>
                 </button>
 
-                {/* Day details */}
                 {isExpanded && (
                   <div className="border-t border-border">
                     <div className="divide-y divide-border">
@@ -426,13 +412,12 @@ export default function PlannerClient({ userName }: Props) {
         </div>
       </div>
 
-      {/* New Plan button */}
       <div className="text-center">
         <button
           onClick={() => { setStep('form'); setPlan(null); setExpandedWeek(null); }}
           className="px-6 py-2.5 rounded-xl border border-border text-sm font-medium hover:border-primary/30 hover:text-primary transition-all"
         >
-          Create Another Plan
+          {t('plan.another', lang)}
         </button>
       </div>
     </div>

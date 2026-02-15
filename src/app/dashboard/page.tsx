@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import { getSession } from '@/lib/session';
 import { createServerClient } from '@/lib/supabase';
 import DashboardClient from '@/components/DashboardClient';
+import LangToggle from '@/components/LangToggle';
 
 export default async function DashboardPage() {
   const userId = await getSession();
@@ -25,6 +26,7 @@ export default async function DashboardPage() {
             <span className="text-primary">🧬</span> RunDNA
           </a>
           <div className="flex items-center gap-4">
+            <LangToggle />
             <div className="flex items-center gap-2">
               {user.avatar_url && (
                 <img src={user.avatar_url} alt="" className="w-7 h-7 rounded-full" />

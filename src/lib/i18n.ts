@@ -1,0 +1,196 @@
+export type Lang = 'en' | 'ko';
+
+const COOKIE_NAME = 'rundna_lang';
+
+export function getLang(): Lang {
+  if (typeof window === 'undefined') return 'en';
+  return (localStorage.getItem(COOKIE_NAME) as Lang) || 'en';
+}
+
+export function setLang(lang: Lang) {
+  localStorage.setItem(COOKIE_NAME, lang);
+  document.cookie = `${COOKIE_NAME}=${lang};path=/;max-age=${60 * 60 * 24 * 365}`;
+}
+
+// Translation dictionary
+const dict: Record<string, { en: string; ko: string }> = {
+  // ── Nav / Global ──
+  'nav.dashboard': { en: 'Dashboard', ko: '대시보드' },
+  'nav.logout': { en: 'Logout', ko: '로그아웃' },
+  'nav.back': { en: 'Dashboard', ko: '대시보드' },
+
+  // ── Landing ──
+  'landing.hero': { en: 'Your Running,', ko: '당신의 러닝,' },
+  'landing.heroAccent': { en: 'Decoded', ko: '해독되다' },
+  'landing.sub': {
+    en: 'Connect your Strava and let AI reveal your Running DNA. Personalized coaching, race planning, and insights that make you a better runner.',
+    ko: 'Strava를 연결하고 AI가 당신의 러닝 DNA를 해독합니다. 맞춤 코칭, 레이스 플래닝, 그리고 더 나은 러너를 만드는 인사이트.',
+  },
+  'landing.cta': { en: 'Connect with Strava', ko: 'Strava로 시작하기' },
+  'landing.free': { en: 'Free forever for personal use', ko: '개인 사용 무료' },
+  'landing.proof': { en: 'Analyze your runs in seconds. No credit card required.', ko: '몇 초 만에 러닝 분석. 신용카드 불필요.' },
+  'landing.features': { en: 'Everything your running data can tell you', ko: '당신의 러닝 데이터가 말해주는 모든 것' },
+  'landing.howTitle': { en: 'How it works', ko: '이렇게 작동합니다' },
+  'landing.step1': { en: 'Connect Strava', ko: 'Strava 연결' },
+  'landing.step1d': { en: 'One-click OAuth. We read your activities (read-only).', ko: '원클릭 OAuth. 활동 데이터를 읽기전용으로 가져옵니다.' },
+  'landing.step2': { en: 'AI Analyzes', ko: 'AI 분석' },
+  'landing.step2d': { en: 'Your entire running history is crunched in seconds.', ko: '전체 러닝 기록을 수 초 만에 분석합니다.' },
+  'landing.step3': { en: 'Get Your DNA', ko: 'DNA 확인' },
+  'landing.step3d': { en: 'Personality, coaching, race plans — all personalized.', ko: '성격, 코칭, 레이스 플랜 — 모두 맞춤형.' },
+  'landing.getStarted': { en: "Get Started — It's Free", ko: '시작하기 — 무료' },
+  'landing.footer': { en: 'AI Running Intelligence', ko: 'AI 러닝 인텔리전스' },
+  'landing.powered': { en: 'Powered by Strava API', ko: 'Strava API 기반' },
+  // Landing feature cards
+  'landing.f1.title': { en: 'Running DNA', ko: '러닝 DNA' },
+  'landing.f1.desc': { en: 'Discover your unique runner personality with 5-axis analysis', ko: '5축 분석으로 당신만의 러너 성격 발견' },
+  'landing.f2.title': { en: 'AI Coach', ko: 'AI 코치' },
+  'landing.f2.desc': { en: 'Chat with an AI that knows your training history inside out', ko: '당신의 훈련 기록을 꿰뚫는 AI와 대화' },
+  'landing.f3.title': { en: 'Race Planner', ko: '레이스 플래너' },
+  'landing.f3.desc': { en: 'Set a goal race and get a week-by-week training plan', ko: '목표 레이스를 설정하고 주별 훈련 계획 받기' },
+  'landing.f4.title': { en: 'Weekly Report', ko: '주간 리포트' },
+  'landing.f4.desc': { en: 'Beautiful shareable cards with your weekly running insights', ko: '주간 러닝 인사이트를 담은 공유 가능한 카드' },
+
+  // ── Dashboard ──
+  'dash.welcome': { en: 'Welcome back,', ko: '환영합니다,' },
+  'dash.overview': { en: "Here's your running overview", ko: '러닝 현황 요약' },
+  'dash.totalRuns': { en: 'Total Runs', ko: '총 러닝' },
+  'dash.totalDist': { en: 'Total Distance', ko: '총 거리' },
+  'dash.avgPace': { en: 'Avg Pace', ko: '평균 페이스' },
+  'dash.locations': { en: 'Locations', ko: '장소' },
+  'dash.prs': { en: 'Personal Records', ko: '개인 기록' },
+  'dash.recent': { en: 'Recent Runs', ko: '최근 러닝' },
+  'dash.activity': { en: 'Activity', ko: '활동' },
+  'dash.distance': { en: 'Distance', ko: '거리' },
+  'dash.pace': { en: 'Pace', ko: '페이스' },
+  'dash.time': { en: 'Time', ko: '시간' },
+  'dash.dna': { en: 'Your Running DNA', ko: '러닝 DNA' },
+  'dash.dnaDesc': { en: 'Discover your 5-axis runner personality', ko: '5축 러닝 성격 분석' },
+  'dash.coach': { en: 'AI Coach', ko: 'AI 코치' },
+  'dash.coachDesc': { en: 'Chat with your personal running coach', ko: '개인 러닝 코치와 대화' },
+  'dash.planner': { en: 'Race Planner', ko: '레이스 플래너' },
+  'dash.plannerDesc': { en: 'Get an AI-generated training plan', ko: 'AI 훈련 계획 생성' },
+  'dash.report': { en: 'Weekly Report', ko: '주간 리포트' },
+  'dash.reportDesc': { en: 'Your shareable weekly running card', ko: '공유 가능한 주간 러닝 카드' },
+  'dash.loading': { en: 'Analyzing your runs...', ko: '러닝 분석 중...' },
+  'dash.loadingSub': { en: 'Fetching data from Strava', ko: 'Strava 데이터 가져오는 중' },
+  'dash.noRunsSub': { en: 'Start running with Strava and come back to see your DNA!', ko: 'Strava로 뛰고 와서 DNA를 확인하세요!' },
+
+  // ── DNA ──
+  'dna.title': { en: 'Running DNA', ko: '러닝 DNA' },
+  'dna.sub': { en: 'Your unique runner profile analyzed from Strava data', ko: 'Strava 데이터 기반 러닝 성격 분석' },
+  'dna.analyze': { en: 'Analyze My DNA', ko: 'DNA 분석하기' },
+  'dna.analyzing': { en: 'Analyzing your DNA...', ko: 'DNA 분석 중...' },
+  'dna.personality': { en: 'Runner Personality', ko: '러너 성격' },
+  'dna.trainingLoad': { en: 'Training Load', ko: '훈련 부하' },
+  'dna.acwr': { en: 'ACWR Ratio', ko: 'ACWR 비율' },
+  'dna.acute': { en: 'Acute (7d)', ko: '급성 (7일)' },
+  'dna.chronic': { en: 'Chronic (4wk avg)', ko: '만성 (4주 평균)' },
+  'dna.todayPlan': { en: "Today's Plan", ko: '오늘의 플랜' },
+  'dna.predictions': { en: 'Race Predictions', ko: '레이스 예측' },
+  'dna.recovery': { en: 'Recovery Pattern', ko: '회복 패턴' },
+  'dna.conditions': { en: 'Best Conditions', ko: '최적 조건' },
+  'dna.download': { en: 'Download DNA Card', ko: 'DNA 카드 저장' },
+  'dna.loading': { en: 'Decoding your Running DNA...', ko: '러닝 DNA 해독 중...' },
+  'dna.loadingPatterns': { en: 'Analyzing patterns', ko: '패턴 분석 중' },
+  'dna.loadingActivities': { en: 'Analyzing activities', ko: '활동 분석 중' },
+  'dna.failed': { en: 'Failed to analyze your data', ko: '데이터 분석 실패' },
+  'dna.consistency': { en: 'Consistency', ko: '일관성' },
+  'dna.speed': { en: 'Speed', ko: '속도' },
+  'dna.endurance': { en: 'Endurance', ko: '지구력' },
+  'dna.variety': { en: 'Variety', ko: '다양성' },
+  'dna.volume': { en: 'Volume', ko: '볼륨' },
+  'dna.totalRuns': { en: 'Total Runs', ko: '총 러닝' },
+  'dna.totalKm': { en: 'Total KM', ko: '총 거리' },
+  'dna.avgRest': { en: 'Avg Rest', ko: '평균 휴식' },
+  'dna.afterHard': { en: 'After Hard Run', ko: '고강도 후' },
+  'dna.longestStreak': { en: 'Longest Streak', ko: '최장 연속' },
+  'dna.longestRest': { en: 'Longest Rest', ko: '최장 휴식' },
+  'dna.coachSays': { en: 'AI Coach Says', ko: 'AI 코치 조언' },
+  'dna.chatCoach': { en: 'Chat with AI Coach', ko: 'AI 코치와 대화' },
+
+  // ── Coach ──
+  'coach.title': { en: 'AI Running Coach', ko: 'AI 러닝 코치' },
+  'coach.intro': { en: "I know your entire Strava history. Ask me anything about training, races, recovery, or today's plan.", ko: 'Strava 기록을 전부 알고 있습니다. 훈련, 레이스, 회복 등 무엇이든 물어보세요.' },
+  'coach.placeholder': { en: 'Ask your coach anything,', ko: '코치에게 질문하세요,' },
+  'coach.send': { en: 'Send', ko: '보내기' },
+  'coach.left': { en: 'messages left today', ko: '오늘 남은 메시지' },
+  'coach.limitReached': { en: 'Daily limit reached — resets at midnight UTC', ko: '일일 한도 도달 — UTC 자정에 초기화' },
+  'coach.s1': { en: 'What should I run today?', ko: '오늘 뭘 뛰면 좋을까요?' },
+  'coach.s2': { en: "How's my training load?", ko: '내 훈련 부하는 어때요?' },
+  'coach.s3': { en: 'I have a 10K race in 4 weeks. How should I prepare?', ko: '4주 후에 10K 대회가 있어요. 어떻게 준비할까요?' },
+  'coach.s4': { en: 'What are my strengths and weaknesses as a runner?', ko: '러너로서 내 강점과 약점은?' },
+
+  // ── Planner ──
+  'plan.title': { en: 'Race Planner', ko: '레이스 플래너' },
+  'plan.sub': { en: "Tell us about your upcoming race and we'll create a personalized training plan based on your Strava data.", ko: '다가오는 레이스 정보를 입력하면 Strava 데이터 기반 맞춤 훈련 계획을 생성합니다.' },
+  'plan.distance': { en: 'Race Distance', ko: '레이스 거리' },
+  'plan.date': { en: 'Race Date', ko: '레이스 날짜' },
+  'plan.goal': { en: 'Goal', ko: '목표' },
+  'plan.goalHint': { en: 'optional', ko: '선택사항' },
+  'plan.goalPlaceholder': { en: 'e.g. Sub 25 minutes, Finish without walking...', ko: '예: 25분 이내, 걷지 않고 완주...' },
+  'plan.generate': { en: 'Generate My Plan', ko: '플랜 생성' },
+  'plan.generating': { en: 'Building your training plan...', ko: '훈련 계획 생성 중...' },
+  'plan.analyzing': { en: 'preparation for', ko: '준비 분석 중 —' },
+  'plan.limitReached': { en: 'Daily Limit Reached', ko: '일일 한도 도달' },
+  'plan.remaining': { en: 'of 3 generations remaining today', ko: '/ 3회 남음 (오늘)' },
+  'plan.phases': { en: 'Training Phases', ko: '훈련 단계' },
+  'plan.raceDay': { en: 'Race Day', ko: '레이스 당일' },
+  'plan.weeklyVolume': { en: 'Weekly Volume', ko: '주간 볼륨' },
+  'plan.weeklyPlan': { en: 'Weekly Plan', ko: '주간 계획' },
+  'plan.download': { en: 'Download Plan Card', ko: '플랜 카드 저장' },
+  'plan.another': { en: 'Create Another Plan', ko: '새 플랜 만들기' },
+  'plan.weeksAway': { en: 'weeks away', ko: '주 남음' },
+  'plan.headsUp': { en: 'Heads Up', ko: '주의사항' },
+  'plan.trainingPlan': { en: 'Training Plan', ko: '훈련 계획' },
+  'plan.pace': { en: 'Pace', ko: '페이스' },
+  'plan.strategy': { en: 'Strategy', ko: '전략' },
+
+  // ── Report ──
+  'report.title': { en: 'Weekly Report', ko: '주간 리포트' },
+  'report.thisWeek': { en: 'This Week', ko: '이번 주' },
+  'report.lastWeek': { en: 'Last Week', ko: '지난 주' },
+  'report.runs': { en: 'runs', ko: '회' },
+  'report.volume': { en: '8-Week Volume Trend', ko: '8주 볼륨 추이' },
+  'report.coachNotes': { en: 'Coach Notes', ko: '코치 노트' },
+  'report.today': { en: "Today's Recommendation", ko: '오늘의 추천' },
+  'report.download': { en: 'Download Report', ko: '리포트 저장' },
+  'report.loading': { en: 'Generating Weekly Report...', ko: '주간 리포트 생성 중...' },
+  'report.loadingSub': { en: "Crunching this week's numbers", ko: '이번 주 데이터 분석 중' },
+  'report.weeklyReport': { en: 'Weekly Running Report', ko: '주간 러닝 리포트' },
+  'report.personality': { en: 'Personality', ko: '러너 성격' },
+  'report.distance': { en: 'Distance', ko: '거리' },
+  'report.avgPace': { en: 'Avg Pace', ko: '평균 페이스' },
+  'report.time': { en: 'Time', ko: '시간' },
+  'report.vsLast': { en: 'vs last wk', ko: '지난 주 대비' },
+  'report.lastWk': { en: 'last wk', ko: '지난 주' },
+  'report.trainingLoad': { en: 'Training Load (ACWR)', ko: '훈련 부하 (ACWR)' },
+  'report.detraining': { en: 'Detraining', ko: '디트레이닝' },
+  'report.recovery': { en: 'Recovery', ko: '회복' },
+  'report.optimal': { en: 'Optimal', ko: '최적' },
+  'report.overreach': { en: 'Overreach', ko: '과부하' },
+  'report.danger': { en: 'Danger', ko: '위험' },
+  'report.safeMax': { en: 'Safe max', ko: '안전 최대' },
+  'report.easyPace': { en: 'Easy pace', ko: '이지 페이스' },
+  'report.chatCoach': { en: 'Chat with Coach', ko: '코치와 대화' },
+  'report.viewDNA': { en: 'View Full DNA', ko: 'DNA 전체 보기' },
+  'report.downloadCard': { en: 'Download Card', ko: '카드 저장' },
+  'report.failed': { en: 'Failed to generate report', ko: '리포트 생성 실패' },
+
+  // ── Common ──
+  'common.retry': { en: 'Retry', ko: '재시도' },
+  'common.error': { en: 'Failed to load data', ko: '데이터 로딩 실패' },
+  'common.noRuns': { en: 'No runs found', ko: '러닝 기록 없음' },
+  'common.noRunsSub': { en: 'Start running with Strava and come back to see your DNA!', ko: 'Strava로 뛰고 와서 DNA를 확인하세요!' },
+  'common.saving': { en: 'Saving...', ko: '저장 중...' },
+};
+
+export function t(key: string, lang: Lang): string {
+  return dict[key]?.[lang] ?? dict[key]?.en ?? key;
+}
+
+// AI prompt language instruction
+export function aiLangInstruction(lang: Lang): string {
+  return lang === 'ko'
+    ? 'IMPORTANT: You MUST respond entirely in Korean (한국어).'
+    : 'Respond in English.';
+}

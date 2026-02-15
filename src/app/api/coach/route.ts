@@ -3,6 +3,7 @@ import { getSession } from '@/lib/session';
 import { fetchUserRunData } from '@/lib/strava';
 import { computeIntelligence } from '@/lib/strava-analytics';
 import { checkAndUse } from '@/lib/usage';
+import { aiLangInstruction } from '@/lib/i18n';
 
 export async function POST(request: NextRequest) {
   const userId = await getSession();
@@ -10,7 +11,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const { messages } = await request.json();
+  const { messages, lang } = await request.json();
   if (!messages || !Array.isArray(messages) || messages.length > 50) {
     return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
   }
@@ -31,7 +32,7 @@ export async function POST(request: NextRequest) {
     const intel = computeIntelligence(runData.runs, runData.stats.totalDistanceKm);
 
     // Build system prompt with user's data
-    const systemPrompt = buildCoachPrompt(runData, intel);
+    const systemPrompt = buildCoachPrompt(runData, intel) + '\n\n' + aiLangInstruction(lang || 'en');
 
     // Call Fireworks AI
     const res = await fetch('https://api.fireworks.ai/inference/v1/chat/completions', {

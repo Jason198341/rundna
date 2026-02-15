@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import { getSession } from '@/lib/session';
 import { createServerClient } from '@/lib/supabase';
 import DNAClient from '@/components/DNAClient';
+import LangToggle from '@/components/LangToggle';
 
 export default async function DNAPage() {
   const userId = await getSession();
@@ -23,11 +24,14 @@ export default async function DNAPage() {
           <a href="/dashboard" className="flex items-center gap-2 font-bold text-lg">
             <span className="text-primary">🧬</span> RunDNA
           </a>
-          <div className="flex items-center gap-2">
-            {user.avatar_url && (
-              <img src={user.avatar_url} alt="" className="w-7 h-7 rounded-full" />
-            )}
-            <span className="text-sm font-medium hidden sm:block">{user.name}</span>
+          <div className="flex items-center gap-3">
+            <LangToggle />
+            <div className="flex items-center gap-2">
+              {user.avatar_url && (
+                <img src={user.avatar_url} alt="" className="w-7 h-7 rounded-full" />
+              )}
+              <span className="text-sm font-medium hidden sm:block">{user.name}</span>
+            </div>
           </div>
         </div>
       </nav>

@@ -4,6 +4,8 @@ import { useState, useEffect, useRef } from 'react';
 import type { IntelligenceData } from '@/lib/strava-analytics';
 import type { EnrichedRunData } from '@/lib/strava';
 import { downloadCard } from '@/lib/share';
+import { t } from '@/lib/i18n';
+import { useLang } from '@/lib/useLang';
 
 interface Props {
   userName: string;
@@ -13,8 +15,8 @@ interface Props {
 interface WeekStats {
   distance: number;
   runs: number;
-  avgPace: number; // secs per km
-  totalTime: number; // seconds
+  avgPace: number;
+  totalTime: number;
   longestRun: number;
 }
 
@@ -63,6 +65,7 @@ function pctChange(curr: number, prev: number): { value: string; positive: boole
 }
 
 export default function ReportClient({ userName, avatarUrl }: Props) {
+  const [lang] = useLang();
   const [data, setData] = useState<(IntelligenceData & { prs: any[] }) | null>(null);
   const [runData, setRunData] = useState<EnrichedRunData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -97,8 +100,8 @@ export default function ReportClient({ userName, avatarUrl }: Props) {
     return (
       <div className="flex flex-col items-center justify-center py-32">
         <div className="text-5xl mb-6 animate-bounce">📊</div>
-        <p className="text-lg font-semibold mb-2">Generating Weekly Report...</p>
-        <p className="text-sm text-text-muted mb-6">Crunching this week&apos;s numbers</p>
+        <p className="text-lg font-semibold mb-2">{t('report.loading', lang)}</p>
+        <p className="text-sm text-text-muted mb-6">{t('report.loadingSub', lang)}</p>
         <div className="w-64 h-2 rounded-full bg-surface overflow-hidden">
           <div className="h-full rounded-full bg-accent transition-all duration-300" style={{ width: `${progress}%` }} />
         </div>
@@ -109,9 +112,9 @@ export default function ReportClient({ userName, avatarUrl }: Props) {
   if (error || !data || !runData) {
     return (
       <div className="text-center py-32">
-        <p className="text-danger mb-4">Failed to generate report</p>
+        <p className="text-danger mb-4">{t('report.failed', lang)}</p>
         <button onClick={() => window.location.reload()} className="px-4 py-2 rounded-lg bg-primary text-white text-sm font-medium">
-          Retry
+          {t('common.retry', lang)}
         </button>
       </div>
     );
@@ -122,7 +125,6 @@ export default function ReportClient({ userName, avatarUrl }: Props) {
   const distChange = pctChange(thisWeek.distance, lastWeek.distance);
   const { trainingLoad, todaysPlan, paceTrend, personality, coachAdvice } = data;
 
-  // Last 8 weeks for mini chart
   const recentTrend = paceTrend.slice(-8);
   const maxDist = Math.max(...recentTrend.map(p => p.distance), 1);
 
@@ -142,12 +144,11 @@ export default function ReportClient({ userName, avatarUrl }: Props) {
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
         </svg>
-        Dashboard
+        {t('nav.back', lang)}
       </a>
 
       {/* Report Card */}
       <div ref={cardRef} className="rounded-2xl border border-border bg-surface overflow-hidden mb-6">
-        {/* Card Header */}
         <div className="bg-gradient-to-r from-primary/20 to-accent/20 px-6 py-5">
           <div className="flex items-center gap-3 mb-3">
             {avatarUrl ? (
@@ -157,44 +158,43 @@ export default function ReportClient({ userName, avatarUrl }: Props) {
             )}
             <div>
               <p className="text-sm font-bold">{userName}</p>
-              <p className="text-xs text-text-muted">Weekly Running Report</p>
+              <p className="text-xs text-text-muted">{t('report.weeklyReport', lang)}</p>
             </div>
           </div>
           <h1 className="text-xl font-bold">{weekLabel}</h1>
-          <p className="text-xs text-text-muted mt-1">Personality: {personality.type}</p>
+          <p className="text-xs text-text-muted mt-1">{t('report.personality', lang)}: {personality.type}</p>
         </div>
 
-        {/* This Week Stats */}
         <div className="px-6 py-5">
           <div className="grid grid-cols-4 gap-3 mb-6">
             <div>
-              <p className="text-xs text-text-muted">Distance</p>
+              <p className="text-xs text-text-muted">{t('report.distance', lang)}</p>
               <p className="text-lg font-bold font-mono">{thisWeek.distance.toFixed(1)}<span className="text-xs font-normal text-text-muted ml-0.5">km</span></p>
               <p className={`text-[10px] font-medium ${distChange.positive ? 'text-primary' : 'text-danger'}`}>
-                {distChange.value} vs last wk
+                {distChange.value} {t('report.vsLast', lang)}
               </p>
             </div>
             <div>
-              <p className="text-xs text-text-muted">Runs</p>
+              <p className="text-xs text-text-muted">{t('report.runs', lang)}</p>
               <p className="text-lg font-bold font-mono">{thisWeek.runs}</p>
-              <p className="text-[10px] text-text-muted">{lastWeek.runs} last wk</p>
+              <p className="text-[10px] text-text-muted">{lastWeek.runs} {t('report.lastWk', lang)}</p>
             </div>
             <div>
-              <p className="text-xs text-text-muted">Avg Pace</p>
+              <p className="text-xs text-text-muted">{t('report.avgPace', lang)}</p>
               <p className="text-lg font-bold font-mono">{fmtPace(thisWeek.avgPace)}</p>
-              <p className="text-[10px] text-text-muted">{fmtPace(lastWeek.avgPace)} last wk</p>
+              <p className="text-[10px] text-text-muted">{fmtPace(lastWeek.avgPace)} {t('report.lastWk', lang)}</p>
             </div>
             <div>
-              <p className="text-xs text-text-muted">Time</p>
+              <p className="text-xs text-text-muted">{t('report.time', lang)}</p>
               <p className="text-lg font-bold font-mono">{fmtDuration(thisWeek.totalTime)}</p>
-              <p className="text-[10px] text-text-muted">{fmtDuration(lastWeek.totalTime)} last wk</p>
+              <p className="text-[10px] text-text-muted">{fmtDuration(lastWeek.totalTime)} {t('report.lastWk', lang)}</p>
             </div>
           </div>
 
           {/* Training Load Gauge */}
           <div className="rounded-xl bg-bg p-4 mb-5">
             <div className="flex justify-between items-center mb-2">
-              <span className="text-sm font-medium">Training Load (ACWR)</span>
+              <span className="text-sm font-medium">{t('report.trainingLoad', lang)}</span>
               <span className="text-sm font-mono font-bold" style={{ color: trainingLoad.zoneColor }}>
                 {trainingLoad.ratio.toFixed(2)} — {trainingLoad.zoneLabel}
               </span>
@@ -213,18 +213,18 @@ export default function ReportClient({ userName, avatarUrl }: Props) {
               />
             </div>
             <div className="flex justify-between text-[9px] text-text-muted mt-1">
-              <span>Detraining</span>
-              <span>Recovery</span>
-              <span>Optimal</span>
-              <span>Overreach</span>
-              <span>Danger</span>
+              <span>{t('report.detraining', lang)}</span>
+              <span>{t('report.recovery', lang)}</span>
+              <span>{t('report.optimal', lang)}</span>
+              <span>{t('report.overreach', lang)}</span>
+              <span>{t('report.danger', lang)}</span>
             </div>
           </div>
 
-          {/* Volume Trend (mini bar chart) */}
+          {/* Volume Trend */}
           {recentTrend.length > 1 && (
             <div className="rounded-xl bg-bg p-4 mb-5">
-              <p className="text-sm font-medium mb-3">8-Week Volume Trend</p>
+              <p className="text-sm font-medium mb-3">{t('report.volume', lang)}</p>
               <div className="flex items-end gap-1.5 h-20">
                 {recentTrend.map((w, i) => {
                   const isLast = i === recentTrend.length - 1;
@@ -253,7 +253,7 @@ export default function ReportClient({ userName, avatarUrl }: Props) {
 
           {/* Today's Plan */}
           <div className="rounded-xl bg-bg p-4 mb-5">
-            <p className="text-sm font-medium mb-2">Today&apos;s Recommendation</p>
+            <p className="text-sm font-medium mb-2">{t('report.today', lang)}</p>
             <div className="flex items-center gap-3">
               <div
                 className="w-10 h-10 rounded-xl flex items-center justify-center text-lg"
@@ -266,7 +266,7 @@ export default function ReportClient({ userName, avatarUrl }: Props) {
               <div>
                 <p className="text-sm font-medium">{todaysPlan.headline}</p>
                 <p className="text-xs text-text-muted">
-                  Safe max: {todaysPlan.safeMaxKm} km · Easy pace: {todaysPlan.easyPace}
+                  {t('report.safeMax', lang)}: {todaysPlan.safeMaxKm} km · {t('report.easyPace', lang)}: {todaysPlan.easyPace}
                 </p>
               </div>
             </div>
@@ -275,7 +275,7 @@ export default function ReportClient({ userName, avatarUrl }: Props) {
           {/* Coach Advice */}
           {coachAdvice.length > 0 && (
             <div className="rounded-xl bg-bg p-4">
-              <p className="text-sm font-medium mb-2">🤖 Coach Notes</p>
+              <p className="text-sm font-medium mb-2">🤖 {t('report.coachNotes', lang)}</p>
               <ul className="space-y-1.5">
                 {coachAdvice.slice(0, 3).map((a, i) => (
                   <li key={i} className="text-xs text-text-muted flex gap-2">
@@ -288,7 +288,6 @@ export default function ReportClient({ userName, avatarUrl }: Props) {
           )}
         </div>
 
-        {/* Footer Branding */}
         <div className="border-t border-border px-6 py-3 flex items-center justify-between">
           <p className="text-[10px] text-text-muted">
             <span className="text-primary">🧬</span> RunDNA — AI Running Intelligence
@@ -301,27 +300,28 @@ export default function ReportClient({ userName, avatarUrl }: Props) {
 
       {/* Actions */}
       <div className="flex items-center justify-center gap-3 flex-wrap">
-        <ShareBtn targetRef={cardRef} filename={`rundna-weekly-${weekLabel.replace(/[\s\/]/g, '-')}`} />
+        <ShareBtn targetRef={cardRef} filename={`rundna-weekly-${weekLabel.replace(/[\s\/]/g, '-')}`} lang={lang} />
         <a
           href="/coach"
           className="px-5 py-2.5 rounded-xl border border-border text-sm font-medium hover:border-primary/30 hover:text-primary transition-all"
         >
-          Chat with Coach
+          {t('report.chatCoach', lang)}
         </a>
         <a
           href="/dna"
           className="px-5 py-2.5 rounded-xl border border-border text-sm font-medium hover:border-accent/30 hover:text-accent transition-all"
         >
-          View Full DNA
+          {t('report.viewDNA', lang)}
         </a>
       </div>
     </div>
   );
 }
 
-function ShareBtn({ targetRef, filename }: {
+function ShareBtn({ targetRef, filename, lang }: {
   targetRef: React.RefObject<HTMLDivElement | null>;
   filename: string;
+  lang: 'en' | 'ko';
 }) {
   const [saving, setSaving] = useState(false);
 
@@ -344,7 +344,7 @@ function ShareBtn({ targetRef, filename }: {
       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
       </svg>
-      {saving ? 'Saving...' : 'Download Card'}
+      {saving ? t('common.saving', lang) : t('report.downloadCard', lang)}
     </button>
   );
 }

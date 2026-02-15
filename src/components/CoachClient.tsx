@@ -2,6 +2,8 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { downloadCard } from '@/lib/share';
+import { t } from '@/lib/i18n';
+import { useLang } from '@/lib/useLang';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -12,14 +14,8 @@ interface Props {
   userName: string;
 }
 
-const SUGGESTIONS = [
-  "What should I run today?",
-  "How's my training load?",
-  "I have a 10K race in 4 weeks. How should I prepare?",
-  "What are my strengths and weaknesses as a runner?",
-];
-
 export default function CoachClient({ userName }: Props) {
+  const [lang] = useLang();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -29,11 +25,12 @@ export default function CoachClient({ userName }: Props) {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const shareRef = useRef<HTMLDivElement>(null);
 
+  const suggestions = [t('coach.s1', lang), t('coach.s2', lang), t('coach.s3', lang), t('coach.s4', lang)];
+
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Fetch initial usage on mount
   useEffect(() => {
     fetch('/api/usage?feature=coach')
       .then(r => r.json())
@@ -55,7 +52,7 @@ export default function CoachClient({ userName }: Props) {
       const res = await fetch('/api/coach', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: updated }),
+        body: JSON.stringify({ messages: updated, lang }),
       });
 
       if (res.status === 429) {
@@ -91,12 +88,10 @@ export default function CoachClient({ userName }: Props) {
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center">
             <div className="text-5xl mb-4">🤖</div>
-            <h2 className="text-xl font-bold mb-2">AI Running Coach</h2>
-            <p className="text-sm text-text-muted mb-8 max-w-md">
-              I know your entire Strava history. Ask me anything about training, races, recovery, or today&apos;s plan.
-            </p>
+            <h2 className="text-xl font-bold mb-2">{t('coach.title', lang)}</h2>
+            <p className="text-sm text-text-muted mb-8 max-w-md">{t('coach.intro', lang)}</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full max-w-lg">
-              {SUGGESTIONS.map((s) => (
+              {suggestions.map((s) => (
                 <button
                   key={s}
                   onClick={() => sendMessage(s)}
@@ -147,7 +142,7 @@ export default function CoachClient({ userName }: Props) {
         {remaining !== null && (
           <div className="max-w-3xl mx-auto mb-2">
             <div className="flex items-center justify-between text-[10px] text-text-muted">
-              <span>{remaining > 0 ? `${remaining} messages left today` : 'Daily limit reached — resets at midnight UTC'}</span>
+              <span>{remaining > 0 ? `${remaining} ${t('coach.left', lang)}` : t('coach.limitReached', lang)}</span>
               <div className="flex gap-0.5">
                 {Array.from({ length: 10 }, (_, i) => (
                   <div key={i} className={`w-1.5 h-1.5 rounded-full ${i < (10 - (remaining ?? 0)) ? 'bg-primary' : 'bg-border'}`} />
@@ -162,7 +157,7 @@ export default function CoachClient({ userName }: Props) {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={`Ask your coach anything, ${userName.split(' ')[0]}...`}
+            placeholder={`${t('coach.placeholder', lang)} ${userName.split(' ')[0]}...`}
             rows={1}
             className="flex-1 px-4 py-2.5 rounded-xl border border-border bg-surface text-text text-sm placeholder:text-text-muted/50 focus:outline-none focus:border-primary resize-none"
             disabled={loading}
@@ -172,7 +167,7 @@ export default function CoachClient({ userName }: Props) {
             disabled={loading || !input.trim()}
             className="px-4 py-2.5 rounded-xl bg-primary text-white text-sm font-medium hover:bg-primary-hover transition-colors disabled:opacity-50 shrink-0"
           >
-            Send
+            {t('coach.send', lang)}
           </button>
           {messages.length >= 2 && (
             <button
@@ -205,20 +200,17 @@ export default function CoachClient({ userName }: Props) {
                 <p className="text-[10px] text-[#7d8590]">AI Running Intelligence</p>
               </div>
             </div>
-            {/* Last user question */}
             <div className="mb-4">
               <p className="text-[10px] text-[#7d8590] mb-1">{userName.split(' ')[0]} asked:</p>
               <p className="text-sm text-[#e6edf3]/80 italic">
                 &ldquo;{messages.filter(m => m.role === 'user').slice(-1)[0]?.content}&rdquo;
               </p>
             </div>
-            {/* Last coach reply */}
             <div className="bg-[#0d1117] border border-[#1e2a3a] rounded-xl p-4 mb-6">
               <p className="text-sm text-[#e6edf3] leading-relaxed whitespace-pre-wrap">
                 {messages.filter(m => m.role === 'assistant').slice(-1)[0]?.content}
               </p>
             </div>
-            {/* Branding */}
             <div className="border-t border-[#1e2a3a] pt-3 flex items-center justify-between">
               <p className="text-[10px] text-[#7d8590]">
                 <span className="text-[#10b981]">🧬</span> RunDNA — rundna.vercel.app

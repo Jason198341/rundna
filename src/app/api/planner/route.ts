@@ -3,6 +3,7 @@ import { getSession } from '@/lib/session';
 import { fetchUserRunData } from '@/lib/strava';
 import { computeIntelligence } from '@/lib/strava-analytics';
 import { checkAndUse } from '@/lib/usage';
+import { aiLangInstruction } from '@/lib/i18n';
 
 export async function POST(request: NextRequest) {
   const userId = await getSession();
@@ -10,7 +11,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const { raceDistance, raceDate, raceGoal } = await request.json();
+  const { raceDistance, raceDate, raceGoal, lang } = await request.json();
   if (!raceDistance || !raceDate) {
     return NextResponse.json({ error: 'Missing race info' }, { status: 400 });
   }
@@ -34,7 +35,7 @@ export async function POST(request: NextRequest) {
     const runData = await fetchUserRunData(userId);
     const intel = computeIntelligence(runData.runs, runData.stats.totalDistanceKm);
 
-    const systemPrompt = buildPlannerPrompt(runData, intel, raceDistance, raceDate, raceGoal);
+    const systemPrompt = buildPlannerPrompt(runData, intel, raceDistance, raceDate, raceGoal) + '\n\n' + aiLangInstruction(lang || 'en');
 
     const res = await fetch('https://api.fireworks.ai/inference/v1/chat/completions', {
       method: 'POST',

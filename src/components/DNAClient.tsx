@@ -3,16 +3,19 @@
 import { useState, useEffect, useRef } from 'react';
 import type { IntelligenceData } from '@/lib/strava-analytics';
 import { downloadCard } from '@/lib/share';
+import { t } from '@/lib/i18n';
+import { useLang } from '@/lib/useLang';
 
 interface Props {
   userName: string;
 }
 
-const TRAIT_LABELS = ['Consistency', 'Speed', 'Endurance', 'Variety', 'Volume'];
+const TRAIT_KEYS = ['dna.consistency', 'dna.speed', 'dna.endurance', 'dna.variety', 'dna.volume'];
 const TRAIT_COLORS = ['#10b981', '#22d3ee', '#818cf8', '#f59e0b', '#ef4444'];
 const TRAIT_ICONS = ['📅', '⚡', '🏔️', '🗺️', '📈'];
 
 export default function DNAClient({ userName }: Props) {
+  const [lang] = useLang();
   const [data, setData] = useState<IntelligenceData & { prs: any[] } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -52,8 +55,10 @@ export default function DNAClient({ userName }: Props) {
           <div className="absolute inset-3 rounded-full border-2 border-accent/30 animate-dna-spin" style={{ animationDirection: 'reverse', animationDuration: '15s' }} />
           <div className="absolute inset-0 flex items-center justify-center text-4xl">🧬</div>
         </div>
-        <p className="text-lg font-semibold mb-2">Decoding your Running DNA...</p>
-        <p className="text-sm text-text-muted mb-6">Analyzing {progress > 50 ? 'patterns' : 'activities'}</p>
+        <p className="text-lg font-semibold mb-2">{t('dna.loading', lang)}</p>
+        <p className="text-sm text-text-muted mb-6">
+          {progress > 50 ? t('dna.loadingPatterns', lang) : t('dna.loadingActivities', lang)}
+        </p>
         <div className="w-64 h-2 rounded-full bg-surface overflow-hidden">
           <div className="h-full rounded-full bg-primary transition-all duration-300" style={{ width: `${progress}%` }} />
         </div>
@@ -64,9 +69,9 @@ export default function DNAClient({ userName }: Props) {
   if (error || !data) {
     return (
       <div className="text-center py-32">
-        <p className="text-danger mb-4">Failed to analyze your data</p>
+        <p className="text-danger mb-4">{t('dna.failed', lang)}</p>
         <button onClick={() => window.location.reload()} className="px-4 py-2 rounded-lg bg-primary text-white text-sm font-medium">
-          Retry
+          {t('common.retry', lang)}
         </button>
       </div>
     );
@@ -75,6 +80,7 @@ export default function DNAClient({ userName }: Props) {
   const { personality, trainingLoad, racePredictions, recovery, totalRuns, totalKm } = data;
   const scores = personality.scores;
   const scoreArr = [scores.consistency, scores.speed, scores.endurance, scores.variety, scores.volume];
+  const traitLabels = TRAIT_KEYS.map((k) => t(k, lang));
 
   return (
     <div>
@@ -82,7 +88,7 @@ export default function DNAClient({ userName }: Props) {
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
         </svg>
-        Dashboard
+        {t('nav.back', lang)}
       </a>
 
       {/* DNA Result Card */}
@@ -90,19 +96,19 @@ export default function DNAClient({ userName }: Props) {
         {/* Header */}
         <div className="text-center mb-8">
           <div className="text-5xl mb-3">🧬</div>
-          <p className="text-sm text-text-muted mb-2">{userName}&apos;s Running DNA</p>
+          <p className="text-sm text-text-muted mb-2">{userName}&apos;s {t('dna.title', lang)}</p>
           <h1 className="text-2xl sm:text-3xl font-bold text-primary">{personality.type}</h1>
           <p className="text-sm text-text-muted mt-2 max-w-md mx-auto">{personality.description}</p>
         </div>
 
         {/* Radar Chart */}
         <div className="flex justify-center mb-8">
-          <RadarChart scores={scoreArr} />
+          <RadarChart scores={scoreArr} labels={traitLabels} />
         </div>
 
         {/* Trait Bars */}
         <div className="space-y-3 mb-8">
-          {TRAIT_LABELS.map((label, i) => (
+          {traitLabels.map((label, i) => (
             <div key={label} className="flex items-center gap-3">
               <span className="text-lg w-7 text-center">{TRAIT_ICONS[i]}</span>
               <span className="text-sm font-medium w-24">{label}</span>
@@ -125,15 +131,15 @@ export default function DNAClient({ userName }: Props) {
 
         {/* Quick Stats */}
         <div className="grid grid-cols-3 gap-3 mb-6">
-          <MiniStat label="Total Runs" value={totalRuns.toString()} />
-          <MiniStat label="Total KM" value={totalKm.toFixed(0)} />
+          <MiniStat label={t('dna.totalRuns', lang)} value={totalRuns.toString()} />
+          <MiniStat label={t('dna.totalKm', lang)} value={totalKm.toFixed(0)} />
           <MiniStat label="ACWR" value={trainingLoad.ratio.toFixed(2)} color={trainingLoad.zoneColor} />
         </div>
 
         {/* Race Predictions */}
         {racePredictions.length > 0 && (
           <div className="border-t border-border pt-5">
-            <h3 className="text-sm font-semibold mb-3">Race Predictions</h3>
+            <h3 className="text-sm font-semibold mb-3">{t('dna.predictions', lang)}</h3>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               {racePredictions.map((rp) => (
                 <div key={rp.label} className="rounded-lg bg-bg p-3 text-center">
@@ -148,12 +154,12 @@ export default function DNAClient({ userName }: Props) {
 
         {/* Recovery */}
         <div className="border-t border-border pt-5 mt-5">
-          <h3 className="text-sm font-semibold mb-3">Recovery Profile</h3>
+          <h3 className="text-sm font-semibold mb-3">{t('dna.recovery', lang)}</h3>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-            <MiniStat label="Avg Rest" value={`${recovery.avgRestDays}d`} />
-            <MiniStat label="After Hard Run" value={`${recovery.avgRestAfterHard}d`} />
-            <MiniStat label="Longest Streak" value={`${recovery.longestStreak}d`} />
-            <MiniStat label="Longest Rest" value={`${recovery.longestRest}d`} />
+            <MiniStat label={t('dna.avgRest', lang)} value={`${recovery.avgRestDays}d`} />
+            <MiniStat label={t('dna.afterHard', lang)} value={`${recovery.avgRestAfterHard}d`} />
+            <MiniStat label={t('dna.longestStreak', lang)} value={`${recovery.longestStreak}d`} />
+            <MiniStat label={t('dna.longestRest', lang)} value={`${recovery.longestRest}d`} />
           </div>
         </div>
 
@@ -170,23 +176,23 @@ export default function DNAClient({ userName }: Props) {
         <ShareButton
           targetRef={cardRef}
           filename={`rundna-${userName.replace(/\s+/g, '-').toLowerCase()}`}
-          label="Download DNA Card"
+          label={t('dna.download', lang)}
+          savingLabel={t('common.saving', lang)}
         />
       </div>
 
       {/* Training Load Detail */}
       <div className={`rounded-xl border border-border bg-surface p-5 mb-6 transition-all duration-700 delay-300 ${revealed ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-        <h2 className="text-lg font-semibold mb-4">Training Load</h2>
+        <h2 className="text-lg font-semibold mb-4">{t('dna.trainingLoad', lang)}</h2>
         <div className="flex items-center gap-4 mb-4">
           <div className="flex-1">
             <div className="flex justify-between text-sm mb-1">
-              <span className="text-text-muted">ACWR Ratio</span>
+              <span className="text-text-muted">{t('dna.acwr', lang)}</span>
               <span className="font-mono font-bold" style={{ color: trainingLoad.zoneColor }}>
                 {trainingLoad.ratio.toFixed(2)} — {trainingLoad.zoneLabel}
               </span>
             </div>
             <div className="h-3 rounded-full bg-bg overflow-hidden relative">
-              {/* Zone markers */}
               <div className="absolute inset-y-0 left-[40%] w-px bg-border" />
               <div className="absolute inset-y-0 left-[50%] w-px bg-border" />
               <div className="absolute inset-y-0 left-[65%] w-px bg-border" />
@@ -200,22 +206,17 @@ export default function DNAClient({ userName }: Props) {
               />
             </div>
             <div className="flex justify-between text-[10px] text-text-muted mt-1">
-              <span>0.0</span>
-              <span>0.8</span>
-              <span>1.0</span>
-              <span>1.3</span>
-              <span>1.5</span>
-              <span>2.0</span>
+              <span>0.0</span><span>0.8</span><span>1.0</span><span>1.3</span><span>1.5</span><span>2.0</span>
             </div>
           </div>
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div className="rounded-lg bg-bg p-3">
-            <p className="text-xs text-text-muted">Acute (7d)</p>
+            <p className="text-xs text-text-muted">{t('dna.acute', lang)}</p>
             <p className="text-lg font-bold font-mono">{trainingLoad.acute.toFixed(0)}</p>
           </div>
           <div className="rounded-lg bg-bg p-3">
-            <p className="text-xs text-text-muted">Chronic (4wk avg)</p>
+            <p className="text-xs text-text-muted">{t('dna.chronic', lang)}</p>
             <p className="text-lg font-bold font-mono">{trainingLoad.chronic.toFixed(0)}</p>
           </div>
         </div>
@@ -225,7 +226,7 @@ export default function DNAClient({ userName }: Props) {
       {data.coachAdvice.length > 0 && (
         <div className={`rounded-xl border border-border bg-surface p-5 mb-6 transition-all duration-700 delay-500 ${revealed ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
           <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
-            <span>🤖</span> AI Coach Says
+            <span>🤖</span> {t('dna.coachSays', lang)}
           </h2>
           <ul className="space-y-2">
             {data.coachAdvice.map((advice, i) => (
@@ -236,7 +237,7 @@ export default function DNAClient({ userName }: Props) {
             ))}
           </ul>
           <a href="/coach" className="inline-block mt-4 text-sm text-primary hover:text-primary-hover transition-colors">
-            Chat with AI Coach →
+            {t('dna.chatCoach', lang)} →
           </a>
         </div>
       )}
@@ -246,7 +247,7 @@ export default function DNAClient({ userName }: Props) {
 
 // ── Radar Chart (SVG) ──
 
-function RadarChart({ scores }: { scores: number[] }) {
+function RadarChart({ scores, labels }: { scores: number[]; labels: string[] }) {
   const cx = 120, cy = 120, maxR = 90;
   const n = 5;
   const angleStep = (2 * Math.PI) / n;
@@ -264,39 +265,23 @@ function RadarChart({ scores }: { scores: number[] }) {
 
   return (
     <svg width="240" height="240" viewBox="0 0 240 240">
-      {/* Grid */}
       {gridLevels.map((level) => {
         const pts = Array.from({ length: n }, (_, i) => point(i, level));
         const path = pts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ') + ' Z';
         return <path key={level} d={path} fill="none" stroke="#1e2a3a" strokeWidth={level === 5 ? 1.5 : 0.5} />;
       })}
-
-      {/* Axes */}
       {Array.from({ length: n }, (_, i) => {
         const p = point(i, 5);
         return <line key={i} x1={cx} y1={cy} x2={p.x} y2={p.y} stroke="#1e2a3a" strokeWidth={0.5} />;
       })}
-
-      {/* Data polygon */}
       <path d={dataPath} fill="#10b98125" stroke="#10b981" strokeWidth={2} />
-
-      {/* Data points */}
       {dataPoints.map((p, i) => (
         <circle key={i} cx={p.x} cy={p.y} r={4} fill={TRAIT_COLORS[i]} />
       ))}
-
-      {/* Labels */}
-      {TRAIT_LABELS.map((label, i) => {
+      {labels.map((label, i) => {
         const p = point(i, 6.2);
         return (
-          <text
-            key={label}
-            x={p.x}
-            y={p.y}
-            textAnchor="middle"
-            dominantBaseline="middle"
-            className="text-[11px] fill-text-muted"
-          >
+          <text key={label} x={p.x} y={p.y} textAnchor="middle" dominantBaseline="middle" className="text-[11px] fill-text-muted">
             {label}
           </text>
         );
@@ -314,10 +299,11 @@ function MiniStat({ label, value, color }: { label: string; value: string; color
   );
 }
 
-function ShareButton({ targetRef, filename, label }: {
+function ShareButton({ targetRef, filename, label, savingLabel }: {
   targetRef: React.RefObject<HTMLDivElement | null>;
   filename: string;
   label: string;
+  savingLabel: string;
 }) {
   const [saving, setSaving] = useState(false);
 
@@ -340,7 +326,7 @@ function ShareButton({ targetRef, filename, label }: {
       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
       </svg>
-      {saving ? 'Saving...' : label}
+      {saving ? savingLabel : label}
     </button>
   );
 }

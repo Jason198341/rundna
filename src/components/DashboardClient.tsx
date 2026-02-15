@@ -2,19 +2,21 @@
 
 import { useState, useEffect } from 'react';
 import type { EnrichedRunData } from '@/lib/strava';
+import { t } from '@/lib/i18n';
+import { useLang } from '@/lib/useLang';
 
 interface Props {
   userName: string;
 }
 
 export default function DashboardClient({ userName }: Props) {
+  const [lang] = useLang();
   const [data, setData] = useState<EnrichedRunData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
-    // Animated progress bar
     const interval = setInterval(() => {
       setProgress((p) => Math.min(p + Math.random() * 15, 90));
     }, 200);
@@ -41,8 +43,8 @@ export default function DashboardClient({ userName }: Props) {
     return (
       <div className="flex flex-col items-center justify-center py-32">
         <div className="text-5xl mb-6 animate-bounce">🏃</div>
-        <p className="text-lg font-semibold mb-2">Analyzing your runs...</p>
-        <p className="text-sm text-text-muted mb-6">Fetching data from Strava</p>
+        <p className="text-lg font-semibold mb-2">{t('dash.loading', lang)}</p>
+        <p className="text-sm text-text-muted mb-6">{t('dash.loadingSub', lang)}</p>
         <div className="w-64 h-2 rounded-full bg-surface overflow-hidden">
           <div
             className="h-full rounded-full bg-primary transition-all duration-300"
@@ -57,13 +59,13 @@ export default function DashboardClient({ userName }: Props) {
   if (error) {
     return (
       <div className="text-center py-32">
-        <p className="text-danger text-lg mb-2">Failed to load data</p>
+        <p className="text-danger text-lg mb-2">{t('common.error', lang)}</p>
         <p className="text-text-muted text-sm mb-4">{error}</p>
         <button
           onClick={() => window.location.reload()}
           className="px-4 py-2 rounded-lg bg-primary text-white text-sm font-medium"
         >
-          Retry
+          {t('common.retry', lang)}
         </button>
       </div>
     );
@@ -73,10 +75,8 @@ export default function DashboardClient({ userName }: Props) {
     return (
       <div className="text-center py-32">
         <p className="text-2xl mb-2">🏃‍♂️</p>
-        <p className="text-lg font-semibold">No runs found</p>
-        <p className="text-sm text-text-muted mt-2">
-          Start running with Strava and come back to see your DNA!
-        </p>
+        <p className="text-lg font-semibold">{t('common.noRuns', lang)}</p>
+        <p className="text-sm text-text-muted mt-2">{t('dash.noRunsSub', lang)}</p>
       </div>
     );
   }
@@ -88,23 +88,23 @@ export default function DashboardClient({ userName }: Props) {
       {/* Welcome */}
       <div className="mb-8">
         <h1 className="text-2xl sm:text-3xl font-bold">
-          Welcome back, {userName.split(' ')[0]}
+          {t('dash.welcome', lang)} {userName.split(' ')[0]}
         </h1>
-        <p className="text-text-muted mt-1">Here&apos;s your running overview</p>
+        <p className="text-text-muted mt-1">{t('dash.overview', lang)}</p>
       </div>
 
       {/* Stats overview */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
-        <StatCard label="Total Runs" value={stats.totalRuns.toString()} />
-        <StatCard label="Total Distance" value={`${stats.totalDistance} km`} />
-        <StatCard label="Avg Pace" value={stats.avgPace} />
-        <StatCard label="Locations" value={data.locations.length.toString()} />
+        <StatCard label={t('dash.totalRuns', lang)} value={stats.totalRuns.toString()} />
+        <StatCard label={t('dash.totalDist', lang)} value={`${stats.totalDistance} km`} />
+        <StatCard label={t('dash.avgPace', lang)} value={stats.avgPace} />
+        <StatCard label={t('dash.locations', lang)} value={data.locations.length.toString()} />
       </div>
 
       {/* Personal Records */}
       {prs.length > 0 && (
         <div className="mb-8">
-          <h2 className="text-lg font-semibold mb-4">Personal Records</h2>
+          <h2 className="text-lg font-semibold mb-4">{t('dash.prs', lang)}</h2>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {prs.map((pr) => (
               <div key={pr.label} className="rounded-xl border border-border bg-surface p-4">
@@ -117,47 +117,23 @@ export default function DashboardClient({ userName }: Props) {
         </div>
       )}
 
-      {/* Feature Cards — coming soon */}
+      {/* Feature Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
-        <FeatureCard
-          icon="🧬"
-          title="Your Running DNA"
-          desc="Discover your 5-axis runner personality"
-          href="/dna"
-          color="primary"
-        />
-        <FeatureCard
-          icon="🤖"
-          title="AI Coach"
-          desc="Chat with your personal running coach"
-          href="/coach"
-          color="accent"
-        />
-        <FeatureCard
-          icon="🏁"
-          title="Race Planner"
-          desc="Get an AI-generated training plan"
-          href="/planner"
-          color="warm"
-        />
-        <FeatureCard
-          icon="📊"
-          title="Weekly Report"
-          desc="Your shareable weekly running card"
-          href="/report"
-          color="primary"
-        />
+        <FeatureCard icon="🧬" title={t('dash.dna', lang)} desc={t('dash.dnaDesc', lang)} href="/dna" color="primary" />
+        <FeatureCard icon="🤖" title={t('dash.coach', lang)} desc={t('dash.coachDesc', lang)} href="/coach" color="accent" />
+        <FeatureCard icon="🏁" title={t('dash.planner', lang)} desc={t('dash.plannerDesc', lang)} href="/planner" color="warm" />
+        <FeatureCard icon="📊" title={t('dash.report', lang)} desc={t('dash.reportDesc', lang)} href="/report" color="primary" />
       </div>
 
       {/* Recent Activities */}
       <div>
-        <h2 className="text-lg font-semibold mb-4">Recent Runs</h2>
+        <h2 className="text-lg font-semibold mb-4">{t('dash.recent', lang)}</h2>
         <div className="rounded-xl border border-border bg-surface overflow-hidden">
           <div className="grid grid-cols-[1fr_auto_auto_auto] gap-3 px-4 py-2.5 border-b border-border text-xs font-medium text-text-muted uppercase tracking-wider">
-            <span>Activity</span>
-            <span className="w-20 text-right">Distance</span>
-            <span className="w-20 text-right hidden sm:block">Pace</span>
-            <span className="w-20 text-right">Time</span>
+            <span>{t('dash.activity', lang)}</span>
+            <span className="w-20 text-right">{t('dash.distance', lang)}</span>
+            <span className="w-20 text-right hidden sm:block">{t('dash.pace', lang)}</span>
+            <span className="w-20 text-right">{t('dash.time', lang)}</span>
           </div>
           {runs.slice(0, 15).map((r, i) => (
             <div

@@ -169,7 +169,7 @@ export const PRESETS: Preset[] = [
 ];
 
 // ── Skins ──
-export type SkinId = 'dark-runner' | 'dawn-patrol' | 'ocean-mile' | 'lava-flow' | 'trail-spirit' | 'ice-breaker';
+export type SkinId = 'fresh-start' | 'dark-runner' | 'dawn-patrol' | 'ocean-mile' | 'lava-flow' | 'trail-spirit' | 'ice-breaker';
 
 // Full color palette matching every CSS variable in globals.css
 export interface SkinColors {
@@ -193,15 +193,31 @@ export interface Skin {
   id: SkinId;
   titleKey: string;
   icon: string;
+  colorScheme: 'light' | 'dark';
   colors: SkinColors;
   preview: string[]; // 6 color dots for the selector
 }
 
 export const SKINS: Skin[] = [
   {
+    id: 'fresh-start',
+    titleKey: 'skin.freshStart',
+    icon: '☀️',
+    colorScheme: 'light',
+    preview: ['#f8fafc', '#ffffff', '#10b981', '#0ea5e9', '#f59e0b', '#ef4444'],
+    colors: {
+      bg: '#f8fafc', surface: '#ffffff', 'surface-hover': '#f1f5f9', border: '#e2e8f0',
+      text: '#0f172a', 'text-muted': '#64748b',
+      primary: '#10b981', 'primary-hover': '#059669', 'primary-dim': '#10b98112',
+      accent: '#0ea5e9', 'accent-dim': '#0ea5e912',
+      warm: '#f59e0b', danger: '#ef4444', glow: '#10b98120',
+    },
+  },
+  {
     id: 'dark-runner',
     titleKey: 'skin.darkRunner',
     icon: '🌑',
+    colorScheme: 'dark',
     preview: ['#060a0e', '#0d1117', '#10b981', '#22d3ee', '#f59e0b', '#ef4444'],
     colors: {
       bg: '#060a0e', surface: '#0d1117', 'surface-hover': '#161b22', border: '#1e2a3a',
@@ -215,6 +231,7 @@ export const SKINS: Skin[] = [
     id: 'dawn-patrol',
     titleKey: 'skin.dawnPatrol',
     icon: '🌅',
+    colorScheme: 'dark',
     preview: ['#0f0a1a', '#1a1028', '#f97316', '#a855f7', '#fbbf24', '#ef4444'],
     colors: {
       bg: '#0f0a1a', surface: '#1a1028', 'surface-hover': '#251840', border: '#2d1f4e',
@@ -228,6 +245,7 @@ export const SKINS: Skin[] = [
     id: 'ocean-mile',
     titleKey: 'skin.oceanMile',
     icon: '🌊',
+    colorScheme: 'dark',
     preview: ['#041318', '#0a1f2e', '#06b6d4', '#2dd4bf', '#38bdf8', '#ef4444'],
     colors: {
       bg: '#041318', surface: '#0a1f2e', 'surface-hover': '#0f2d42', border: '#153448',
@@ -241,6 +259,7 @@ export const SKINS: Skin[] = [
     id: 'lava-flow',
     titleKey: 'skin.lavaFlow',
     icon: '🔥',
+    colorScheme: 'dark',
     preview: ['#120808', '#1c0e0e', '#ef4444', '#f97316', '#fbbf24', '#dc2626'],
     colors: {
       bg: '#120808', surface: '#1c0e0e', 'surface-hover': '#2a1414', border: '#3a1a1a',
@@ -254,6 +273,7 @@ export const SKINS: Skin[] = [
     id: 'trail-spirit',
     titleKey: 'skin.trailSpirit',
     icon: '🌿',
+    colorScheme: 'dark',
     preview: ['#080e08', '#0e170e', '#22c55e', '#a3e635', '#84cc16', '#ef4444'],
     colors: {
       bg: '#080e08', surface: '#0e170e', 'surface-hover': '#163016', border: '#1e3a1e',
@@ -267,6 +287,7 @@ export const SKINS: Skin[] = [
     id: 'ice-breaker',
     titleKey: 'skin.iceBreaker',
     icon: '❄️',
+    colorScheme: 'dark',
     preview: ['#0a0e14', '#111827', '#93c5fd', '#c4b5fd', '#e5e7eb', '#f87171'],
     colors: {
       bg: '#0a0e14', surface: '#111827', 'surface-hover': '#1e293b', border: '#1f2937',

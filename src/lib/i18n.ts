@@ -279,6 +279,7 @@ const dict: Record<string, { en: string; ko: string }> = {
   'preset.custom': { en: 'Custom', ko: '커스텀' },
 
   // Skins
+  'skin.freshStart': { en: 'Fresh Start', ko: '프레시 스타트' },
   'skin.darkRunner': { en: 'Dark Runner', ko: '다크 러너' },
   'skin.dawnPatrol': { en: 'Dawn Patrol', ko: '새벽 순찰' },
   'skin.oceanMile': { en: 'Ocean Mile', ko: '오션 마일' },

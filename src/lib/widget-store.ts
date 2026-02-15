@@ -20,7 +20,7 @@ export interface WidgetPreferences {
 const DEFAULT_PREFS: WidgetPreferences = {
   version: 2,
   preset: 'beginner',
-  skin: 'dark-runner',
+  skin: 'fresh-start',
   enabledWidgets: ['stats-overview', 'coach-advice', 'todays-plan', 'weekly-challenge', 'recent-activities', 'feature-nav'],
   widgetOrder: ['stats-overview', 'todays-plan', 'coach-advice', 'weekly-challenge', 'feature-nav', 'recent-activities'],
   widgetSizes: {},
@@ -65,7 +65,7 @@ export function applyPreset(presetId: PresetId): WidgetPreferences {
   return prefs;
 }
 
-// ── Apply skin — sets ALL CSS variables for full theme change ──
+// ── Apply skin — sets ALL CSS variables + color-scheme for full theme change ──
 export function applySkin(skinId: SkinId): void {
   const skin = SKINS.find(s => s.id === skinId);
   if (!skin || typeof document === 'undefined') return;
@@ -73,6 +73,8 @@ export function applySkin(skinId: SkinId): void {
   for (const [key, value] of Object.entries(skin.colors)) {
     root.style.setProperty(`--color-${key}`, value);
   }
+  // Set color-scheme for native elements (scrollbars, inputs, etc.)
+  root.style.colorScheme = skin.colorScheme;
   const prefs = loadPreferences();
   prefs.skin = skinId;
   savePreferences(prefs);

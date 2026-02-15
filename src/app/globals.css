@@ -1,0 +1,86 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-bg: #060a0e;
+  --color-surface: #0d1117;
+  --color-surface-hover: #161b22;
+  --color-border: #1e2a3a;
+  --color-text: #e6edf3;
+  --color-text-muted: #7d8590;
+  --color-primary: #10b981;
+  --color-primary-hover: #34d399;
+  --color-primary-dim: #10b98120;
+  --color-accent: #22d3ee;
+  --color-accent-dim: #22d3ee20;
+  --color-warm: #f59e0b;
+  --color-danger: #ef4444;
+  --color-glow: #10b98140;
+  --color-strava: #fc4c02;
+
+  --font-sans: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+}
+
+html {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  scroll-behavior: smooth;
+  color-scheme: dark;
+}
+
+body {
+  min-height: 100dvh;
+}
+
+::selection {
+  background-color: var(--color-primary);
+  color: white;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Glow hover */
+.glow-hover {
+  transition: box-shadow 0.3s ease, border-color 0.3s ease;
+}
+.glow-hover:hover {
+  box-shadow: 0 0 30px var(--color-glow), 0 0 60px var(--color-glow);
+}
+
+/* Animations */
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.8; }
+}
+
+@keyframes dna-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .animate-fade-in-up {
+    animation: fade-in-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  .animate-pulse-glow {
+    animation: pulse-glow 3s ease-in-out infinite;
+  }
+  .animate-dna-spin {
+    animation: dna-spin 20s linear infinite;
+  }
+}
+
+.delay-1 { animation-delay: 0.1s; }
+.delay-2 { animation-delay: 0.2s; }
+.delay-3 { animation-delay: 0.3s; }
+.delay-4 { animation-delay: 0.4s; }
+.delay-5 { animation-delay: 0.5s; }

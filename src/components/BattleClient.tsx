@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import type { IntelligenceData, RunningPersonality } from '@/lib/strava-analytics';
-import { encodeDNA, decodeDNA } from '@/lib/strava-analytics';
+import { useState, useEffect, useMemo } from 'react';
+import type { IntelligenceData, RunningPersonality, CodexGroup } from '@/lib/strava-analytics';
+import { encodeDNA, decodeDNA, generateDNACodex } from '@/lib/strava-analytics';
 import { t } from '@/lib/i18n';
 import { useLang } from '@/lib/useLang';
 import AdBreak from '@/components/AdBreak';
@@ -405,6 +405,9 @@ export default function BattleClient() {
       {/* ── Inner Battle (shown when no rival) ── */}
       <AdBreak />
 
+      {/* ── DNA Codex ── */}
+      <DNACodex myCode={myCode} myType={personality.type} lang={lang} />
+
       {!rival && (
         <>
           <div className="rounded-2xl border border-warm/20 bg-surface p-5 mb-6">
@@ -448,6 +451,208 @@ export default function BattleClient() {
             </div>
           </div>
         </>
+      )}
+    </div>
+  );
+}
+
+// ── DNA Codex Component ─────────────────────────────────────
+
+const NOTABLE_CODES = [
+  { code: 'RD-55555', label: { en: 'The Perfect Runner', ko: '완벽한 러너' } },
+  { code: 'RD-11111', label: { en: 'The Fresh Start', ko: '새로운 시작' } },
+  { code: 'RD-51515', label: { en: 'Speed + Endurance', ko: '속도 + 지구력' } },
+  { code: 'RD-15151', label: { en: 'Consistency + Variety', ko: '일관성 + 다양성' } },
+  { code: 'RD-55111', label: { en: 'Discipline King', ko: '규율의 왕' } },
+  { code: 'RD-11551', label: { en: 'Distance Seeker', ko: '거리 추구자' } },
+  { code: 'RD-15515', label: { en: 'The Explorer', ko: '탐험가' } },
+  { code: 'RD-53535', label: { en: 'Balanced Power', ko: '균형 잡힌 힘' } },
+  { code: 'RD-12345', label: { en: 'The Gradient', ko: '그라디언트' } },
+  { code: 'RD-54321', label: { en: 'Reverse Gradient', ko: '역 그라디언트' } },
+  { code: 'RD-33333', label: { en: 'The Average', ko: '중간값' } },
+  { code: 'RD-55555', label: { en: 'MAX POWER', ko: '맥스 파워' } },
+];
+
+const TYPE_EMOJIS: Record<string, string> = {
+  'The Complete Runner': '🏆',
+  'The Rising Runner': '🌱',
+  'The Iron Racer': '🔥',
+  'The Mileage Machine': '⚙️',
+  'The Steady Sprinter': '💨',
+  'The Ultra Mind': '🧠',
+  'The Trail Blazer': '🌲',
+  'The Wandering Wolf': '🐺',
+  'The Marathon Monk': '🧘',
+  'The Global Runner': '🌍',
+  'The Routine Explorer': '🧭',
+  'The Consistent Cruiser': '🚀',
+  'The Speed Demon': '⚡',
+  'The Distance Seeker': '🏔️',
+  'The Explorer': '🗺️',
+  'The High Mileage Runner': '📈',
+};
+
+function DNACodex({ myCode, myType, lang }: { myCode: string; myType: string; lang: 'en' | 'ko' }) {
+  const [search, setSearch] = useState('');
+  const [expandedType, setExpandedType] = useState<string | null>(null);
+  const [showCodex, setShowCodex] = useState(false);
+
+  const codex = useMemo(() => generateDNACodex(), []);
+  const totalCodes = codex.reduce((s, g) => s + g.entries.length, 0);
+
+  // Search filter
+  const filteredCodex = useMemo(() => {
+    if (!search.trim()) return codex;
+    const q = search.trim().toUpperCase();
+    return codex
+      .map(g => ({
+        ...g,
+        entries: g.entries.filter(e =>
+          e.code.includes(q) || g.type.toUpperCase().includes(q)
+        ),
+      }))
+      .filter(g => g.entries.length > 0 || g.type.toUpperCase().includes(q));
+  }, [codex, search]);
+
+  // Notable codes with decoded info
+  const notableCodes = useMemo(() => {
+    const unique = new Map<string, typeof NOTABLE_CODES[0]>();
+    for (const n of NOTABLE_CODES) unique.set(n.code, n);
+    return Array.from(unique.values()).map(n => ({
+      ...n,
+      decoded: decodeDNA(n.code),
+    }));
+  }, []);
+
+  return (
+    <div className="rounded-2xl border border-primary/20 bg-surface p-5 mb-6">
+      <button
+        onClick={() => setShowCodex(!showCodex)}
+        className="w-full flex items-center justify-between"
+      >
+        <h2 className="text-sm font-bold uppercase tracking-wider text-primary flex items-center gap-2">
+          📖 {t('battle.codex', lang)}
+        </h2>
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] text-text-muted font-mono">{totalCodes} {t('battle.codes', lang)}</span>
+          <span className={`text-xs transition-transform ${showCodex ? 'rotate-180' : ''}`}>▼</span>
+        </div>
+      </button>
+
+      {showCodex && (
+        <div className="mt-4">
+          <p className="text-xs text-text-muted mb-4">{t('battle.codexDesc', lang)}</p>
+
+          {/* Search */}
+          <input
+            type="text"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder={t('battle.search', lang)}
+            className="w-full px-3 py-2 rounded-lg bg-bg border border-border text-sm mb-4 focus:outline-none focus:border-primary"
+          />
+
+          {/* Notable Codes */}
+          {!search && (
+            <div className="mb-5">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-accent mb-3">
+                ✨ {t('battle.notable', lang)}
+              </h3>
+              <div className="grid grid-cols-2 gap-2">
+                {notableCodes.slice(0, 8).map(n => {
+                  const isMine = n.code === myCode;
+                  return (
+                    <div
+                      key={n.code + n.label.en}
+                      className={`p-2 rounded-lg text-center ${isMine ? 'bg-primary/10 border border-primary/30' : 'bg-bg'}`}
+                    >
+                      <p className={`text-xs font-mono font-bold ${isMine ? 'text-primary' : 'text-text'}`}>{n.code}</p>
+                      <p className="text-[10px] text-text-muted">{n.label[lang]}</p>
+                      {n.decoded && <p className="text-[9px] text-accent mt-0.5">{n.decoded.type}</p>}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Personality Type Groups */}
+          <h3 className="text-xs font-bold uppercase tracking-wider text-text-muted mb-3">
+            {lang === 'ko' ? '성격 유형별' : 'By Personality Type'} ({filteredCodex.length})
+          </h3>
+          <div className="space-y-2">
+            {filteredCodex.map(group => {
+              const isMyType = group.type === myType;
+              const isExpanded = expandedType === group.type;
+              const emoji = TYPE_EMOJIS[group.type] || '🏃';
+              const displayEntries = isExpanded ? group.entries.slice(0, 50) : [];
+
+              return (
+                <div key={group.type} className={`rounded-xl overflow-hidden ${isMyType ? 'border border-primary/30' : 'border border-border/50'}`}>
+                  <button
+                    onClick={() => setExpandedType(isExpanded ? null : group.type)}
+                    className={`w-full flex items-center gap-3 p-3 text-left transition-colors ${isMyType ? 'bg-primary/5' : 'bg-bg hover:bg-surface-hover'}`}
+                  >
+                    <span className="text-xl">{emoji}</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-bold truncate">{group.type}</span>
+                        {isMyType && (
+                          <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-primary/20 text-primary font-bold shrink-0">
+                            {t('battle.yourType', lang)}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[10px] text-text-muted truncate">{group.description}</p>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className="text-xs font-mono font-bold text-primary">{group.entries.length}</p>
+                      <p className="text-[9px] text-text-muted">{t('battle.codes', lang)}</p>
+                    </div>
+                    <span className={`text-xs transition-transform ${isExpanded ? 'rotate-180' : ''}`}>▼</span>
+                  </button>
+
+                  {isExpanded && (
+                    <div className="border-t border-border/50 bg-bg p-3">
+                      <div className="flex items-center justify-between text-[10px] text-text-muted mb-2">
+                        <span>{t('battle.percentileRange', lang)}: {group.minPercentile}% — {group.maxPercentile}%</span>
+                        <span>{t('battle.topCode', lang)}: {group.entries[0]?.code}</span>
+                      </div>
+                      <div className="grid grid-cols-3 sm:grid-cols-4 gap-1 max-h-[200px] overflow-y-auto">
+                        {displayEntries.map(entry => {
+                          const isMine = entry.code === myCode;
+                          return (
+                            <div
+                              key={entry.code}
+                              className={`text-center py-1.5 px-1 rounded text-xs font-mono ${isMine ? 'bg-primary/15 text-primary font-bold' : 'bg-surface text-text-muted'}`}
+                            >
+                              {entry.code}
+                              <span className="text-[8px] block opacity-60">{entry.total}pt</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                      {group.entries.length > 50 && (
+                        <p className="text-[10px] text-text-muted text-center mt-2">
+                          +{group.entries.length - 50} {lang === 'ko' ? '더 있음' : 'more'}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Stats footer */}
+          <div className="mt-4 pt-3 border-t border-border text-center">
+            <p className="text-[10px] text-text-muted">
+              {lang === 'ko'
+                ? `5개 특성 × 5단계 = ${totalCodes}개 고유 코드 · ${codex.length}개 성격 유형`
+                : `5 traits × 5 levels = ${totalCodes} unique codes · ${codex.length} personality types`}
+            </p>
+          </div>
+        </div>
       )}
     </div>
   );

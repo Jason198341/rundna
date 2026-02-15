@@ -933,6 +933,67 @@ export function decodeDNA(code: string): (RunningPersonality & { code: string })
 }
 
 // ============================================================
+// DNA Codex — all 3,125 possible codes grouped by personality
+// ============================================================
+
+export interface CodexEntry {
+  code: string;
+  scores: RunningPersonality['scores'];
+  total: number;
+}
+
+export interface CodexGroup {
+  type: string;
+  description: string;
+  entries: CodexEntry[];
+  minPercentile: number;
+  maxPercentile: number;
+}
+
+let _codexCache: CodexGroup[] | null = null;
+
+/** Generate all 3,125 DNA codes grouped by personality type. Cached after first call. */
+export function generateDNACodex(): CodexGroup[] {
+  if (_codexCache) return _codexCache;
+
+  const groupMap = new Map<string, { description: string; entries: CodexEntry[]; percentiles: number[] }>();
+
+  for (let c = 1; c <= 5; c++) {
+    for (let s = 1; s <= 5; s++) {
+      for (let e = 1; e <= 5; e++) {
+        for (let v = 1; v <= 5; v++) {
+          for (let vol = 1; vol <= 5; vol++) {
+            const scores = { consistency: c, speed: s, endurance: e, variety: v, volume: vol };
+            const { type, description, percentile } = classifyPersonality(scores);
+            const code = `RD-${c}${s}${e}${v}${vol}`;
+            const total = c + s + e + v + vol;
+
+            if (!groupMap.has(type)) {
+              groupMap.set(type, { description, entries: [], percentiles: [] });
+            }
+            const g = groupMap.get(type)!;
+            g.entries.push({ code, scores, total });
+            g.percentiles.push(percentile);
+          }
+        }
+      }
+    }
+  }
+
+  _codexCache = Array.from(groupMap.entries())
+    .map(([type, { description, entries, percentiles }]) => ({
+      type,
+      description,
+      entries: entries.sort((a, b) => b.total - a.total),
+      minPercentile: Math.min(...percentiles),
+      maxPercentile: Math.max(...percentiles),
+    }))
+    .sort((a, b) => b.entries.length - a.entries.length);
+
+  return _codexCache;
+}
+
+// ============================================================
 // Main: compute all intelligence
 // ============================================================
 

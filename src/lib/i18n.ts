@@ -223,7 +223,6 @@ const dict: Record<string, { en: string; ko: string }> = {
   'widget.runHeatmap': { en: 'Run Heatmap', ko: '러닝 히트맵' },
 
   // Level 1: Run Film
-  'widget.runFilm': { en: 'Run Film', ko: '런 필름' },
   'widget.ghostComparison': { en: 'Ghost Race', ko: '고스트 레이스' },
   'widget.monthlyHighlight': { en: 'Monthly Highlight', ko: '월간 하이라이트' },
   'film.selectRun': { en: 'Select a run to replay', ko: '리플레이할 러닝 선택' },
@@ -233,7 +232,6 @@ const dict: Record<string, { en: string; ko: string }> = {
   'film.shareFilm': { en: 'Share Run Film', ko: '런 필름 공유' },
 
   // Level 2: Segment Sniper
-  'widget.hiddenCrowns': { en: 'Hidden Crowns', ko: '숨겨진 왕관' },
   'widget.snipeMissions': { en: 'Snipe Missions', ko: '스나이프 미션' },
   'widget.segmentXray': { en: 'Segment X-Ray', ko: '세그먼트 엑스레이' },
   'segment.crown': { en: 'Crown', ko: '왕관' },
@@ -270,6 +268,16 @@ const dict: Record<string, { en: string; ko: string }> = {
   'battle.overall': { en: 'Overall', ko: '종합' },
   'battle.rivalDNA': { en: 'Rival DNA', ko: '상대 DNA' },
   'battle.reset': { en: 'New Battle', ko: '새 대전' },
+  'battle.codex': { en: 'DNA Codex', ko: 'DNA 도감' },
+  'battle.codexDesc': { en: 'All 3,125 possible Running DNA codes', ko: '가능한 모든 3,125개 러닝 DNA 코드' },
+  'battle.codes': { en: 'codes', ko: '코드' },
+  'battle.yourType': { en: 'Your type!', ko: '당신의 타입!' },
+  'battle.topCode': { en: 'Top', ko: '최고' },
+  'battle.percentileRange': { en: 'Percentile', ko: '백분위' },
+  'battle.search': { en: 'Search code or type...', ko: '코드 또는 타입 검색...' },
+  'battle.notable': { en: 'Notable Codes', ko: '특별한 코드' },
+  'battle.showAll': { en: 'Show all', ko: '전체 보기' },
+  'battle.collapse': { en: 'Collapse', ko: '접기' },
 
   // Level 5: Digital Twin
   'widget.raceSimulation': { en: 'Race Simulation', ko: '레이스 시뮬레이션' },

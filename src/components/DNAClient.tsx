@@ -5,7 +5,6 @@ import type { IntelligenceData } from '@/lib/strava-analytics';
 import { downloadCard } from '@/lib/share';
 
 interface Props {
-  userId: string;
   userName: string;
 }
 

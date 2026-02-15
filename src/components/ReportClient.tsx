@@ -6,7 +6,6 @@ import type { EnrichedRunData } from '@/lib/strava';
 import { downloadCard } from '@/lib/share';
 
 interface Props {
-  userId: string;
   userName: string;
   avatarUrl: string | null;
 }

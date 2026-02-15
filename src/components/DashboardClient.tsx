@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import type { EnrichedRunData } from '@/lib/strava';
 
 interface Props {
-  userId: string;
   userName: string;
 }
 

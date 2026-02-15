@@ -32,7 +32,7 @@ export default async function CoachPage() {
         </div>
       </nav>
       <main className="pt-14 h-screen flex flex-col">
-        <CoachClient userId={user.id} userName={user.name} />
+        <CoachClient userName={user.name} />
       </main>
     </div>
   );

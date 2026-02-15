@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
   }
 
   const { messages } = await request.json();
-  if (!messages || !Array.isArray(messages)) {
+  if (!messages || !Array.isArray(messages) || messages.length > 50) {
     return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
   }
 

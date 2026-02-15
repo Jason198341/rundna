@@ -32,7 +32,7 @@ export default async function ReportPage() {
         </div>
       </nav>
       <main className="pt-14 px-6 py-8 max-w-3xl mx-auto">
-        <ReportClient userId={user.id} userName={user.name} avatarUrl={user.avatar_url} />
+        <ReportClient userName={user.name} avatarUrl={user.avatar_url} />
       </main>
     </div>
   );

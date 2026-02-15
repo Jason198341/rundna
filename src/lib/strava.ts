@@ -127,7 +127,8 @@ async function refreshAccessToken(userId: string): Promise<string> {
   // Check if current token is still valid
   if (user.strava_token_expires_at && Date.now() / 1000 < user.strava_token_expires_at - 60) {
     const { data: fresh } = await db.from('users').select('strava_access_token').eq('id', userId).single();
-    return fresh!.strava_access_token;
+    if (!fresh) throw new Error('User token not found');
+    return fresh.strava_access_token;
   }
 
   // Refresh
@@ -159,13 +160,15 @@ async function refreshAccessToken(userId: string): Promise<string> {
 async function fetchAllActivities(token: string): Promise<StravaActivity[]> {
   const all: StravaActivity[] = [];
   let page = 1;
-  while (true) {
+  const MAX_PAGES = 50; // Safety limit: 50 pages × 200 = 10,000 activities
+  while (page <= MAX_PAGES) {
     const res = await fetch(
       `https://www.strava.com/api/v3/athlete/activities?per_page=200&page=${page}`,
       { headers: { Authorization: `Bearer ${token}` } },
     );
     if (!res.ok) throw new Error(`Strava API error: ${res.status}`);
     const batch: StravaActivity[] = await res.json();
+    if (!Array.isArray(batch)) break;
     all.push(...batch);
     if (batch.length < 200) break;
     page++;

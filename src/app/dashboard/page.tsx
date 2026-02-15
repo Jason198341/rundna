@@ -43,7 +43,7 @@ export default async function DashboardPage() {
 
       <main className="pt-20 pb-12 px-6">
         <div className="mx-auto max-w-5xl">
-          <DashboardClient userId={user.id} userName={user.name} />
+          <DashboardClient userName={user.name} />
         </div>
       </main>
     </div>

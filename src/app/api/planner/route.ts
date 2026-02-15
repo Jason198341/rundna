@@ -14,6 +14,11 @@ export async function POST(request: NextRequest) {
   if (!raceDistance || !raceDate) {
     return NextResponse.json({ error: 'Missing race info' }, { status: 400 });
   }
+  // Validate race date is at least 7 days in the future
+  const raceMs = new Date(raceDate).getTime();
+  if (isNaN(raceMs) || raceMs < Date.now() + 7 * 86400000) {
+    return NextResponse.json({ error: 'Race date must be at least 7 days from now' }, { status: 400 });
+  }
 
   // Check daily limit
   const usage = await checkAndUse(userId, 'planner');

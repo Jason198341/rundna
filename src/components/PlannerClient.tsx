@@ -4,7 +4,6 @@ import { useState, useRef, useEffect } from 'react';
 import { downloadCard } from '@/lib/share';
 
 interface Props {
-  userId: string;
   userName: string;
 }
 

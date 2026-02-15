@@ -33,7 +33,7 @@ export default async function DNAPage() {
       </nav>
       <main className="pt-20 pb-12 px-6">
         <div className="mx-auto max-w-3xl">
-          <DNAClient userId={user.id} userName={user.name} />
+          <DNAClient userName={user.name} />
         </div>
       </main>
     </div>

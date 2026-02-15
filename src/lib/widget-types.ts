@@ -33,11 +33,9 @@ export type WidgetId =
   | 'route-familiarity'
   | 'milestones'
   // Level 1: Run Film
-  | 'run-film'
   | 'ghost-comparison'
   | 'monthly-highlight'
   // Level 2: Segment Sniper
-  | 'hidden-crowns'
   | 'snipe-missions'
   | 'segment-xray'
   // Level 3: Shoe Graveyard
@@ -88,12 +86,10 @@ export const WIDGET_REGISTRY: WidgetDef[] = [
   { id: 'milestones', titleKey: 'widget.milestones', icon: '🎯', category: 'core', sizes: ['M', 'L'], defaultSize: 'M', dataDeps: ['intelligence'], tier: 'free' },
 
   // ── Level 1: Run Film ──
-  { id: 'run-film', titleKey: 'widget.runFilm', icon: '🎬', category: 'film', sizes: ['L', 'XL'], defaultSize: 'L', dataDeps: ['streams'], tier: 'free' },
   { id: 'ghost-comparison', titleKey: 'widget.ghostComparison', icon: '👻', category: 'film', sizes: ['L'], defaultSize: 'L', dataDeps: ['streams'], tier: 'pro' },
   { id: 'monthly-highlight', titleKey: 'widget.monthlyHighlight', icon: '🎞️', category: 'film', sizes: ['M', 'L'], defaultSize: 'M', dataDeps: ['runData', 'streams'], tier: 'free' },
 
   // ── Level 2: Segment Sniper ──
-  { id: 'hidden-crowns', titleKey: 'widget.hiddenCrowns', icon: '👑', category: 'segment', sizes: ['M', 'L'], defaultSize: 'L', dataDeps: ['segments'], tier: 'free' },
   { id: 'snipe-missions', titleKey: 'widget.snipeMissions', icon: '🎯', category: 'segment', sizes: ['M', 'L'], defaultSize: 'M', dataDeps: ['segments'], tier: 'free' },
   { id: 'segment-xray', titleKey: 'widget.segmentXray', icon: '📉', category: 'segment', sizes: ['L', 'XL'], defaultSize: 'L', dataDeps: ['segments', 'streams'], tier: 'pro' },
 
@@ -136,14 +132,22 @@ export const PRESETS: Preset[] = [
     titleKey: 'preset.speedDemon',
     icon: '⚡',
     description: 'Optimized for speed-focused runners',
-    widgets: ['stats-overview', 'training-load', 'pace-trend', 'race-predictions', 'run-film', 'hidden-crowns', 'todays-plan', 'pacing-card'],
+    widgets: [
+      'stats-overview', 'pace-trend', 'training-load', 'race-predictions',
+      'personal-records', 'conditions', 'pacing-card', 'todays-plan',
+      'snipe-missions', 'dna-battle',
+    ],
   },
   {
     id: 'ultra-beast',
     titleKey: 'preset.ultraBeast',
     icon: '🦁',
     description: 'Built for distance and volume chasers',
-    widgets: ['stats-overview', 'training-load', 'recovery-stats', 'year-comparison', 'shoe-health', 'route-familiarity', 'milestones', 'todays-plan'],
+    widgets: [
+      'stats-overview', 'year-comparison', 'training-load', 'recovery-stats',
+      'distance-distribution', 'milestones', 'shoe-health', 'route-familiarity',
+      'run-heatmap', 'todays-plan',
+    ],
   },
   {
     id: 'data-nerd',
@@ -151,10 +155,15 @@ export const PRESETS: Preset[] = [
     icon: '📊',
     description: 'All widgets on. Maximum data.',
     widgets: [
-      'stats-overview', 'personal-records', 'dna-radar', 'trait-bars', 'training-load',
-      'race-predictions', 'recovery-stats', 'pace-trend', 'conditions', 'year-comparison',
-      'distance-distribution', 'route-familiarity', 'milestones', 'coach-advice', 'todays-plan',
-      'run-film', 'hidden-crowns', 'shoe-health', 'weekly-challenge', 'pacing-card',
+      'stats-overview', 'personal-records', 'recent-activities',
+      'dna-radar', 'trait-bars', 'training-load', 'recovery-stats',
+      'race-predictions', 'pace-trend', 'conditions', 'year-comparison',
+      'distance-distribution', 'route-familiarity', 'milestones',
+      'coach-advice', 'todays-plan', 'run-heatmap',
+      'shoe-health', 'shoe-graveyard', 'weekly-challenge',
+      'dna-battle', 'pacing-card', 'snipe-missions',
+      'ghost-comparison', 'monthly-highlight', 'segment-xray',
+      'training-twin', 'race-simulation', 'what-if',
     ],
   },
   {
@@ -162,7 +171,10 @@ export const PRESETS: Preset[] = [
     titleKey: 'preset.beginner',
     icon: '🌱',
     description: 'Simple view for new runners',
-    widgets: ['stats-overview', 'coach-advice', 'todays-plan', 'weekly-challenge', 'recent-activities'],
+    widgets: [
+      'stats-overview', 'coach-advice', 'todays-plan', 'recent-activities',
+      'weekly-challenge', 'milestones', 'recovery-stats',
+    ],
   },
   {
     id: 'custom',

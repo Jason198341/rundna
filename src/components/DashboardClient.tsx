@@ -469,16 +469,12 @@ function renderWidget(id: WidgetId, data: DataSources, lang: 'en' | 'ko'): React
       return runData ? <RunHeatmap data={runData} /> : null;
 
     // ── Level 1: Run Film ──
-    case 'run-film':
-      return <RunFilmWidget data={runData} lang={lang} />;
     case 'ghost-comparison':
       return <GhostComparisonWidget lang={lang} />;
     case 'monthly-highlight':
       return runData ? <MonthlyHighlightWidget data={runData} lang={lang} /> : null;
 
     // ── Level 2: Segment Sniper ──
-    case 'hidden-crowns':
-      return <HiddenCrownsWidget lang={lang} />;
     case 'snipe-missions':
       return <SnipeMissionsWidget lang={lang} />;
     case 'segment-xray':
@@ -525,6 +521,28 @@ function renderExpandedWidget(id: WidgetId, data: DataSources, lang: 'en' | 'ko'
       return intelligence ? <YearComparisonExpanded intel={intelligence} lang={lang} /> : null;
     case 'run-heatmap':
       return runData ? <RunHeatmapExpanded data={runData} lang={lang} /> : null;
+    case 'personal-records':
+      return runData ? <PersonalRecordsExpanded data={runData} lang={lang} /> : null;
+    case 'trait-bars':
+      return intelligence ? <TraitBarsExpanded intel={intelligence} lang={lang} /> : null;
+    case 'training-load':
+      return intelligence ? <TrainingLoadExpanded intel={intelligence} lang={lang} /> : null;
+    case 'race-predictions':
+      return intelligence ? <RacePredictionsExpanded intel={intelligence} lang={lang} /> : null;
+    case 'recovery-stats':
+      return intelligence ? <RecoveryExpanded intel={intelligence} lang={lang} /> : null;
+    case 'conditions':
+      return intelligence ? <ConditionsExpanded intel={intelligence} lang={lang} /> : null;
+    case 'distance-distribution':
+      return intelligence ? <DistributionExpanded intel={intelligence} lang={lang} /> : null;
+    case 'route-familiarity':
+      return intelligence ? <RouteFamiliarityExpanded intel={intelligence} lang={lang} /> : null;
+    case 'milestones':
+      return intelligence ? <MilestonesExpanded intel={intelligence} lang={lang} /> : null;
+    case 'todays-plan':
+      return intelligence ? <TodaysPlanExpanded intel={intelligence} lang={lang} /> : null;
+    case 'coach-advice':
+      return intelligence ? <CoachAdviceExpanded intel={intelligence} lang={lang} /> : null;
     default:
       return null;
   }
@@ -533,32 +551,6 @@ function renderExpandedWidget(id: WidgetId, data: DataSources, lang: 'en' | 'ko'
 // ═══════════════════════════════════════════════
 // Level 1-5 Widgets (previously Coming Soon)
 // ═══════════════════════════════════════════════
-
-function RunFilmWidget({ data, lang }: { data: EnrichedRunData | null; lang: 'en' | 'ko' }) {
-  const recent = data?.runs.slice(0, 5) ?? [];
-  return (
-    <div>
-      <p className="text-xs text-text-muted mb-3">{lang === 'ko' ? '최근 런 필름' : 'Recent run films'}</p>
-      {recent.length > 0 ? recent.map((r) => (
-        <div key={r.id} className="flex items-center justify-between py-1.5 text-sm">
-          <div className="flex items-center gap-2 min-w-0">
-            <span className="text-base">{r.locationFlag || '🏃'}</span>
-            <span className="truncate">{r.name}</span>
-          </div>
-          <div className="flex items-center gap-2 shrink-0 ml-2">
-            <span className="text-xs text-text-muted font-mono">{r.distanceKm.toFixed(1)} km</span>
-            <span className="text-xs text-accent font-mono">{r.pace}</span>
-          </div>
-        </div>
-      )) : (
-        <p className="text-sm text-text-muted">{lang === 'ko' ? '러닝 데이터 없음' : 'No run data'}</p>
-      )}
-      <a href="/film" className="inline-block mt-3 text-xs text-primary hover:text-primary-hover transition-colors">
-        {lang === 'ko' ? '런 필름 보기' : 'View Run Film'} →
-      </a>
-    </div>
-  );
-}
 
 function GhostComparisonWidget({ lang }: { lang: 'en' | 'ko' }) {
   return (
@@ -597,31 +589,6 @@ function MonthlyHighlightWidget({ data, lang }: { data: EnrichedRunData; lang: '
       ) : (
         <p className="text-sm text-text-muted">{lang === 'ko' ? '이번 달 러닝 없음' : 'No runs this month'}</p>
       )}
-    </div>
-  );
-}
-
-function HiddenCrownsWidget({ lang }: { lang: 'en' | 'ko' }) {
-  const [segments, setSegments] = useState<Array<{ segmentName: string; prRank: number | null; athleteCount: number }>>([]);
-  useEffect(() => {
-    fetch('/api/strava/segments').then(r => r.ok ? r.json() : []).then(d => {
-      if (Array.isArray(d)) setSegments(d.filter((s: any) => s.prRank === 1).slice(0, 5));
-    }).catch(() => {});
-  }, []);
-  return (
-    <div>
-      <p className="text-xs text-text-muted mb-2">{lang === 'ko' ? '나의 왕관 세그먼트' : 'Your Crown Segments'}</p>
-      {segments.length > 0 ? segments.map((s, i) => (
-        <div key={i} className="flex items-center justify-between py-1.5">
-          <span className="text-sm truncate flex-1">👑 {s.segmentName}</span>
-          <span className="text-[10px] text-text-muted">{s.athleteCount} athletes</span>
-        </div>
-      )) : (
-        <p className="text-sm text-text-muted">{lang === 'ko' ? '세그먼트 데이터 로딩...' : 'Loading segments...'}</p>
-      )}
-      <a href="/segments" className="inline-block mt-3 text-xs text-primary hover:text-primary-hover transition-colors">
-        {lang === 'ko' ? '세그먼트 보기' : 'View Segments'} →
-      </a>
     </div>
   );
 }
@@ -988,10 +955,9 @@ function YearComparisonExpanded({ intel, lang }: { intel: IntelligenceData; lang
 }
 
 function RunHeatmapExpanded({ data, lang }: { data: EnrichedRunData; lang: 'en' | 'ko' }) {
-  // Monthly summary
   const monthMap = new Map<string, { km: number; count: number }>();
   for (const run of data.runs) {
-    const key = run.date.slice(0, 7); // YYYY-MM
+    const key = run.date.slice(0, 7);
     const prev = monthMap.get(key) || { km: 0, count: 0 };
     monthMap.set(key, { km: prev.km + run.distanceKm, count: prev.count + 1 });
   }
@@ -1011,6 +977,391 @@ function RunHeatmapExpanded({ data, lang }: { data: EnrichedRunData; lang: 'en' 
             </div>
           </div>
         ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Personal Records Expanded ──
+function PersonalRecordsExpanded({ data, lang }: { data: EnrichedRunData; lang: 'en' | 'ko' }) {
+  const distances = [1, 3, 5, 10, 21.1, 42.2];
+  const labels: Record<number, string> = { 1: '1K', 3: '3K', 5: '5K', 10: '10K', 21.1: 'Half', 42.2: 'Marathon' };
+  const prs = distances.map(d => {
+    const eligible = data.runs.filter(r => r.distanceKm >= d * 0.95);
+    if (eligible.length === 0) return null;
+    const best = eligible.reduce((a, b) => a.paceSecsPerKm < b.paceSecsPerKm ? a : b);
+    return { dist: d, label: labels[d], pace: best.pace, date: best.date, name: best.name, time: best.time };
+  }).filter(Boolean) as { dist: number; label: string; pace: string; date: string; name: string; time: string }[];
+  return (
+    <div>
+      <h4 className="text-xs font-semibold uppercase tracking-wider text-text-muted mb-3">
+        {lang === 'ko' ? '거리별 베스트' : 'Personal Bests by Distance'}
+      </h4>
+      <div className="space-y-0 divide-y divide-border">
+        {prs.map(pr => (
+          <div key={pr.label} className="flex items-center justify-between py-2">
+            <div>
+              <span className="text-sm font-bold text-primary">{pr.label}</span>
+              <span className="text-[10px] text-text-muted ml-2">{pr.date}</span>
+            </div>
+            <div className="text-right">
+              <span className="text-sm font-mono font-bold">{pr.time}</span>
+              <span className="text-[10px] text-text-muted ml-2">{pr.pace}/km</span>
+            </div>
+          </div>
+        ))}
+      </div>
+      {prs.length === 0 && <p className="text-sm text-text-muted">{lang === 'ko' ? '데이터 부족' : 'Not enough data'}</p>}
+    </div>
+  );
+}
+
+// ── Trait Bars Expanded ──
+function TraitBarsExpanded({ intel, lang }: { intel: IntelligenceData; lang: 'en' | 'ko' }) {
+  const { personality } = intel;
+  const traits = [
+    { key: 'consistency', label: lang === 'ko' ? '일관성' : 'Consistency', score: personality.scores.consistency, color: '#10b981', desc: lang === 'ko' ? '규칙적으로 러닝하는 정도' : 'How regularly you run' },
+    { key: 'speed', label: lang === 'ko' ? '속도' : 'Speed', score: personality.scores.speed, color: '#22d3ee', desc: lang === 'ko' ? '평균 페이스 대비 실력' : 'Pace capability vs average' },
+    { key: 'endurance', label: lang === 'ko' ? '지구력' : 'Endurance', score: personality.scores.endurance, color: '#818cf8', desc: lang === 'ko' ? '장거리 러닝 능력' : 'Long distance capability' },
+    { key: 'variety', label: lang === 'ko' ? '다양성' : 'Variety', score: personality.scores.variety, color: '#f59e0b', desc: lang === 'ko' ? '다양한 루트/거리 탐색' : 'Route and distance variety' },
+    { key: 'volume', label: lang === 'ko' ? '볼륨' : 'Volume', score: personality.scores.volume, color: '#ef4444', desc: lang === 'ko' ? '총 러닝 거리' : 'Total running volume' },
+  ];
+  const total = traits.reduce((s, t) => s + t.score, 0);
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-3">
+        <h4 className="text-xs font-semibold uppercase tracking-wider text-text-muted">
+          {lang === 'ko' ? '특성 상세 분석' : 'Trait Analysis'}
+        </h4>
+        <span className="text-xs font-mono text-primary font-bold">{total}/25</span>
+      </div>
+      <div className="space-y-3">
+        {traits.map(tr => (
+          <div key={tr.key}>
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-sm font-medium" style={{ color: tr.color }}>{tr.label}</span>
+              <span className="text-sm font-mono font-bold" style={{ color: tr.color }}>{tr.score}/5</span>
+            </div>
+            <div className="h-2 rounded-full bg-bg overflow-hidden mb-1">
+              <div className="h-full rounded-full" style={{ width: `${(tr.score / 5) * 100}%`, backgroundColor: tr.color }} />
+            </div>
+            <p className="text-[10px] text-text-muted">{tr.desc}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Training Load Expanded ──
+function TrainingLoadExpanded({ intel, lang }: { intel: IntelligenceData; lang: 'en' | 'ko' }) {
+  const { trainingLoad, paceTrend } = intel;
+  const recent = paceTrend.slice(-4);
+  return (
+    <div>
+      <h4 className="text-xs font-semibold uppercase tracking-wider text-text-muted mb-3">
+        {lang === 'ko' ? '트레이닝 부하 상세' : 'Training Load Detail'}
+      </h4>
+      <div className="grid grid-cols-3 gap-3 mb-4">
+        <div className="text-center p-2 rounded-lg bg-bg">
+          <p className="text-[10px] text-text-muted">{lang === 'ko' ? '급성 부하' : 'Acute'}</p>
+          <p className="text-lg font-bold font-mono text-primary">{trainingLoad.acute.toFixed(0)}</p>
+          <p className="text-[10px] text-text-muted">{lang === 'ko' ? '최근 7일' : 'Last 7d'}</p>
+        </div>
+        <div className="text-center p-2 rounded-lg bg-bg">
+          <p className="text-[10px] text-text-muted">{lang === 'ko' ? '만성 부하' : 'Chronic'}</p>
+          <p className="text-lg font-bold font-mono text-accent">{trainingLoad.chronic.toFixed(0)}</p>
+          <p className="text-[10px] text-text-muted">{lang === 'ko' ? '최근 28일' : 'Last 28d'}</p>
+        </div>
+        <div className="text-center p-2 rounded-lg bg-bg">
+          <p className="text-[10px] text-text-muted">ACWR</p>
+          <p className="text-lg font-bold font-mono" style={{ color: trainingLoad.zoneColor }}>{trainingLoad.ratio.toFixed(2)}</p>
+          <p className="text-[10px] font-medium" style={{ color: trainingLoad.zoneColor }}>{trainingLoad.zoneLabel}</p>
+        </div>
+      </div>
+      <h4 className="text-xs font-semibold uppercase tracking-wider text-text-muted mb-2">
+        {lang === 'ko' ? '최근 4주 거리' : 'Last 4 Weeks Distance'}
+      </h4>
+      <div className="space-y-0 divide-y divide-border">
+        {recent.map(w => (
+          <div key={w.weekKey} className="flex justify-between py-1.5 text-xs">
+            <span className="text-text-muted">{w.week}</span>
+            <span className="font-mono text-primary">{w.distance.toFixed(1)} km</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Race Predictions Expanded ──
+function RacePredictionsExpanded({ intel, lang }: { intel: IntelligenceData; lang: 'en' | 'ko' }) {
+  const preds = intel.racePredictions;
+  return (
+    <div>
+      <h4 className="text-xs font-semibold uppercase tracking-wider text-text-muted mb-3">
+        {lang === 'ko' ? '레이스 예측 상세' : 'Race Prediction Detail'}
+      </h4>
+      {preds.length > 0 ? (
+        <div className="grid grid-cols-2 gap-3">
+          {preds.map(rp => (
+            <div key={rp.label} className="p-3 rounded-lg bg-bg text-center">
+              <p className="text-xs text-text-muted mb-1">{rp.label}</p>
+              <p className="text-xl font-extrabold font-mono text-accent">{rp.time}</p>
+              <p className="text-[10px] text-text-muted mt-1">{rp.pace}/km</p>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="text-sm text-text-muted">{lang === 'ko' ? '3km 이상 러닝 데이터 필요' : 'Need a 3km+ run'}</p>
+      )}
+    </div>
+  );
+}
+
+// ── Recovery Expanded ──
+function RecoveryExpanded({ intel, lang }: { intel: IntelligenceData; lang: 'en' | 'ko' }) {
+  const { recovery } = intel;
+  const isWellRested = recovery.avgRestDays >= 2;
+  return (
+    <div>
+      <h4 className="text-xs font-semibold uppercase tracking-wider text-text-muted mb-3">
+        {lang === 'ko' ? '회복 상세' : 'Recovery Detail'}
+      </h4>
+      <div className="flex items-center gap-3 mb-4 p-3 rounded-lg bg-bg">
+        <span className="text-3xl">{isWellRested ? '💚' : '⚡'}</span>
+        <div>
+          <p className="text-sm font-bold">{isWellRested ? (lang === 'ko' ? '충분한 회복' : 'Well Rested') : (lang === 'ko' ? '회복 필요' : 'Needs Recovery')}</p>
+          <p className="text-xs text-text-muted">
+            {lang === 'ko' ? `평균 휴식 간격: ${recovery.avgRestDays.toFixed(1)}일` : `Avg rest gap: ${recovery.avgRestDays.toFixed(1)}d`}
+          </p>
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-3 mb-4">
+        <div className="text-center p-2 rounded-lg bg-bg">
+          <p className="text-[10px] text-text-muted">{lang === 'ko' ? '평균 휴식 간격' : 'Avg Rest Gap'}</p>
+          <p className="text-lg font-bold font-mono text-primary">{recovery.avgRestDays.toFixed(1)}d</p>
+        </div>
+        <div className="text-center p-2 rounded-lg bg-bg">
+          <p className="text-[10px] text-text-muted">{lang === 'ko' ? '고강도 후 휴식' : 'Rest After Hard'}</p>
+          <p className="text-lg font-bold font-mono text-accent">{recovery.avgRestAfterHard.toFixed(1)}d</p>
+        </div>
+        <div className="text-center p-2 rounded-lg bg-bg">
+          <p className="text-[10px] text-text-muted">{lang === 'ko' ? '최장 연속 러닝' : 'Longest Streak'}</p>
+          <p className="text-lg font-bold font-mono text-warm">{recovery.longestStreak}d</p>
+        </div>
+        <div className="text-center p-2 rounded-lg bg-bg">
+          <p className="text-[10px] text-text-muted">{lang === 'ko' ? '최장 휴식' : 'Longest Rest'}</p>
+          <p className="text-lg font-bold font-mono text-text-muted">{recovery.longestRest}d</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Conditions Expanded ──
+function ConditionsExpanded({ intel, lang }: { intel: IntelligenceData; lang: 'en' | 'ko' }) {
+  const { conditions } = intel;
+  return (
+    <div>
+      <h4 className="text-xs font-semibold uppercase tracking-wider text-text-muted mb-3">
+        {lang === 'ko' ? '최적 조건 상세' : 'Optimal Conditions'}
+      </h4>
+      <div className="space-y-3">
+        <div className="p-3 rounded-lg bg-bg">
+          <p className="text-[10px] text-text-muted uppercase tracking-wider mb-1">{lang === 'ko' ? '최고의 요일' : 'Best Day'}</p>
+          <div className="flex justify-between items-center">
+            <span className="text-lg font-bold">{conditions.bestDay.day}</span>
+            <span className="text-sm font-mono text-primary">{conditions.bestDay.pace}/km</span>
+          </div>
+        </div>
+        <div className="p-3 rounded-lg bg-bg">
+          <p className="text-[10px] text-text-muted uppercase tracking-wider mb-1">{lang === 'ko' ? '최고의 시간' : 'Best Time'}</p>
+          <div className="flex justify-between items-center">
+            <span className="text-lg font-bold">{conditions.bestHour.hour}</span>
+            <span className="text-sm font-mono text-accent">{conditions.bestHour.pace}/km</span>
+          </div>
+        </div>
+        <div className="p-3 rounded-lg bg-bg">
+          <p className="text-[10px] text-text-muted uppercase tracking-wider mb-1">{lang === 'ko' ? '최적 거리' : 'Sweet Spot Distance'}</p>
+          <div className="flex justify-between items-center">
+            <span className="text-lg font-bold">{conditions.sweetSpotDistance.range}</span>
+            <span className="text-sm font-mono text-warm">{conditions.sweetSpotDistance.pace}/km</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Distribution Expanded ──
+function DistributionExpanded({ intel, lang }: { intel: IntelligenceData; lang: 'en' | 'ko' }) {
+  const dist = intel.distribution;
+  const maxCount = Math.max(...dist.map(d => d.count), 1);
+  const total = dist.reduce((s, d) => s + d.count, 0);
+  return (
+    <div>
+      <h4 className="text-xs font-semibold uppercase tracking-wider text-text-muted mb-3">
+        {lang === 'ko' ? '거리 분포 상세' : 'Distance Distribution Detail'}
+      </h4>
+      <div className="space-y-2">
+        {dist.map(d => (
+          <div key={d.label}>
+            <div className="flex justify-between text-xs mb-0.5">
+              <span className="font-medium">{d.label}</span>
+              <span className="text-text-muted">{d.count} runs ({d.percentage}%)</span>
+            </div>
+            <div className="h-3 rounded-full bg-bg overflow-hidden">
+              <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${(d.count / maxCount) * 100}%` }} />
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="mt-3 pt-3 border-t border-border text-xs text-text-muted text-center">
+        {lang === 'ko' ? `총 ${total}회 러닝` : `${total} total runs`}
+      </div>
+    </div>
+  );
+}
+
+// ── Route Familiarity Expanded ──
+function RouteFamiliarityExpanded({ intel, lang }: { intel: IntelligenceData; lang: 'en' | 'ko' }) {
+  const routes = intel.routes;
+  return (
+    <div>
+      <h4 className="text-xs font-semibold uppercase tracking-wider text-text-muted mb-3">
+        {lang === 'ko' ? '루트 상세' : 'Route Details'}
+      </h4>
+      <div className="space-y-0 divide-y divide-border max-h-[250px] overflow-y-auto">
+        {routes.map((r, i) => (
+          <div key={i} className="flex items-center justify-between py-2">
+            <div className="min-w-0">
+              <p className="text-sm font-medium truncate">{r.flag} {r.location}</p>
+              <p className="text-[10px] text-text-muted">
+                {r.count} {lang === 'ko' ? '회' : 'runs'} · {r.improvement}
+              </p>
+            </div>
+            <span className="text-xs font-mono text-primary ml-2 shrink-0">{r.bestPace}/km</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Milestones Expanded ──
+function MilestonesExpanded({ intel, lang }: { intel: IntelligenceData; lang: 'en' | 'ko' }) {
+  const milestones = intel.milestones;
+  return (
+    <div>
+      <h4 className="text-xs font-semibold uppercase tracking-wider text-text-muted mb-3">
+        {lang === 'ko' ? '마일스톤 상세' : 'Milestone Progress'}
+      </h4>
+      <div className="space-y-3">
+        {milestones.map((m, i) => {
+          const pct = Math.min(m.progress, 100);
+          const done = m.progress >= 100;
+          return (
+            <div key={i} className={`p-3 rounded-lg ${done ? 'bg-primary/10 border border-primary/20' : 'bg-bg'}`}>
+              <div className="flex justify-between items-center mb-1">
+                <span className="text-sm font-medium">{done ? '✅' : '🎯'} {m.label}</span>
+                <span className={`text-xs font-mono font-bold ${done ? 'text-primary' : 'text-text-muted'}`}>
+                  {pct.toFixed(0)}%
+                </span>
+              </div>
+              <div className="h-2 rounded-full bg-bg overflow-hidden mb-1">
+                <div className={`h-full rounded-full ${done ? 'bg-primary' : 'bg-primary/50'}`} style={{ width: `${pct}%` }} />
+              </div>
+              <div className="flex justify-between text-[10px] text-text-muted">
+                <span>{lang === 'ko' ? `목표: ${m.target}` : `Target: ${m.target}`}</span>
+                {m.estimatedDate && !done && <span>ETA {m.estimatedDate}</span>}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ── Today's Plan Expanded ──
+function TodaysPlanExpanded({ intel, lang }: { intel: IntelligenceData; lang: 'en' | 'ko' }) {
+  const plan = intel.todaysPlan;
+  const rec = plan.recommended;
+  return (
+    <div>
+      <h4 className="text-xs font-semibold uppercase tracking-wider text-text-muted mb-3">
+        {lang === 'ko' ? '오늘의 플랜 상세' : "Today's Plan Detail"}
+      </h4>
+      <div className="p-3 rounded-lg bg-bg mb-3">
+        <p className="text-sm font-bold mb-1">{plan.headline}</p>
+        <div className="flex items-center gap-2 mb-2">
+          <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary font-bold">{rec.activity}</span>
+          <span className="text-xs px-2 py-0.5 rounded-full bg-accent/10 text-accent font-bold">{rec.distance}</span>
+        </div>
+        <p className="text-xs text-text-muted">{lang === 'ko' ? '추천 페이스' : 'Pace'}: {rec.pace} · {rec.duration}</p>
+      </div>
+      <div className="grid grid-cols-2 gap-2 mb-3 text-xs">
+        <div className="p-2 rounded-lg bg-bg text-center">
+          <p className="text-text-muted">{lang === 'ko' ? '안전 최대 거리' : 'Safe Max'}</p>
+          <p className="font-bold text-primary font-mono">{plan.safeMaxKm.toFixed(1)} km</p>
+        </div>
+        <div className="p-2 rounded-lg bg-bg text-center">
+          <p className="text-text-muted">{lang === 'ko' ? '위험 거리' : 'Danger Zone'}</p>
+          <p className="font-bold text-danger font-mono">{plan.dangerKm.toFixed(1)} km</p>
+        </div>
+      </div>
+      {plan.advice.length > 0 && (
+        <div>
+          <p className="text-xs font-semibold text-text-muted mb-2">{lang === 'ko' ? '코치 조언' : 'Coach Tips'}</p>
+          <div className="space-y-1.5">
+            {plan.advice.map((a, i) => (
+              <div key={i} className="flex gap-2 text-xs">
+                <span className="text-primary shrink-0">•</span>
+                <span className="text-text-muted">{a}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Coach Advice Expanded ──
+function CoachAdviceExpanded({ intel, lang }: { intel: IntelligenceData; lang: 'en' | 'ko' }) {
+  const { todaysPlan, recovery, trainingLoad } = intel;
+  const rec = todaysPlan.recommended;
+  return (
+    <div>
+      <h4 className="text-xs font-semibold uppercase tracking-wider text-text-muted mb-3">
+        {lang === 'ko' ? 'AI 코치 종합 분석' : 'AI Coach Analysis'}
+      </h4>
+      <div className="space-y-3">
+        <div className="p-3 rounded-lg bg-bg">
+          <p className="text-[10px] text-text-muted uppercase mb-1">{lang === 'ko' ? '회복 상태' : 'Recovery'}</p>
+          <p className="text-sm">{recovery.avgRestDays >= 2 ? '💚' : '⚡'} {lang === 'ko' ? `평균 ${recovery.avgRestDays.toFixed(1)}일 휴식` : `Avg ${recovery.avgRestDays.toFixed(1)}d rest`}</p>
+          <p className="text-xs text-text-muted mt-1">
+            {lang === 'ko' ? `최장 연속 ${recovery.longestStreak}일` : `Longest streak: ${recovery.longestStreak}d`}
+          </p>
+        </div>
+        <div className="p-3 rounded-lg bg-bg">
+          <p className="text-[10px] text-text-muted uppercase mb-1">{lang === 'ko' ? '부하 상태' : 'Load Status'}</p>
+          <p className="text-sm font-bold" style={{ color: trainingLoad.zoneColor }}>
+            ACWR {trainingLoad.ratio.toFixed(2)} — {trainingLoad.zoneLabel}
+          </p>
+        </div>
+        <div className="p-3 rounded-lg bg-bg">
+          <p className="text-[10px] text-text-muted uppercase mb-1">{lang === 'ko' ? '오늘 추천' : "Today's Recommendation"}</p>
+          <p className="text-sm font-medium text-primary">{rec.activity}: {rec.distance} @ {rec.pace}</p>
+        </div>
+        {todaysPlan.advice.length > 0 && (
+          <div className="space-y-1">
+            {todaysPlan.advice.map((a, i) => (
+              <p key={i} className="text-xs text-text-muted">• {a}</p>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

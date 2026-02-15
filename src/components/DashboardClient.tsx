@@ -535,6 +535,8 @@ function renderExpandedWidget(id: WidgetId, data: DataSources, lang: 'en' | 'ko'
       return intelligence ? <TodaysPlanExpanded intel={intelligence} lang={lang} /> : null;
     case 'coach-advice':
       return intelligence ? <CoachAdviceExpanded intel={intelligence} lang={lang} /> : null;
+    case 'run-world-map':
+      return runData ? <RunWorldMapExpanded data={runData} lang={lang} /> : null;
     default:
       return null;
   }
@@ -1385,6 +1387,15 @@ function CoachAdviceExpanded({ intel, lang }: { intel: IntelligenceData; lang: '
       <a href="/coach" className="inline-block mt-4 text-xs text-primary hover:text-primary-hover transition-colors">
         {lang === 'ko' ? 'AI 코치에서 자세히 →' : 'Full AI Coach →'}
       </a>
+    </div>
+  );
+}
+
+// ── Run World Map Expanded (full-width) ──
+function RunWorldMapExpanded({ data, lang }: { data: EnrichedRunData; lang: 'en' | 'ko' }) {
+  return (
+    <div className="w-full">
+      <RunWorldMap data={data} lang={lang} />
     </div>
   );
 }

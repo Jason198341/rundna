@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import type { IntelligenceData } from '@/lib/strava-analytics';
 import type { EnrichedRunData } from '@/lib/strava';
+import { downloadCard } from '@/lib/share';
 
 interface Props {
   userId: string;
@@ -300,7 +301,8 @@ export default function ReportClient({ userName, avatarUrl }: Props) {
       </div>
 
       {/* Actions */}
-      <div className="flex items-center justify-center gap-3">
+      <div className="flex items-center justify-center gap-3 flex-wrap">
+        <ShareBtn targetRef={cardRef} filename={`rundna-weekly-${weekLabel.replace(/[\s\/]/g, '-')}`} />
         <a
           href="/coach"
           className="px-5 py-2.5 rounded-xl border border-border text-sm font-medium hover:border-primary/30 hover:text-primary transition-all"
@@ -315,5 +317,35 @@ export default function ReportClient({ userName, avatarUrl }: Props) {
         </a>
       </div>
     </div>
+  );
+}
+
+function ShareBtn({ targetRef, filename }: {
+  targetRef: React.RefObject<HTMLDivElement | null>;
+  filename: string;
+}) {
+  const [saving, setSaving] = useState(false);
+
+  async function handleDownload() {
+    if (!targetRef.current || saving) return;
+    setSaving(true);
+    try {
+      await downloadCard(targetRef.current, filename);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <button
+      onClick={handleDownload}
+      disabled={saving}
+      className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-primary/30 bg-primary/10 text-primary text-sm font-medium hover:bg-primary/20 transition-all disabled:opacity-50"
+    >
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+      </svg>
+      {saving ? 'Saving...' : 'Download Card'}
+    </button>
   );
 }

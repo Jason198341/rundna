@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { downloadCard } from '@/lib/share';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -23,8 +24,10 @@ export default function CoachClient({ userName }: Props) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const shareRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -142,8 +145,62 @@ export default function CoachClient({ userName }: Props) {
           >
             Send
           </button>
+          {messages.length >= 2 && (
+            <button
+              onClick={async () => {
+                if (!shareRef.current || saving) return;
+                setSaving(true);
+                try { await downloadCard(shareRef.current, 'rundna-coach-advice'); }
+                finally { setSaving(false); }
+              }}
+              disabled={saving}
+              className="px-3 py-2.5 rounded-xl border border-primary/30 text-primary text-sm hover:bg-primary/10 transition-all disabled:opacity-50 shrink-0"
+              title="Save last advice as image"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+            </button>
+          )}
         </div>
       </div>
+
+      {/* Hidden share card — last Q&A pair */}
+      {messages.length >= 2 && (
+        <div className="fixed -left-[9999px] top-0">
+          <div ref={shareRef} className="w-[540px] bg-[#060a0e] p-8 rounded-2xl border border-[#1e2a3a]">
+            <div className="flex items-center gap-2 mb-6">
+              <span className="text-2xl">🤖</span>
+              <div>
+                <p className="text-sm font-bold text-[#e6edf3]">RunDNA Coach</p>
+                <p className="text-[10px] text-[#7d8590]">AI Running Intelligence</p>
+              </div>
+            </div>
+            {/* Last user question */}
+            <div className="mb-4">
+              <p className="text-[10px] text-[#7d8590] mb-1">{userName.split(' ')[0]} asked:</p>
+              <p className="text-sm text-[#e6edf3]/80 italic">
+                &ldquo;{messages.filter(m => m.role === 'user').slice(-1)[0]?.content}&rdquo;
+              </p>
+            </div>
+            {/* Last coach reply */}
+            <div className="bg-[#0d1117] border border-[#1e2a3a] rounded-xl p-4 mb-6">
+              <p className="text-sm text-[#e6edf3] leading-relaxed whitespace-pre-wrap">
+                {messages.filter(m => m.role === 'assistant').slice(-1)[0]?.content}
+              </p>
+            </div>
+            {/* Branding */}
+            <div className="border-t border-[#1e2a3a] pt-3 flex items-center justify-between">
+              <p className="text-[10px] text-[#7d8590]">
+                <span className="text-[#10b981]">🧬</span> RunDNA — rundna.vercel.app
+              </p>
+              <p className="text-[10px] text-[#7d8590]">
+                {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import type { IntelligenceData } from '@/lib/strava-analytics';
+import { downloadCard } from '@/lib/share';
 
 interface Props {
   userId: string;
@@ -165,6 +166,15 @@ export default function DNAClient({ userName }: Props) {
         </div>
       </div>
 
+      {/* Share Button */}
+      <div className={`flex justify-center mb-6 transition-all duration-700 delay-200 ${revealed ? 'opacity-100' : 'opacity-0'}`}>
+        <ShareButton
+          targetRef={cardRef}
+          filename={`rundna-${userName.replace(/\s+/g, '-').toLowerCase()}`}
+          label="Download DNA Card"
+        />
+      </div>
+
       {/* Training Load Detail */}
       <div className={`rounded-xl border border-border bg-surface p-5 mb-6 transition-all duration-700 delay-300 ${revealed ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
         <h2 className="text-lg font-semibold mb-4">Training Load</h2>
@@ -302,5 +312,36 @@ function MiniStat({ label, value, color }: { label: string; value: string; color
       <p className="text-xs text-text-muted">{label}</p>
       <p className="text-sm font-bold font-mono" style={color ? { color } : undefined}>{value}</p>
     </div>
+  );
+}
+
+function ShareButton({ targetRef, filename, label }: {
+  targetRef: React.RefObject<HTMLDivElement | null>;
+  filename: string;
+  label: string;
+}) {
+  const [saving, setSaving] = useState(false);
+
+  async function handleDownload() {
+    if (!targetRef.current || saving) return;
+    setSaving(true);
+    try {
+      await downloadCard(targetRef.current, filename);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <button
+      onClick={handleDownload}
+      disabled={saving}
+      className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-primary/30 bg-primary/10 text-primary text-sm font-medium hover:bg-primary/20 transition-all disabled:opacity-50"
+    >
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+      </svg>
+      {saving ? 'Saving...' : label}
+    </button>
   );
 }

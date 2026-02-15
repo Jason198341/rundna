@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
+import { downloadCard } from '@/lib/share';
 
 interface Props {
   userId: string;
@@ -70,6 +71,8 @@ export default function PlannerClient({ userName }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [expandedWeek, setExpandedWeek] = useState<number | null>(null);
   const [progress, setProgress] = useState(0);
+  const [saving, setSaving] = useState(false);
+  const shareRef = useRef<HTMLDivElement>(null);
 
   const minDate = new Date(Date.now() + 14 * 86400000).toISOString().split('T')[0];
 
@@ -224,26 +227,29 @@ export default function PlannerClient({ userName }: Props) {
         Dashboard
       </a>
 
-      {/* Header */}
-      <div className="text-center mb-8">
-        <div className="text-4xl mb-2">🏁</div>
-        <h1 className="text-2xl font-bold">{raceDistance} Training Plan</h1>
-        <p className="text-sm text-text-muted mt-1">{plan.totalWeeks} weeks · Race Day: {raceDate}</p>
-        <p className="text-sm text-text-muted mt-2 max-w-lg mx-auto">{plan.summary}</p>
-      </div>
+      {/* Shareable Plan Summary */}
+      <div ref={shareRef} className="rounded-2xl border border-border bg-surface overflow-hidden mb-6">
+        <div className="p-6 sm:p-8">
+          {/* Header */}
+          <div className="text-center mb-6">
+            <div className="text-4xl mb-2">🏁</div>
+            <h1 className="text-2xl font-bold">{raceDistance} Training Plan</h1>
+            <p className="text-sm text-text-muted mt-1">{plan.totalWeeks} weeks · Race Day: {raceDate}</p>
+            <p className="text-sm text-text-muted mt-2 max-w-lg mx-auto">{plan.summary}</p>
+          </div>
 
-      {/* Warnings */}
-      {plan.warnings?.length > 0 && (
-        <div className="rounded-xl border border-warm/30 bg-warm/5 p-4 mb-6">
-          <p className="text-sm font-medium text-warm mb-2">⚠️ Heads Up</p>
-          {plan.warnings.map((w, i) => (
-            <p key={i} className="text-sm text-text-muted">{w}</p>
-          ))}
-        </div>
-      )}
+          {/* Warnings */}
+          {plan.warnings?.length > 0 && (
+            <div className="rounded-xl border border-warm/30 bg-warm/5 p-4 mb-6">
+              <p className="text-sm font-medium text-warm mb-2">⚠️ Heads Up</p>
+              {plan.warnings.map((w, i) => (
+                <p key={i} className="text-sm text-text-muted">{w}</p>
+              ))}
+            </div>
+          )}
 
-      {/* Phase Overview */}
-      <div className="rounded-xl border border-border bg-surface p-5 mb-6">
+          {/* Phase Overview */}
+          <div className="mb-6">
         <h2 className="text-sm font-semibold mb-3 text-text-muted uppercase tracking-wider">Training Phases</h2>
         <div className="space-y-3">
           {plan.phases?.map((phase, i) => (
@@ -261,6 +267,66 @@ export default function PlannerClient({ userName }: Props) {
             </div>
           ))}
         </div>
+          </div>
+
+          {/* Race Day (in share card) */}
+          {plan.raceDay && (
+            <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 mb-4">
+              <p className="text-sm font-semibold mb-2">🏆 Race Day</p>
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div><span className="text-text-muted">Pace: </span><span className="font-mono font-bold text-primary">{plan.raceDay.targetPace}</span></div>
+                <div><span className="text-text-muted">Strategy: </span>{plan.raceDay.strategy}</div>
+              </div>
+            </div>
+          )}
+
+          {/* Volume Chart */}
+          {plan.weeks?.length > 0 && (
+            <div className="mb-4">
+              <p className="text-xs text-text-muted mb-2">Weekly Volume</p>
+              <div className="flex items-end gap-1 h-16">
+                {plan.weeks.map((w) => {
+                  const maxKm = plan.weeks.reduce((m, wk) => Math.max(m, wk.totalKm), 1);
+                  return (
+                    <div key={w.week} className="flex-1 flex flex-col items-center gap-0.5">
+                      <div
+                        className="w-full rounded-t bg-primary/60"
+                        style={{ height: `${Math.max((w.totalKm / maxKm) * 100, 4)}%` }}
+                      />
+                      <span className="text-[7px] text-text-muted">W{w.week}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Branding */}
+          <div className="border-t border-border pt-3 text-center">
+            <p className="text-[10px] text-text-muted">
+              <span className="text-primary">🧬</span> RunDNA — AI Running Intelligence
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Download Plan Card */}
+      <div className="flex justify-center mb-6">
+        <button
+          onClick={async () => {
+            if (!shareRef.current || saving) return;
+            setSaving(true);
+            try { await downloadCard(shareRef.current, `rundna-plan-${raceDistance.toLowerCase()}`); }
+            finally { setSaving(false); }
+          }}
+          disabled={saving}
+          className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-primary/30 bg-primary/10 text-primary text-sm font-medium hover:bg-primary/20 transition-all disabled:opacity-50"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+          </svg>
+          {saving ? 'Saving...' : 'Download Plan Card'}
+        </button>
       </div>
 
       {/* Weekly Breakdown */}
@@ -334,33 +400,6 @@ export default function PlannerClient({ userName }: Props) {
           })}
         </div>
       </div>
-
-      {/* Race Day Strategy */}
-      {plan.raceDay && (
-        <div className="rounded-xl border border-primary/30 bg-primary/5 p-5 mb-6">
-          <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
-            🏆 Race Day Strategy
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="rounded-lg bg-bg/50 p-3">
-              <p className="text-xs text-text-muted mb-1">Pacing Strategy</p>
-              <p className="text-sm">{plan.raceDay.strategy}</p>
-            </div>
-            <div className="rounded-lg bg-bg/50 p-3">
-              <p className="text-xs text-text-muted mb-1">Target Pace</p>
-              <p className="text-sm font-mono font-bold text-primary">{plan.raceDay.targetPace}</p>
-            </div>
-            <div className="rounded-lg bg-bg/50 p-3">
-              <p className="text-xs text-text-muted mb-1">Warm-up</p>
-              <p className="text-sm">{plan.raceDay.warmup}</p>
-            </div>
-            <div className="rounded-lg bg-bg/50 p-3">
-              <p className="text-xs text-text-muted mb-1">Nutrition</p>
-              <p className="text-sm">{plan.raceDay.nutrition}</p>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* New Plan button */}
       <div className="text-center">

@@ -715,26 +715,132 @@ function PacingCardWidget({ intel, lang }: { intel: IntelligenceData; lang: 'en'
 function StatsOverviewExpanded({ data, lang }: { data: EnrichedRunData; lang: 'en' | 'ko' }) {
   const { monthlyVolume, locations } = data;
   const recent12 = monthlyVolume.slice(-12);
+  if (recent12.length === 0) return <p className="text-sm text-text-muted">{lang === 'ko' ? '데이터 없음' : 'No data'}</p>;
+
   const maxKm = Math.max(...recent12.map(m => m.km), 1);
+  const avgKm = recent12.reduce((s, m) => s + m.km, 0) / recent12.length;
+
+  // SVG layout
+  const W = 300, H = 120;
+  const padL = 30, padR = 8, padT = 14, padB = 22;
+  const chartW = W - padL - padR;
+  const chartH = H - padT - padB;
+  const n = recent12.length;
+  const barW = Math.max(chartW / n - 3, 4);
+  const gap = (chartW - barW * n) / Math.max(n - 1, 1);
+
+  // Bar x center
+  const xOf = (i: number) => padL + i * (barW + gap) + barW / 2;
+  const yOf = (km: number) => padT + chartH - (km / maxKm) * chartH;
+
+  // Red interpolation: low km = light warm, high km = deep red
+  // HSL: hue 0 (red) to 15 (warm-orange), saturation 60-90%, lightness 70→40%
+  function barColor(km: number): string {
+    const t = Math.min(km / maxKm, 1);
+    const hue = 15 - t * 15;         // 15 (warm) → 0 (pure red)
+    const sat = 60 + t * 30;         // 60% → 90%
+    const lit = 70 - t * 30;         // 70% (light) → 40% (deep)
+    return `hsl(${hue}, ${sat}%, ${lit}%)`;
+  }
+
+  // Smooth line path (cubic bezier)
+  const linePoints = recent12.map((m, i) => ({ x: xOf(i), y: yOf(m.km) }));
+  let linePath = `M ${linePoints[0].x} ${linePoints[0].y}`;
+  for (let i = 1; i < linePoints.length; i++) {
+    const prev = linePoints[i - 1];
+    const curr = linePoints[i];
+    const cpx = (prev.x + curr.x) / 2;
+    linePath += ` C ${cpx} ${prev.y}, ${cpx} ${curr.y}, ${curr.x} ${curr.y}`;
+  }
+
+  // Area fill path
+  const areaPath = linePath + ` L ${linePoints[linePoints.length - 1].x} ${padT + chartH} L ${linePoints[0].x} ${padT + chartH} Z`;
+
+  // Best month
+  const bestIdx = recent12.reduce((bi, m, i) => m.km > recent12[bi].km ? i : bi, 0);
+
+  // Y-axis labels
+  const yLabels = [0, Math.round(maxKm / 2), Math.round(maxKm)];
+
+  // Average line
+  const avgY = yOf(avgKm);
+
   return (
     <div className="space-y-5">
       <div>
         <h4 className="text-xs font-semibold uppercase tracking-wider text-text-muted mb-3">
           {lang === 'ko' ? '월별 거리 (12개월)' : 'Monthly Distance (12mo)'}
         </h4>
-        <div className="flex items-end gap-1.5 h-28">
-          {recent12.map((m) => {
-            const h = (m.km / maxKm) * 100;
+        <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ maxHeight: '160px' }}>
+          {/* Grid lines */}
+          {yLabels.map(km => (
+            <g key={km}>
+              <line x1={padL} x2={W - padR} y1={yOf(km)} y2={yOf(km)} stroke="var(--color-border)" strokeWidth="0.5" strokeDasharray="2 2" />
+              <text x={padL - 3} y={yOf(km) + 3} textAnchor="end" style={{ fill: 'var(--color-text-muted)' }} fontSize="7" fontFamily="ui-monospace,monospace">{km}</text>
+            </g>
+          ))}
+
+          {/* Average line */}
+          <line x1={padL} x2={W - padR} y1={avgY} y2={avgY} stroke="var(--color-text-muted)" strokeWidth="0.5" strokeDasharray="4 3" opacity="0.5" />
+          <text x={W - padR} y={avgY - 3} textAnchor="end" style={{ fill: 'var(--color-text-muted)' }} fontSize="6" fontFamily="ui-monospace,monospace" opacity="0.7">
+            avg {avgKm.toFixed(0)}
+          </text>
+
+          {/* Area fill */}
+          <path d={areaPath} fill="url(#monthGrad)" opacity="0.15" />
+
+          {/* Bars with red interpolation */}
+          {recent12.map((m, i) => {
+            const barH = Math.max((m.km / maxKm) * chartH, 1.5);
+            const x = xOf(i) - barW / 2;
+            const y = padT + chartH - barH;
             return (
-              <div key={m.month} className="flex-1 flex flex-col items-center gap-1">
-                <span className="text-[9px] font-mono text-text-muted">{m.km.toFixed(0)}</span>
-                <div className="w-full rounded-t bg-primary/70 hover:bg-primary transition-colors" style={{ height: `${Math.max(h, 2)}%` }} />
-                <span className="text-[9px] text-text-muted">{m.month}</span>
-              </div>
+              <rect key={i} x={x} y={y} width={barW} height={barH} rx={2} fill={barColor(m.km)} opacity="0.85" />
             );
           })}
+
+          {/* Smooth line */}
+          <path d={linePath} fill="none" stroke="#ef4444" strokeWidth="1.5" strokeLinecap="round" opacity="0.8" />
+
+          {/* Best month dot + label */}
+          <circle cx={xOf(bestIdx)} cy={yOf(recent12[bestIdx].km)} r="3" fill="#ef4444" stroke="var(--color-surface)" strokeWidth="1" />
+          <text
+            x={xOf(bestIdx)}
+            y={yOf(recent12[bestIdx].km) - 5}
+            textAnchor={bestIdx < 2 ? 'start' : bestIdx > n - 3 ? 'end' : 'middle'}
+            style={{ fill: '#ef4444' }}
+            fontSize="7"
+            fontWeight="700"
+            fontFamily="ui-monospace,monospace"
+          >
+            {recent12[bestIdx].km.toFixed(0)} km
+          </text>
+
+          {/* Month labels */}
+          {recent12.map((m, i) => (
+            <text key={i} x={xOf(i)} y={H - 4} textAnchor="middle" style={{ fill: 'var(--color-text-muted)' }} fontSize="6.5" fontFamily="ui-monospace,monospace">
+              {m.month.slice(0, 3)}
+            </text>
+          ))}
+
+          {/* Gradient def */}
+          <defs>
+            <linearGradient id="monthGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#ef4444" />
+              <stop offset="100%" stopColor="#ef4444" stopOpacity="0" />
+            </linearGradient>
+          </defs>
+        </svg>
+
+        {/* Summary bar below chart */}
+        <div className="flex justify-between mt-2 text-[10px]">
+          <span className="text-text-muted">{lang === 'ko' ? '최근 12개월' : 'Last 12 months'}</span>
+          <span className="font-mono" style={{ color: '#ef4444' }}>
+            {lang === 'ko' ? `총 ${recent12.reduce((s, m) => s + m.km, 0).toFixed(0)} km` : `Total ${recent12.reduce((s, m) => s + m.km, 0).toFixed(0)} km`}
+          </span>
         </div>
       </div>
+
       {locations.length > 0 && (
         <div>
           <h4 className="text-xs font-semibold uppercase tracking-wider text-text-muted mb-2">

@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
   if (!usage.allowed) {
     return NextResponse.json({
       error: 'Daily limit reached',
-      message: "You've used all 3 plan generations today. Your limit resets at midnight UTC.",
+      message: "You've used all 2 plan generations today. Your limit resets at midnight UTC.",
       remaining: 0,
     }, { status: 429 });
   }

@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
   if (!usage.allowed) {
     return NextResponse.json({
       error: 'Daily limit reached',
-      message: "You've used all 10 coach messages today. Your limit resets at midnight UTC. Try your Running DNA or Weekly Report in the meantime!",
+      message: "You've used all 2 coach messages today. Your limit resets at midnight UTC. Try your Running DNA or Weekly Report in the meantime!",
       remaining: 0,
     }, { status: 429 });
   }

@@ -196,6 +196,7 @@ const dict: Record<string, { en: string; ko: string }> = {
   'widget.widgets': { en: 'Widgets', ko: '위젯' },
   'widget.addWidget': { en: 'Add Widget', ko: '위젯 추가' },
   'widget.removeWidget': { en: 'Remove', ko: '제거' },
+  'widget.share': { en: 'Share', ko: '공유' },
   'widget.shareSetup': { en: 'Share My Setup', ko: '내 셋업 공유' },
   'widget.importSetup': { en: 'Import Setup', ko: '셋업 가져오기' },
   'widget.copied': { en: 'Setup code copied!', ko: '셋업 코드 복사됨!' },
@@ -222,6 +223,13 @@ const dict: Record<string, { en: string; ko: string }> = {
   'widget.milestones': { en: 'Milestones', ko: '마일스톤' },
   'widget.runHeatmap': { en: 'Run Heatmap', ko: '러닝 히트맵' },
   'widget.runWorldMap': { en: 'Run World Map', ko: '러닝 세계지도' },
+  'widget.dnaHelix': { en: 'DNA Helix', ko: 'DNA 나선' },
+  'widget.identityStreak': { en: 'Identity Streak', ko: '아이덴티티 스트릭' },
+  'widget.trophyCabinet': { en: 'Trophy Cabinet', ko: '트로피 캐비닛' },
+  'widget.injuryRisk': { en: 'Injury Risk', ko: '부상 위험도' },
+  'widget.fatigueTank': { en: 'Fatigue Tank', ko: '피로 연료 탱크' },
+  'widget.cityConstellation': { en: 'City Constellation', ko: '도시 별자리' },
+  'widget.seasonalCrown': { en: 'Seasonal Crown', ko: '시즌 왕관' },
 
   // Level 1: Run Film
   'widget.monthlyHighlight': { en: 'Monthly Highlight', ko: '월간 하이라이트' },

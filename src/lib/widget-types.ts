@@ -47,7 +47,15 @@ export type WidgetId =
   | 'pacing-card'
   // Story / Visual
   | 'run-heatmap'
-  | 'run-world-map';
+  | 'run-world-map'
+  // Premium / Brainstorm
+  | 'dna-helix'
+  | 'identity-streak'
+  | 'trophy-cabinet'
+  | 'injury-risk'
+  | 'fatigue-tank'
+  | 'city-constellation'
+  | 'seasonal-crown';
 
 // ── Widget Definition ──
 export interface WidgetDef {
@@ -103,6 +111,15 @@ export const WIDGET_REGISTRY: WidgetDef[] = [
   // ── Story / Visual ──
   { id: 'run-heatmap', titleKey: 'widget.runHeatmap', icon: '🗓️', category: 'core', sizes: ['L', 'XL'], defaultSize: 'L', dataDeps: ['runData'], tier: 'free' },
   { id: 'run-world-map', titleKey: 'widget.runWorldMap', icon: '🌍', category: 'core', sizes: ['L', 'XL'], defaultSize: 'L', dataDeps: ['runData'], tier: 'free' },
+
+  // ── Premium / Brainstorm ──
+  { id: 'dna-helix', titleKey: 'widget.dnaHelix', icon: '🧬', category: 'core', sizes: ['M', 'L'], defaultSize: 'M', dataDeps: ['intelligence'], tier: 'free' },
+  { id: 'identity-streak', titleKey: 'widget.identityStreak', icon: '🔥', category: 'core', sizes: ['M', 'L'], defaultSize: 'M', dataDeps: ['runData'], tier: 'free' },
+  { id: 'trophy-cabinet', titleKey: 'widget.trophyCabinet', icon: '🏅', category: 'core', sizes: ['L', 'XL'], defaultSize: 'L', dataDeps: ['runData', 'intelligence'], tier: 'free' },
+  { id: 'injury-risk', titleKey: 'widget.injuryRisk', icon: '🩺', category: 'core', sizes: ['M', 'L'], defaultSize: 'M', dataDeps: ['runData', 'intelligence'], tier: 'free' },
+  { id: 'fatigue-tank', titleKey: 'widget.fatigueTank', icon: '⛽', category: 'core', sizes: ['M', 'L'], defaultSize: 'M', dataDeps: ['intelligence'], tier: 'free' },
+  { id: 'city-constellation', titleKey: 'widget.cityConstellation', icon: '✨', category: 'core', sizes: ['M', 'L'], defaultSize: 'L', dataDeps: ['runData'], tier: 'free' },
+  { id: 'seasonal-crown', titleKey: 'widget.seasonalCrown', icon: '👑', category: 'core', sizes: ['M', 'L'], defaultSize: 'M', dataDeps: ['runData', 'intelligence'], tier: 'free' },
 ];
 
 export function getWidgetDef(id: WidgetId): WidgetDef | undefined {
@@ -168,6 +185,8 @@ export const PRESETS: Preset[] = [
       'shoe-health', 'weekly-challenge', 'feature-nav',
       'dna-battle', 'pacing-card', 'snipe-missions',
       'monthly-highlight', 'training-twin', 'race-simulation',
+      'dna-helix', 'identity-streak', 'trophy-cabinet',
+      'injury-risk', 'fatigue-tank', 'city-constellation', 'seasonal-crown',
     ],
   },
   {

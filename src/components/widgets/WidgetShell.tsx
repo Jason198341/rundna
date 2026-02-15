@@ -1,9 +1,10 @@
 'use client';
 
-import { useRef, useEffect } from 'react';
+import { useRef, useState, useCallback } from 'react';
 import type { WidgetId } from '@/lib/widget-types';
 import { getWidgetDef } from '@/lib/widget-types';
 import { t, type Lang } from '@/lib/i18n';
+import { shareCard } from '@/lib/share';
 
 interface Props {
   id: WidgetId;
@@ -24,9 +25,20 @@ export default function WidgetShell({
 }: Props) {
   const def = getWidgetDef(id);
   const shellRef = useRef<HTMLDivElement>(null);
+  const [sharing, setSharing] = useState(false);
   if (!def) return null;
 
   const canExpand = !!onToggleExpand;
+
+  const handleShare = async () => {
+    if (!shellRef.current || sharing) return;
+    setSharing(true);
+    try {
+      const filename = `rundna-${id}`;
+      await shareCard(shellRef.current, filename, 'My RunDNA widget 🧬🏃', 'https://rundna.online');
+    } catch { /* user cancelled or error */ }
+    setTimeout(() => setSharing(false), 1500);
+  };
 
   return (
     <div
@@ -79,6 +91,21 @@ export default function WidgetShell({
         )}
 
         <div className="flex items-center gap-1">
+          <button
+            onClick={handleShare}
+            className={`text-xs p-1 transition-colors ${sharing ? 'text-primary' : 'text-text-muted hover:text-primary'}`}
+            title={sharing ? '✓' : t('widget.share', lang)}
+          >
+            {sharing ? (
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            ) : (
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+              </svg>
+            )}
+          </button>
           {expanded && onToggleExpand && (
             <button
               onClick={() => onToggleExpand(id)}

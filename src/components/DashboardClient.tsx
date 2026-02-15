@@ -20,6 +20,10 @@ import {
   RouteFamiliarityWidget, MilestonesWidget, WeeklyChallenge, RunHeatmap,
   RunWorldMap,
 } from '@/components/widgets/CoreWidgets';
+import {
+  DNAHelix, IdentityStreak, TrophyCabinet,
+  InjuryRiskRadar, FatigueFuelTank, CityConstellation, SeasonalCrown,
+} from '@/components/widgets/PremiumWidgets';
 
 const CustomizePanel = dynamic(() => import('@/components/widgets/CustomizePanel'), {
   ssr: false,
@@ -492,6 +496,22 @@ function renderWidget(id: WidgetId, data: DataSources, lang: 'en' | 'ko'): React
       return intelligence ? <RaceSimWidget intel={intelligence} lang={lang} /> : null;
     case 'pacing-card':
       return intelligence ? <PacingCardWidget intel={intelligence} lang={lang} /> : null;
+
+    // ── Premium / Brainstorm ──
+    case 'dna-helix':
+      return intelligence ? <DNAHelix intel={intelligence} lang={lang} /> : null;
+    case 'identity-streak':
+      return runData ? <IdentityStreak data={runData} lang={lang} /> : null;
+    case 'trophy-cabinet':
+      return runData && intelligence ? <TrophyCabinet data={runData} intel={intelligence} lang={lang} /> : null;
+    case 'injury-risk':
+      return runData && intelligence ? <InjuryRiskRadar intel={intelligence} data={runData} lang={lang} /> : null;
+    case 'fatigue-tank':
+      return intelligence ? <FatigueFuelTank intel={intelligence} lang={lang} /> : null;
+    case 'city-constellation':
+      return runData ? <CityConstellation data={runData} lang={lang} /> : null;
+    case 'seasonal-crown':
+      return runData && intelligence ? <SeasonalCrown data={runData} intel={intelligence} lang={lang} /> : null;
     default:
       return null;
   }

@@ -167,7 +167,7 @@ export default function ReportClient({ userName, avatarUrl }: Props) {
         </div>
 
         <div className="px-6 py-5">
-          <div className="grid grid-cols-4 gap-3 mb-6">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
             <div>
               <p className="text-xs text-text-muted">{t('report.distance', lang)}</p>
               <p className="text-lg font-bold font-mono">{thisWeek.distance.toFixed(1)}<span className="text-xs font-normal text-text-muted ml-0.5">km</span></p>
@@ -213,7 +213,7 @@ export default function ReportClient({ userName, avatarUrl }: Props) {
                 }}
               />
             </div>
-            <div className="flex justify-between text-[9px] text-text-muted mt-1">
+            <div className="flex justify-between text-[10px] text-text-muted mt-1">
               <span>{t('report.detraining', lang)}</span>
               <span>{t('report.recovery', lang)}</span>
               <span>{t('report.optimal', lang)}</span>
@@ -238,14 +238,14 @@ export default function ReportClient({ userName, avatarUrl }: Props) {
                           style={{ height: `${height}%` }}
                         />
                       </div>
-                      <span className="text-[8px] text-text-muted truncate w-full text-center">
+                      <span className="text-[10px] text-text-muted truncate w-full text-center">
                         {w.week.split(' ').pop()}
                       </span>
                     </div>
                   );
                 })}
               </div>
-              <div className="flex justify-between text-[9px] text-text-muted mt-1">
+              <div className="flex justify-between text-[10px] text-text-muted mt-1">
                 <span>{recentTrend[0]?.distance.toFixed(0)} km</span>
                 <span className="text-primary font-bold">{recentTrend[recentTrend.length - 1]?.distance.toFixed(0)} km</span>
               </div>

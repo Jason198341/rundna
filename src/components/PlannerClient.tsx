@@ -309,7 +309,7 @@ export default function PlannerClient({ userName }: Props) {
                         className="w-full rounded-t bg-primary/60"
                         style={{ height: `${Math.max((w.totalKm / maxKm) * 100, 4)}%` }}
                       />
-                      <span className="text-[7px] text-text-muted">W{w.week}</span>
+                      <span className="text-[10px] text-text-muted">W{w.week}</span>
                     </div>
                   );
                 })}

@@ -22,6 +22,7 @@ export default function DNAClient({ userName }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
   const [revealed, setRevealed] = useState(false);
+  const [showStory, setShowStory] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
   const storyRef = useRef<HTMLDivElement>(null);
 
@@ -85,7 +86,7 @@ export default function DNAClient({ userName }: Props) {
   const traitLabels = TRAIT_KEYS.map((k) => t(k, lang));
 
   return (
-    <div>
+    <div className="pb-20 sm:pb-0">
       <a href="/dashboard" className="text-sm text-text-muted hover:text-text mb-6 flex items-center gap-1 transition-colors">
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -177,7 +178,7 @@ export default function DNAClient({ userName }: Props) {
         </div>
       </div>
 
-      {/* Share Buttons */}
+      {/* Inline share buttons (visible when scrolled to) */}
       <div className={`flex justify-center gap-3 mb-6 transition-all duration-700 delay-200 ${revealed ? 'opacity-100' : 'opacity-0'}`}>
         <ShareButton
           targetRef={cardRef}
@@ -192,11 +193,35 @@ export default function DNAClient({ userName }: Props) {
           shareText={`My Running DNA: ${personality.type}`}
           label="Story"
           savingLabel="..."
+          onBeforeShare={() => setShowStory(true)}
         />
       </div>
 
-      {/* Hidden Instagram Story Card (9:16) */}
-      <div className="fixed -left-[9999px] top-0">
+      {/* Sticky share bar — always visible on mobile */}
+      {revealed && (
+        <div className="fixed bottom-0 left-0 right-0 z-40 sm:hidden border-t border-border bg-bg/90 backdrop-blur-lg px-4 py-3 flex gap-2">
+          <ShareButton
+            targetRef={cardRef}
+            filename={`rundna-${userName.replace(/\s+/g, '-').toLowerCase()}`}
+            shareText={`My Running DNA: ${personality.type}`}
+            label={t('dna.share', lang)}
+            savingLabel={t('common.saving', lang)}
+            fullWidth
+          />
+          <ShareButton
+            targetRef={storyRef}
+            filename={`rundna-story-${userName.replace(/\s+/g, '-').toLowerCase()}`}
+            shareText={`My Running DNA: ${personality.type}`}
+            label="Story"
+            savingLabel="..."
+            onBeforeShare={() => setShowStory(true)}
+            fullWidth
+          />
+        </div>
+      )}
+
+      {/* Hidden Instagram Story Card (9:16) — lazy rendered */}
+      {showStory && <div className="fixed -left-[9999px] top-0">
         <div ref={storyRef} className="w-[1080px] h-[1920px] bg-[#060a0e] flex flex-col items-center justify-center p-16 relative overflow-hidden">
           {/* Background pattern */}
           <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 50% 30%, #10b981 0%, transparent 50%)' }} />
@@ -249,7 +274,7 @@ export default function DNAClient({ userName }: Props) {
             </div>
           </div>
         </div>
-      </div>
+      </div>}
 
       {/* Training Load Detail */}
       <div className={`rounded-xl border border-border bg-surface p-5 mb-6 transition-all duration-700 delay-300 ${revealed ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
@@ -372,19 +397,23 @@ function MiniStat({ label, value, color }: { label: string; value: string; color
   );
 }
 
-function ShareButton({ targetRef, filename, shareText, label, savingLabel }: {
+function ShareButton({ targetRef, filename, shareText, label, savingLabel, fullWidth, onBeforeShare }: {
   targetRef: React.RefObject<HTMLDivElement | null>;
   filename: string;
   shareText: string;
   label: string;
   savingLabel: string;
+  fullWidth?: boolean;
+  onBeforeShare?: () => void;
 }) {
   const [saving, setSaving] = useState(false);
 
   async function handleShare() {
     if (!targetRef.current || saving) return;
+    if (onBeforeShare) onBeforeShare();
     setSaving(true);
     try {
+      await new Promise((r) => setTimeout(r, 100)); // allow lazy DOM to mount
       await shareCard(targetRef.current, filename, shareText, 'https://rundna.online');
     } finally {
       setSaving(false);
@@ -395,7 +424,7 @@ function ShareButton({ targetRef, filename, shareText, label, savingLabel }: {
     <button
       onClick={handleShare}
       disabled={saving}
-      className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-primary/30 bg-primary/10 text-primary text-sm font-medium hover:bg-primary/20 transition-all disabled:opacity-50"
+      className={`flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl border border-primary/30 bg-primary/10 text-primary text-sm font-medium hover:bg-primary/20 transition-all disabled:opacity-50 ${fullWidth ? 'flex-1' : ''}`}
     >
       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />

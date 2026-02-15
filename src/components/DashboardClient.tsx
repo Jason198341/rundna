@@ -134,26 +134,26 @@ export default function DashboardClient({ userName }: Props) {
       <div>
         <h2 className="text-lg font-semibold mb-4">{t('dash.recent', lang)}</h2>
         <div className="rounded-xl border border-border bg-surface overflow-hidden">
-          <div className="grid grid-cols-[1fr_auto_auto_auto] gap-3 px-4 py-2.5 border-b border-border text-xs font-medium text-text-muted uppercase tracking-wider">
+          <div className="grid grid-cols-[1fr_auto_auto] sm:grid-cols-[1fr_auto_auto_auto] gap-3 px-4 py-2.5 border-b border-border text-xs font-medium text-text-muted uppercase tracking-wider">
             <span>{t('dash.activity', lang)}</span>
-            <span className="w-20 text-right">{t('dash.distance', lang)}</span>
-            <span className="w-20 text-right hidden sm:block">{t('dash.pace', lang)}</span>
-            <span className="w-20 text-right">{t('dash.time', lang)}</span>
+            <span className="w-16 sm:w-20 text-right">{t('dash.distance', lang)}</span>
+            <span className="w-16 sm:w-20 text-right hidden sm:block">{t('dash.pace', lang)}</span>
+            <span className="w-16 sm:w-20 text-right">{t('dash.time', lang)}</span>
           </div>
           {runs.slice(0, 15).map((r, i) => (
             <div
               key={i}
-              className={`grid grid-cols-[1fr_auto_auto_auto] gap-3 px-4 py-3 text-sm ${
+              className={`grid grid-cols-[1fr_auto_auto] sm:grid-cols-[1fr_auto_auto_auto] gap-3 px-4 py-3 text-sm ${
                 i < Math.min(runs.length, 15) - 1 ? 'border-b border-border' : ''
               }`}
             >
               <div className="min-w-0">
                 <p className="font-medium truncate">{r.name}</p>
-                <p className="text-xs text-text-muted">{r.date} · {r.locationFlag} {r.location}</p>
+                <p className="text-xs text-text-muted truncate">{r.date} · {r.locationFlag} {r.location}</p>
               </div>
-              <span className="w-20 text-right font-mono text-text-muted">{r.distance}</span>
-              <span className="w-20 text-right font-mono text-text-muted hidden sm:block">{r.pace}</span>
-              <span className="w-20 text-right font-mono text-text-muted">{r.time}</span>
+              <span className="w-16 sm:w-20 text-right font-mono text-text-muted">{r.distance}</span>
+              <span className="w-16 sm:w-20 text-right font-mono text-text-muted hidden sm:block">{r.pace}</span>
+              <span className="w-16 sm:w-20 text-right font-mono text-text-muted">{r.time}</span>
             </div>
           ))}
         </div>
@@ -180,7 +180,11 @@ function FeatureCard({ icon, title, desc, href, color }: {
       className="rounded-xl border border-border bg-surface p-5 hover:border-primary/30 transition-all group block"
     >
       <span className="text-2xl mb-2 block">{icon}</span>
-      <h3 className={`font-semibold mb-1 text-${color} group-hover:text-${color}-hover transition-colors`}>
+      <h3 className={`font-semibold mb-1 transition-colors ${
+        color === 'primary' ? 'text-primary group-hover:text-primary-hover' :
+        color === 'accent' ? 'text-accent group-hover:text-accent' :
+        color === 'warm' ? 'text-warm group-hover:text-warm' : 'text-primary group-hover:text-primary-hover'
+      }`}>
         {title}
       </h3>
       <p className="text-sm text-text-muted">{desc}</p>

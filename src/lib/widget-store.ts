@@ -14,8 +14,6 @@ export interface WidgetPreferences {
   enabledWidgets: WidgetId[];
   widgetOrder: WidgetId[];
   widgetSizes: Partial<Record<WidgetId, WidgetSize>>;
-  // Share setup
-  shareCode?: string;
 }
 
 // ── Default preferences (beginner preset) ──
@@ -67,18 +65,14 @@ export function applyPreset(presetId: PresetId): WidgetPreferences {
   return prefs;
 }
 
-// ── Apply skin ──
+// ── Apply skin — sets ALL CSS variables for full theme change ──
 export function applySkin(skinId: SkinId): void {
   const skin = SKINS.find(s => s.id === skinId);
-  if (!skin) return;
+  if (!skin || typeof document === 'undefined') return;
   const root = document.documentElement;
-  root.style.setProperty('--color-bg', skin.colors.bg);
-  root.style.setProperty('--color-surface', skin.colors.surface);
-  root.style.setProperty('--color-border', skin.colors.border);
-  root.style.setProperty('--color-primary', skin.colors.primary);
-  root.style.setProperty('--color-accent', skin.colors.accent);
-  root.style.setProperty('--color-warm', skin.colors.warm);
-  // Update preferences
+  for (const [key, value] of Object.entries(skin.colors)) {
+    root.style.setProperty(`--color-${key}`, value);
+  }
   const prefs = loadPreferences();
   prefs.skin = skinId;
   savePreferences(prefs);
@@ -116,35 +110,4 @@ export function resizeWidget(id: WidgetId, size: WidgetSize): WidgetPreferences 
   prefs.widgetSizes[id] = size;
   savePreferences(prefs);
   return prefs;
-}
-
-// ── Generate share code ──
-export function generateShareCode(): string {
-  const prefs = loadPreferences();
-  const payload = {
-    p: prefs.preset,
-    s: prefs.skin,
-    w: prefs.enabledWidgets,
-    o: prefs.widgetOrder,
-  };
-  return btoa(JSON.stringify(payload));
-}
-
-// ── Import from share code ──
-export function importShareCode(code: string): WidgetPreferences | null {
-  try {
-    const payload = JSON.parse(atob(code));
-    const prefs: WidgetPreferences = {
-      version: 2,
-      preset: payload.p || 'custom',
-      skin: payload.s || 'dark-runner',
-      enabledWidgets: payload.w || [],
-      widgetOrder: payload.o || payload.w || [],
-      widgetSizes: {},
-    };
-    savePreferences(prefs);
-    return prefs;
-  } catch {
-    return null;
-  }
 }

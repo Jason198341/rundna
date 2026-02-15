@@ -4,7 +4,7 @@ import { useState } from 'react';
 import type { WidgetId, WidgetCategory, PresetId, SkinId } from '@/lib/widget-types';
 import { WIDGET_REGISTRY, PRESETS, SKINS } from '@/lib/widget-types';
 import type { WidgetPreferences } from '@/lib/widget-store';
-import { applyPreset, applySkin, toggleWidget, generateShareCode, importShareCode } from '@/lib/widget-store';
+import { applyPreset, applySkin, toggleWidget } from '@/lib/widget-store';
 import { t, type Lang } from '@/lib/i18n';
 
 interface Props {
@@ -27,8 +27,6 @@ const CATEGORIES: { id: WidgetCategory; titleKey: string }[] = [
 
 export default function CustomizePanel({ lang, prefs, onUpdate, onClose }: Props) {
   const [tab, setTab] = useState<Tab>('presets');
-  const [shareMsg, setShareMsg] = useState('');
-  const [importCode, setImportCode] = useState('');
 
   const handlePreset = (id: PresetId) => {
     const next = applyPreset(id);
@@ -43,25 +41,6 @@ export default function CustomizePanel({ lang, prefs, onUpdate, onClose }: Props
   const handleToggle = (id: WidgetId) => {
     const next = toggleWidget(id);
     onUpdate(next);
-  };
-
-  const handleShare = () => {
-    const code = generateShareCode();
-    navigator.clipboard.writeText(code);
-    setShareMsg(t('widget.copied', lang));
-    setTimeout(() => setShareMsg(''), 2000);
-  };
-
-  const handleImport = () => {
-    if (!importCode.trim()) return;
-    const result = importShareCode(importCode.trim());
-    if (result) {
-      applySkin(result.skin);
-      onUpdate(result);
-      setImportCode('');
-      setShareMsg(t('widget.applied', lang));
-      setTimeout(() => setShareMsg(''), 2000);
-    }
   };
 
   const tabs: { id: Tab; label: string }[] = [
@@ -148,7 +127,7 @@ export default function CustomizePanel({ lang, prefs, onUpdate, onClose }: Props
                     <span className="text-sm font-semibold">{t(s.titleKey, lang)}</span>
                   </div>
                   <div className="flex gap-1.5">
-                    {Object.values(s.colors).map((c, i) => (
+                    {s.preview.map((c, i) => (
                       <div key={i} className="w-5 h-5 rounded-full border border-white/10" style={{ backgroundColor: c }} />
                     ))}
                   </div>
@@ -197,36 +176,6 @@ export default function CustomizePanel({ lang, prefs, onUpdate, onClose }: Props
                 );
               })}
             </div>
-          )}
-        </div>
-
-        {/* Footer: Share / Import */}
-        <div className="border-t border-border px-4 py-3 shrink-0">
-          <div className="flex gap-2">
-            <button
-              onClick={handleShare}
-              className="flex-1 text-xs py-2 rounded-lg bg-primary/10 text-primary font-medium hover:bg-primary/20 transition-colors"
-            >
-              {t('widget.shareSetup', lang)}
-            </button>
-            <div className="flex-1 flex gap-1">
-              <input
-                type="text"
-                value={importCode}
-                onChange={e => setImportCode(e.target.value)}
-                placeholder="Paste code..."
-                className="flex-1 text-xs px-2 py-2 rounded-lg bg-bg border border-border focus:border-primary outline-none"
-              />
-              <button
-                onClick={handleImport}
-                className="text-xs px-3 py-2 rounded-lg bg-accent/10 text-accent font-medium hover:bg-accent/20 transition-colors"
-              >
-                OK
-              </button>
-            </div>
-          </div>
-          {shareMsg && (
-            <p className="text-xs text-primary text-center mt-2 animate-fade-in-up">{shareMsg}</p>
           )}
         </div>
       </div>

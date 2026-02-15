@@ -171,18 +171,30 @@ export const PRESETS: Preset[] = [
 // ── Skins ──
 export type SkinId = 'dark-runner' | 'dawn-patrol' | 'ocean-mile' | 'lava-flow' | 'trail-spirit' | 'ice-breaker';
 
+// Full color palette matching every CSS variable in globals.css
+export interface SkinColors {
+  bg: string;
+  surface: string;
+  'surface-hover': string;
+  border: string;
+  text: string;
+  'text-muted': string;
+  primary: string;
+  'primary-hover': string;
+  'primary-dim': string;
+  accent: string;
+  'accent-dim': string;
+  warm: string;
+  danger: string;
+  glow: string;
+}
+
 export interface Skin {
   id: SkinId;
   titleKey: string;
   icon: string;
-  colors: {
-    bg: string;
-    surface: string;
-    border: string;
-    primary: string;
-    accent: string;
-    warm: string;
-  };
+  colors: SkinColors;
+  preview: string[]; // 6 color dots for the selector
 }
 
 export const SKINS: Skin[] = [
@@ -190,37 +202,79 @@ export const SKINS: Skin[] = [
     id: 'dark-runner',
     titleKey: 'skin.darkRunner',
     icon: '🌑',
-    colors: { bg: '#060a0e', surface: '#0d1117', border: '#1e2a3a', primary: '#10b981', accent: '#22d3ee', warm: '#f59e0b' },
+    preview: ['#060a0e', '#0d1117', '#10b981', '#22d3ee', '#f59e0b', '#ef4444'],
+    colors: {
+      bg: '#060a0e', surface: '#0d1117', 'surface-hover': '#161b22', border: '#1e2a3a',
+      text: '#e6edf3', 'text-muted': '#7d8590',
+      primary: '#10b981', 'primary-hover': '#34d399', 'primary-dim': '#10b98120',
+      accent: '#22d3ee', 'accent-dim': '#22d3ee20',
+      warm: '#f59e0b', danger: '#ef4444', glow: '#10b98140',
+    },
   },
   {
     id: 'dawn-patrol',
     titleKey: 'skin.dawnPatrol',
     icon: '🌅',
-    colors: { bg: '#0f0a1a', surface: '#1a1028', border: '#2d1f4e', primary: '#f97316', accent: '#a855f7', warm: '#fbbf24' },
+    preview: ['#0f0a1a', '#1a1028', '#f97316', '#a855f7', '#fbbf24', '#ef4444'],
+    colors: {
+      bg: '#0f0a1a', surface: '#1a1028', 'surface-hover': '#251840', border: '#2d1f4e',
+      text: '#f0e6ff', 'text-muted': '#9b8ab8',
+      primary: '#f97316', 'primary-hover': '#fb923c', 'primary-dim': '#f9731620',
+      accent: '#a855f7', 'accent-dim': '#a855f720',
+      warm: '#fbbf24', danger: '#f43f5e', glow: '#f9731640',
+    },
   },
   {
     id: 'ocean-mile',
     titleKey: 'skin.oceanMile',
     icon: '🌊',
-    colors: { bg: '#041318', surface: '#0a1f2e', border: '#153448', primary: '#06b6d4', accent: '#2dd4bf', warm: '#38bdf8' },
+    preview: ['#041318', '#0a1f2e', '#06b6d4', '#2dd4bf', '#38bdf8', '#ef4444'],
+    colors: {
+      bg: '#041318', surface: '#0a1f2e', 'surface-hover': '#0f2d42', border: '#153448',
+      text: '#d1f0fa', 'text-muted': '#6ba3be',
+      primary: '#06b6d4', 'primary-hover': '#22d3ee', 'primary-dim': '#06b6d420',
+      accent: '#2dd4bf', 'accent-dim': '#2dd4bf20',
+      warm: '#38bdf8', danger: '#f87171', glow: '#06b6d440',
+    },
   },
   {
     id: 'lava-flow',
     titleKey: 'skin.lavaFlow',
     icon: '🔥',
-    colors: { bg: '#120808', surface: '#1c0e0e', border: '#3a1a1a', primary: '#ef4444', accent: '#f97316', warm: '#fbbf24' },
+    preview: ['#120808', '#1c0e0e', '#ef4444', '#f97316', '#fbbf24', '#dc2626'],
+    colors: {
+      bg: '#120808', surface: '#1c0e0e', 'surface-hover': '#2a1414', border: '#3a1a1a',
+      text: '#fde8e8', 'text-muted': '#b07070',
+      primary: '#ef4444', 'primary-hover': '#f87171', 'primary-dim': '#ef444420',
+      accent: '#f97316', 'accent-dim': '#f9731620',
+      warm: '#fbbf24', danger: '#dc2626', glow: '#ef444440',
+    },
   },
   {
     id: 'trail-spirit',
     titleKey: 'skin.trailSpirit',
     icon: '🌿',
-    colors: { bg: '#080e08', surface: '#0e170e', border: '#1e3a1e', primary: '#22c55e', accent: '#a3e635', warm: '#84cc16' },
+    preview: ['#080e08', '#0e170e', '#22c55e', '#a3e635', '#84cc16', '#ef4444'],
+    colors: {
+      bg: '#080e08', surface: '#0e170e', 'surface-hover': '#163016', border: '#1e3a1e',
+      text: '#d8f5d8', 'text-muted': '#6da06d',
+      primary: '#22c55e', 'primary-hover': '#4ade80', 'primary-dim': '#22c55e20',
+      accent: '#a3e635', 'accent-dim': '#a3e63520',
+      warm: '#84cc16', danger: '#f87171', glow: '#22c55e40',
+    },
   },
   {
     id: 'ice-breaker',
     titleKey: 'skin.iceBreaker',
     icon: '❄️',
-    colors: { bg: '#0a0e14', surface: '#111827', border: '#1f2937', primary: '#93c5fd', accent: '#c4b5fd', warm: '#e5e7eb' },
+    preview: ['#0a0e14', '#111827', '#93c5fd', '#c4b5fd', '#e5e7eb', '#f87171'],
+    colors: {
+      bg: '#0a0e14', surface: '#111827', 'surface-hover': '#1e293b', border: '#1f2937',
+      text: '#e2e8f0', 'text-muted': '#94a3b8',
+      primary: '#93c5fd', 'primary-hover': '#bfdbfe', 'primary-dim': '#93c5fd20',
+      accent: '#c4b5fd', 'accent-dim': '#c4b5fd20',
+      warm: '#e5e7eb', danger: '#f87171', glow: '#93c5fd40',
+    },
   },
 ];
 

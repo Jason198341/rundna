@@ -1,13 +1,13 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import type { EnrichedRunData } from '@/lib/strava';
 import type { IntelligenceData } from '@/lib/strava-analytics';
 import type { WidgetId } from '@/lib/widget-types';
 import { getWidgetDef } from '@/lib/widget-types';
 import type { WidgetPreferences } from '@/lib/widget-store';
-import { loadPreferences, savePreferences, applySkin } from '@/lib/widget-store';
+import { loadPreferences, savePreferences, reorderWidgets } from '@/lib/widget-store';
 import { t } from '@/lib/i18n';
 import { useLang } from '@/lib/useLang';
 import WidgetShell from '@/components/widgets/WidgetShell';
@@ -28,7 +28,6 @@ interface Props {
   userName: string;
 }
 
-// Data source types
 interface DataSources {
   runData: EnrichedRunData | null;
   intelligence: IntelligenceData | null;
@@ -43,10 +42,10 @@ export default function DashboardClient({ userName }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
 
-  // Apply skin on mount
-  useEffect(() => {
-    applySkin(prefs.skin);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  // ── Drag & Drop State ──
+  const [dragIdx, setDragIdx] = useState<number | null>(null);
+  const [overIdx, setOverIdx] = useState<number | null>(null);
+  const dragCounter = useRef(0);
 
   // Compute which data sources are needed (js-set-map-lookups best practice)
   const neededDeps = new Set(
@@ -61,13 +60,10 @@ export default function DashboardClient({ userName }: Props) {
       setProgress(p => Math.min(p + Math.random() * 15, 90));
     }, 200);
 
+    const needsRun = neededDeps.has('runData') || neededDeps.has('intelligence');
     const fetches: Promise<void>[] = [];
 
-    // Always fetch runData if any widget needs it or intelligence (intelligence is derived from runData server-side)
-    const needsRun = neededDeps.has('runData') || neededDeps.has('intelligence');
-
     if (needsRun) {
-      // Fetch both in parallel — intelligence API fetches its own data server-side
       const runPromise = fetch('/api/strava/data').then(r => {
         if (!r.ok) throw new Error('Failed to load run data');
         return r.json();
@@ -77,7 +73,6 @@ export default function DashboardClient({ userName }: Props) {
         return r.json();
       });
 
-      // async-parallel: start both, await together
       fetches.push(
         Promise.all([runPromise, intelPromise]).then(([runData, intelligence]) => {
           setData({ runData, intelligence });
@@ -112,6 +107,39 @@ export default function DashboardClient({ userName }: Props) {
       savePreferences(next);
       return next;
     });
+  }, []);
+
+  // ── Drag Handlers ──
+  const handleDragStart = useCallback((idx: number) => {
+    setDragIdx(idx);
+  }, []);
+
+  const handleDragEnter = useCallback((idx: number) => {
+    dragCounter.current++;
+    setOverIdx(idx);
+  }, []);
+
+  const handleDragLeave = useCallback(() => {
+    dragCounter.current--;
+    if (dragCounter.current <= 0) {
+      dragCounter.current = 0;
+      setOverIdx(null);
+    }
+  }, []);
+
+  const handleDrop = useCallback((toIdx: number) => {
+    if (dragIdx === null || dragIdx === toIdx) return;
+    const next = reorderWidgets(dragIdx, toIdx);
+    setPrefs(next);
+    setDragIdx(null);
+    setOverIdx(null);
+    dragCounter.current = 0;
+  }, [dragIdx]);
+
+  const handleDragEnd = useCallback(() => {
+    setDragIdx(null);
+    setOverIdx(null);
+    dragCounter.current = 0;
   }, []);
 
   // ── Loading State ──
@@ -157,7 +185,6 @@ export default function DashboardClient({ userName }: Props) {
     );
   }
 
-  // Build ordered list of enabled widgets
   const orderedWidgets = prefs.widgetOrder.filter(id => prefs.enabledWidgets.includes(id));
 
   return (
@@ -181,18 +208,30 @@ export default function DashboardClient({ userName }: Props) {
         </button>
       </div>
 
-      {/* Widget Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {orderedWidgets.map(id => (
-          <WidgetShell
+      {/* Widget Grid — Flexbox: 2/row default, equal height, drag-and-drop */}
+      <div className="flex flex-wrap gap-4 items-stretch">
+        {orderedWidgets.map((id, idx) => (
+          <div
             key={id}
-            id={id}
-            size={prefs.widgetSizes[id]}
-            lang={lang}
-            onRemove={handleRemoveWidget}
+            className="flex-1 basis-[calc(50%-0.5rem)] min-w-[280px]"
+            draggable
+            onDragStart={() => handleDragStart(idx)}
+            onDragEnter={() => handleDragEnter(idx)}
+            onDragLeave={handleDragLeave}
+            onDragOver={e => e.preventDefault()}
+            onDrop={() => handleDrop(idx)}
+            onDragEnd={handleDragEnd}
           >
-            {renderWidget(id, data, lang)}
-          </WidgetShell>
+            <WidgetShell
+              id={id}
+              lang={lang}
+              onRemove={handleRemoveWidget}
+              isDragging={dragIdx === idx}
+              isDragOver={overIdx === idx && dragIdx !== idx}
+            >
+              {renderWidget(id, data, lang)}
+            </WidgetShell>
+          </div>
         ))}
       </div>
 
@@ -227,12 +266,10 @@ export default function DashboardClient({ userName }: Props) {
 }
 
 // ── Widget Renderer ──
-// Maps each WidgetId to its component with correct data
 function renderWidget(id: WidgetId, data: DataSources, lang: 'en' | 'ko'): React.ReactNode {
   const { runData, intelligence } = data;
 
   switch (id) {
-    // ── Core widgets ──
     case 'stats-overview':
       return runData ? <StatsOverview data={runData} lang={lang} /> : null;
     case 'personal-records':
@@ -270,7 +307,6 @@ function renderWidget(id: WidgetId, data: DataSources, lang: 'en' | 'ko'): React
     case 'weekly-challenge':
       return intelligence ? <WeeklyChallenge intel={intelligence} lang={lang} /> : null;
 
-    // ── Level 1-5 widgets (placeholder until implemented) ──
     case 'run-film':
     case 'ghost-comparison':
     case 'monthly-highlight':

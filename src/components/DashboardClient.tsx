@@ -469,23 +469,15 @@ function renderWidget(id: WidgetId, data: DataSources, lang: 'en' | 'ko'): React
       return runData ? <RunHeatmap data={runData} /> : null;
 
     // ── Level 1: Run Film ──
-    case 'ghost-comparison':
-      return <GhostComparisonWidget lang={lang} />;
     case 'monthly-highlight':
       return runData ? <MonthlyHighlightWidget data={runData} lang={lang} /> : null;
 
     // ── Level 2: Segment Sniper ──
     case 'snipe-missions':
       return <SnipeMissionsWidget lang={lang} />;
-    case 'segment-xray':
-      return <SegmentXrayWidget lang={lang} />;
-
-    // ── Level 3: Shoe Graveyard ──
+    // ── Level 3: Shoe ──
     case 'shoe-health':
       return <ShoeHealthWidget lang={lang} />;
-    case 'shoe-graveyard':
-      return <ShoeGraveyardWidget lang={lang} />;
-
     // ── Level 4: DNA Battle ──
     case 'dna-battle':
       return intelligence ? <DNABattleWidget intel={intelligence} lang={lang} /> : null;
@@ -497,9 +489,6 @@ function renderWidget(id: WidgetId, data: DataSources, lang: 'en' | 'ko'): React
       return intelligence ? <RaceSimWidget intel={intelligence} lang={lang} /> : null;
     case 'pacing-card':
       return intelligence ? <PacingCardWidget intel={intelligence} lang={lang} /> : null;
-    case 'what-if':
-      return intelligence ? <WhatIfWidget intel={intelligence} lang={lang} /> : null;
-
     default:
       return null;
   }
@@ -552,22 +541,10 @@ function renderExpandedWidget(id: WidgetId, data: DataSources, lang: 'en' | 'ko'
 // Level 1-5 Widgets (previously Coming Soon)
 // ═══════════════════════════════════════════════
 
-function GhostComparisonWidget({ lang }: { lang: 'en' | 'ko' }) {
-  return (
-    <div className="text-center py-2">
-      <span className="text-3xl">👻</span>
-      <p className="text-sm font-medium mt-2">{lang === 'ko' ? '고스트 비교' : 'Ghost Comparison'}</p>
-      <p className="text-xs text-text-muted mt-1">{lang === 'ko' ? '과거 나 vs 현재 나' : 'Past you vs Present you'}</p>
-      <a href="/film" className="inline-block mt-3 text-xs text-primary hover:text-primary-hover transition-colors">
-        {lang === 'ko' ? '필름에서 비교' : 'Compare in Film'} →
-      </a>
-    </div>
-  );
-}
 
 function MonthlyHighlightWidget({ data, lang }: { data: EnrichedRunData; lang: 'en' | 'ko' }) {
   const thisMonth = data.runs.filter(r => {
-    const d = new Date(r.date);
+    const d = new Date(r.dateFull);
     const now = new Date();
     return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
   });
@@ -618,30 +595,6 @@ function SnipeMissionsWidget({ lang }: { lang: 'en' | 'ko' }) {
   );
 }
 
-function SegmentXrayWidget({ lang }: { lang: 'en' | 'ko' }) {
-  const [top, setTop] = useState<Array<{ segmentName: string; elapsedTime: number; distance: number }>>([]);
-  useEffect(() => {
-    fetch('/api/strava/segments').then(r => r.ok ? r.json() : []).then(d => {
-      if (Array.isArray(d)) setTop(d.slice(0, 5));
-    }).catch(() => {});
-  }, []);
-  const fmtTime = (s: number) => { const m = Math.floor(s / 60); return `${m}:${String(Math.round(s % 60)).padStart(2, '0')}`; };
-  return (
-    <div>
-      <p className="text-xs text-text-muted mb-2">{lang === 'ko' ? '세그먼트 X-Ray' : 'Segment X-Ray'}</p>
-      {top.map((s, i) => (
-        <div key={i} className="flex items-center justify-between py-1.5 text-sm">
-          <span className="truncate flex-1">{s.segmentName}</span>
-          <span className="text-xs font-mono text-accent">{fmtTime(s.elapsedTime)}</span>
-        </div>
-      ))}
-      <a href="/segments" className="inline-block mt-3 text-xs text-primary hover:text-primary-hover transition-colors">
-        {lang === 'ko' ? '상세 분석' : 'Deep Analysis'} →
-      </a>
-    </div>
-  );
-}
-
 function ShoeHealthWidget({ lang }: { lang: 'en' | 'ko' }) {
   const [shoes, setShoes] = useState<Array<{ name: string; distanceKm: number; healthPercent: number; retired: boolean }>>([]);
   useEffect(() => {
@@ -670,31 +623,6 @@ function ShoeHealthWidget({ lang }: { lang: 'en' | 'ko' }) {
       )}
       <a href="/shoes" className="inline-block mt-2 text-xs text-primary hover:text-primary-hover transition-colors">
         {lang === 'ko' ? '신발 관리' : 'Manage Shoes'} →
-      </a>
-    </div>
-  );
-}
-
-function ShoeGraveyardWidget({ lang }: { lang: 'en' | 'ko' }) {
-  const [retired, setRetired] = useState<Array<{ name: string; distanceKm: number }>>([]);
-  useEffect(() => {
-    fetch('/api/strava/gear').then(r => r.ok ? r.json() : []).then(d => {
-      if (Array.isArray(d)) setRetired(d.filter((s: any) => s.retired).slice(0, 5));
-    }).catch(() => {});
-  }, []);
-  return (
-    <div>
-      <p className="text-xs text-text-muted mb-2">{lang === 'ko' ? '은퇴한 신발' : 'Retired Shoes'}</p>
-      {retired.length > 0 ? retired.map((s, i) => (
-        <div key={i} className="flex items-center justify-between py-1.5 text-sm">
-          <span className="truncate">🪦 {s.name}</span>
-          <span className="text-xs text-text-muted font-mono">{s.distanceKm.toFixed(0)} km</span>
-        </div>
-      )) : (
-        <p className="text-sm text-text-muted">{lang === 'ko' ? '은퇴 신발 없음' : 'No retired shoes yet'}</p>
-      )}
-      <a href="/shoes" className="inline-block mt-2 text-xs text-primary hover:text-primary-hover transition-colors">
-        {lang === 'ko' ? '신발 묘지' : 'Shoe Graveyard'} →
       </a>
     </div>
   );
@@ -775,27 +703,6 @@ function PacingCardWidget({ intel, lang }: { intel: IntelligenceData; lang: 'en'
       </div>
       <a href="/simulation" className="inline-block mt-3 text-xs text-primary hover:text-primary-hover transition-colors">
         {lang === 'ko' ? '시뮬레이션' : 'Simulation'} →
-      </a>
-    </div>
-  );
-}
-
-function WhatIfWidget({ intel, lang }: { intel: IntelligenceData; lang: 'en' | 'ko' }) {
-  const pred5k = intel.racePredictions.find(r => r.label === '5K');
-  return (
-    <div className="text-center py-2">
-      <span className="text-3xl">🔄</span>
-      <p className="text-sm font-medium mt-2">{lang === 'ko' ? 'What-If 시뮬레이터' : 'What-If Simulator'}</p>
-      {pred5k && (
-        <p className="text-xs text-text-muted mt-1">
-          {lang === 'ko' ? `현재 5K: ${pred5k.time}` : `Current 5K: ${pred5k.time}`}
-        </p>
-      )}
-      <p className="text-[10px] text-text-muted mt-1">
-        {lang === 'ko' ? '체중, 날씨, 코스를 바꿔보세요' : 'Adjust weight, weather, course'}
-      </p>
-      <a href="/simulation" className="inline-block mt-3 text-xs text-primary hover:text-primary-hover transition-colors">
-        {lang === 'ko' ? '시뮬레이터 열기' : 'Open Simulator'} →
       </a>
     </div>
   );
@@ -1324,6 +1231,9 @@ function TodaysPlanExpanded({ intel, lang }: { intel: IntelligenceData; lang: 'e
           </div>
         </div>
       )}
+      <a href="/planner" className="inline-block mt-4 text-xs text-primary hover:text-primary-hover transition-colors">
+        {lang === 'ko' ? '플래너에서 자세히 →' : 'Full Planner →'}
+      </a>
     </div>
   );
 }
@@ -1363,6 +1273,9 @@ function CoachAdviceExpanded({ intel, lang }: { intel: IntelligenceData; lang: '
           </div>
         )}
       </div>
+      <a href="/coach" className="inline-block mt-4 text-xs text-primary hover:text-primary-hover transition-colors">
+        {lang === 'ko' ? 'AI 코치에서 자세히 →' : 'Full AI Coach →'}
+      </a>
     </div>
   );
 }

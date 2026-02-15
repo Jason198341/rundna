@@ -16,7 +16,7 @@ interface Props {
 
 type Tab = 'presets' | 'skins' | 'widgets';
 
-const CATEGORIES: { id: WidgetCategory; titleKey: string }[] = [
+const ALL_CATEGORIES: { id: WidgetCategory; titleKey: string }[] = [
   { id: 'core', titleKey: 'cat.core' },
   { id: 'film', titleKey: 'cat.film' },
   { id: 'segment', titleKey: 'cat.segment' },
@@ -24,6 +24,7 @@ const CATEGORIES: { id: WidgetCategory; titleKey: string }[] = [
   { id: 'battle', titleKey: 'cat.battle' },
   { id: 'twin', titleKey: 'cat.twin' },
 ];
+const CATEGORIES = ALL_CATEGORIES.filter(cat => WIDGET_REGISTRY.some(w => w.category === cat.id));
 
 export default function CustomizePanel({ lang, prefs, onUpdate, onClose }: Props) {
   const [tab, setTab] = useState<Tab>('presets');

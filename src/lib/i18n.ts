@@ -223,7 +223,6 @@ const dict: Record<string, { en: string; ko: string }> = {
   'widget.runHeatmap': { en: 'Run Heatmap', ko: '러닝 히트맵' },
 
   // Level 1: Run Film
-  'widget.ghostComparison': { en: 'Ghost Race', ko: '고스트 레이스' },
   'widget.monthlyHighlight': { en: 'Monthly Highlight', ko: '월간 하이라이트' },
   'film.selectRun': { en: 'Select a run to replay', ko: '리플레이할 러닝 선택' },
   'film.replay': { en: 'Replay', ko: '리플레이' },
@@ -233,7 +232,6 @@ const dict: Record<string, { en: string; ko: string }> = {
 
   // Level 2: Segment Sniper
   'widget.snipeMissions': { en: 'Snipe Missions', ko: '스나이프 미션' },
-  'widget.segmentXray': { en: 'Segment X-Ray', ko: '세그먼트 엑스레이' },
   'segment.crown': { en: 'Crown', ko: '왕관' },
   'segment.yourRank': { en: 'Your Rank', ko: '내 순위' },
   'segment.mission': { en: 'This Week\'s Mission', ko: '이번 주 미션' },
@@ -241,7 +239,6 @@ const dict: Record<string, { en: string; ko: string }> = {
 
   // Level 3: Shoe Graveyard
   'widget.shoeHealth': { en: 'Shoe Health', ko: '신발 건강' },
-  'widget.shoeGraveyard': { en: 'Shoe Graveyard', ko: '슈즈 묘지' },
   'shoe.health': { en: 'Health', ko: '건강' },
   'shoe.retired': { en: 'Retired', ko: '은퇴' },
   'shoe.active': { en: 'Active', ko: '활성' },
@@ -282,7 +279,6 @@ const dict: Record<string, { en: string; ko: string }> = {
   // Level 5: Digital Twin
   'widget.raceSimulation': { en: 'Race Simulation', ko: '레이스 시뮬레이션' },
   'widget.pacingCard': { en: 'Pacing Card', ko: '페이싱 카드' },
-  'widget.whatIf': { en: 'What-If Analysis', ko: '만약에 분석' },
   'twin.simulate': { en: 'Simulate Race', ko: '레이스 시뮬레이션' },
   'twin.conservative': { en: 'Conservative', ko: '보수적' },
   'twin.even': { en: 'Even Split', ko: '이븐 스플릿' },
@@ -343,6 +339,7 @@ const dict: Record<string, { en: string; ko: string }> = {
   'nav.shoes': { en: 'Shoes', ko: '신발' },
   'nav.battle': { en: 'DNA Battle', ko: 'DNA 배틀' },
   'nav.simulation': { en: 'Race Sim', ko: '레이스 시뮬' },
+  'nav.story': { en: 'My Story', ko: '나의 스토리' },
 };
 
 export function t(key: string, lang: Lang): string {

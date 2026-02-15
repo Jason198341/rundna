@@ -41,14 +41,14 @@ export function FeatureNav({ lang }: { lang: Lang }) {
   const features = [
     { icon: '🧬', title: t('dash.dna', lang), href: '/dna', color: 'primary' },
     { icon: '🤖', title: t('dash.coach', lang), href: '/coach', color: 'accent' },
-    { icon: '🏁', title: t('dash.planner', lang), href: '/planner', color: 'warm' },
+    { icon: '⚔️', title: t('nav.battle', lang), href: '/battle', color: 'warm' },
     { icon: '📊', title: t('dash.report', lang), href: '/report', color: 'primary' },
-    { icon: '🎁', title: t('dash.wrapped', lang), href: '/wrapped', color: 'accent' },
-    { icon: '🎬', title: t('nav.film', lang), href: '/film', color: 'warm' },
+    { icon: '🏁', title: t('dash.planner', lang), href: '/planner', color: 'accent' },
+    { icon: '📖', title: t('nav.story', lang), href: '/story', color: 'warm' },
     { icon: '👑', title: t('nav.segments', lang), href: '/segments', color: 'primary' },
     { icon: '👟', title: t('nav.shoes', lang), href: '/shoes', color: 'accent' },
-    { icon: '⚔️', title: t('nav.battle', lang), href: '/battle', color: 'warm' },
-    { icon: '🏁', title: t('nav.simulation', lang), href: '/simulation', color: 'primary' },
+    { icon: '🏁', title: t('nav.simulation', lang), href: '/simulation', color: 'warm' },
+    { icon: '🎁', title: t('dash.wrapped', lang), href: '/wrapped', color: 'primary' },
   ];
   return (
     <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
@@ -283,41 +283,214 @@ export function PaceTrend({ intel }: { intel: IntelligenceData }) {
   const points = intel.paceTrend.slice(-12);
   if (points.length < 2) return <p className="text-sm text-text-muted">Need more data</p>;
 
-  const maxPace = Math.max(...points.map(p => p.avgPace));
-  const minPace = Math.min(...points.map(p => p.avgPace));
-  const range = maxPace - minPace || 1;
-  // Faster pace = taller bar (invert: subtract from max)
   const fmtPace = (s: number) => `${Math.floor(s / 60)}:${String(Math.round(s % 60)).padStart(2, '0')}`;
+
+  // --- Layout constants ---
+  const svgW = 200;
+  const svgH = 96;
+  const padL = 30;   // left gutter for Y-axis labels
+  const padR = 6;
+  const padT = 12;   // top breathing room for pace label
+  const padB = 14;   // bottom for week labels
+  const chartW = svgW - padL - padR;
+  const chartH = svgH - padT - padB;
+
+  // --- Data bounds ---
+  // Y-axis: pace in secs/km. LOWER pace = FASTER = HIGHER on chart (natural Y inversion).
+  // We plot with the slowest pace at the bottom and fastest at the top.
+  const paces = points.map(p => p.avgPace);
+  const minPace = Math.min(...paces);
+  const maxPace = Math.max(...paces);
+  const range = maxPace - minPace || 1;
+  // Add 5% padding so bars/dots don't clip edges
+  const yMin = minPace - range * 0.05;
+  const yMax = maxPace + range * 0.05;
+  const yRange = yMax - yMin || 1;
+
   const bestIdx = points.reduce((bi, p, i, arr) => p.avgPace < arr[bi].avgPace ? i : bi, 0);
+  const lastIdx = points.length - 1;
+
+  // --- Coordinate helpers ---
+  // X: evenly spaced across chart width
+  const xOf = (i: number) => padL + (chartW / Math.max(points.length - 1, 1)) * i;
+  // Y: lower pace (faster) = smaller Y (higher on screen)
+  const yOf = (pace: number) => padT + ((pace - yMin) / yRange) * chartH;
+
+  // --- Bar width ---
+  const barGap = 2;
+  const barW = Math.max(Math.min((chartW / points.length) - barGap, 14), 4);
+
+  // --- Color per bar: gradient from accent (fastest) to warm (slowest) ---
+  // Normalize each point's pace: 0 = fastest (best), 1 = slowest
+  const barColors = points.map(p => {
+    const t = range > 0 ? (p.avgPace - minPace) / range : 0;
+    // Interpolate hue: accent-ish (190 cyan-blue) -> warm-ish (35 amber)
+    // We use HSL: fast=hsl(160,80%,45%) mid=hsl(200,70%,50%) slow=hsl(35,90%,55%)
+    // Simpler: use 3-stop gradient via CSS. For inline SVG, compute hex.
+    // green(fast) -> yellow(mid) -> orange(slow)
+    const h = 160 - t * 125;       // 160 (green) -> 35 (amber)
+    const s = 75 + t * 15;         // 75% -> 90%
+    const l = 45 + t * 10;         // 45% -> 55%
+    return `hsl(${h} ${s}% ${l}%)`;
+  });
+
+  // --- Trend line: linear regression on avgPace ---
+  const n = points.length;
+  const sumX = points.reduce((s, _, i) => s + i, 0);
+  const sumY = points.reduce((s, p) => s + p.avgPace, 0);
+  const sumXY = points.reduce((s, p, i) => s + i * p.avgPace, 0);
+  const sumX2 = points.reduce((s, _, i) => s + i * i, 0);
+  const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX || 1);
+  const intercept = (sumY - slope * sumX) / n;
+  const trendY0 = intercept;
+  const trendYN = intercept + slope * (n - 1);
+  // Trend direction for the arrow/label
+  const isFaster = slope < -0.5;
+  const isSlower = slope > 0.5;
+
+  // --- Smoothed line path (monotone cubic interpolation via SVG cubic bezier) ---
+  const linePoints = points.map((p, i) => ({ x: xOf(i), y: yOf(p.avgPace) }));
+  let linePath = `M${linePoints[0].x},${linePoints[0].y}`;
+  if (linePoints.length === 2) {
+    // 2 points: straight line
+    linePath += ` L${linePoints[1].x},${linePoints[1].y}`;
+  } else {
+    // 3+ points: smooth cubic bezier through each pair using midpoint control points
+    for (let i = 1; i < linePoints.length; i++) {
+      const prev = linePoints[i - 1];
+      const curr = linePoints[i];
+      const cpx1 = prev.x + (curr.x - prev.x) / 3;
+      const cpx2 = prev.x + (curr.x - prev.x) * 2 / 3;
+      // Slope: use neighboring points for tangent direction
+      const slopePrev = i > 1
+        ? (curr.y - linePoints[i - 2].y) / (curr.x - linePoints[i - 2].x)
+        : (curr.y - prev.y) / (curr.x - prev.x);
+      const slopeCurr = i < linePoints.length - 1
+        ? (linePoints[i + 1].y - prev.y) / (linePoints[i + 1].x - prev.x)
+        : (curr.y - prev.y) / (curr.x - prev.x);
+      const cpy1 = prev.y + slopePrev * (curr.x - prev.x) / 3;
+      const cpy2 = curr.y - slopeCurr * (curr.x - prev.x) / 3;
+      linePath += ` C${cpx1},${cpy1} ${cpx2},${cpy2} ${curr.x},${curr.y}`;
+    }
+  }
+
+  // --- Area fill under curve ---
+  const areaPath = linePath + ` L${linePoints[lastIdx].x},${padT + chartH} L${linePoints[0].x},${padT + chartH} Z`;
 
   return (
     <div>
-      <p className="text-xs text-text-muted mb-2">{intel.paceImprovement}</p>
-      <div className="flex gap-1 h-24">
+      {/* Trend summary line */}
+      <div className="flex items-center gap-1.5 mb-1">
+        <span className={`text-[10px] font-semibold ${isFaster ? 'text-[#10b981]' : isSlower ? 'text-warm' : 'text-text-muted'}`}>
+          {isFaster ? '\u25B2' : isSlower ? '\u25BC' : '\u2500'}{' '}
+          {intel.paceImprovement}
+        </span>
+      </div>
+
+      <svg width="100%" viewBox={`0 0 ${svgW} ${svgH}`} className="overflow-visible">
+        <defs>
+          {/* Gradient fill under the curve */}
+          <linearGradient id="paceFillGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="var(--color-primary)" stopOpacity="0.25" />
+            <stop offset="100%" stopColor="var(--color-primary)" stopOpacity="0.02" />
+          </linearGradient>
+        </defs>
+
+        {/* Y-axis reference lines (2 lines: fastest & slowest) */}
+        <line x1={padL} y1={yOf(minPace)} x2={svgW - padR} y2={yOf(minPace)} stroke="var(--color-border)" strokeWidth="0.5" strokeDasharray="2,2" />
+        <line x1={padL} y1={yOf(maxPace)} x2={svgW - padR} y2={yOf(maxPace)} stroke="var(--color-border)" strokeWidth="0.5" strokeDasharray="2,2" />
+
+        {/* Y-axis pace labels */}
+        <text x={padL - 3} y={yOf(minPace) + 1} textAnchor="end" style={{ fill: 'var(--color-accent)' }} fontSize="7" fontWeight="600" fontFamily="ui-monospace,monospace">
+          {fmtPace(minPace)}
+        </text>
+        <text x={padL - 3} y={yOf(maxPace) + 1} textAnchor="end" style={{ fill: 'var(--color-text-muted)' }} fontSize="7" fontFamily="ui-monospace,monospace">
+          {fmtPace(maxPace)}
+        </text>
+
+        {/* Area fill */}
+        <path d={areaPath} fill="url(#paceFillGrad)" />
+
+        {/* Bars */}
         {points.map((p, i) => {
-          // Faster (lower pace number) = taller bar
-          const height = Math.max(((maxPace - p.avgPace) / range) * 85 + 15, 8);
-          const isLast = i === points.length - 1;
+          const cx = xOf(i);
+          const cy = yOf(p.avgPace);
+          const barTop = cy;
+          const barBottom = padT + chartH;
+          const barHeight = barBottom - barTop;
           const isBest = i === bestIdx;
+          const isLast = i === lastIdx;
           return (
-            <div key={p.weekKey} className="flex-1 flex flex-col items-center gap-0.5">
-              {isBest && <span className="text-[8px] font-bold text-accent shrink-0">{fmtPace(p.avgPace)}</span>}
-              <div className="flex-1 w-full relative">
-                <div
-                  className={`absolute bottom-0 w-full rounded-t transition-colors ${isLast ? 'bg-primary' : isBest ? 'bg-accent' : 'bg-primary/30'}`}
-                  style={{ height: `${height}%` }}
-                  title={`${p.week}: ${fmtPace(p.avgPace)}/km — ${p.distance.toFixed(1)}km`}
-                />
-              </div>
-              {i % 3 === 0 && <span className="text-[8px] text-text-muted shrink-0">{p.week.split(' ').pop()}</span>}
-            </div>
+            <g key={p.weekKey}>
+              <rect
+                x={cx - barW / 2}
+                y={barTop}
+                width={barW}
+                height={Math.max(barHeight, 1)}
+                rx={barW > 6 ? 2 : 1}
+                fill={barColors[i]}
+                opacity={isBest || isLast ? 0.9 : 0.5}
+                stroke={isBest ? 'var(--color-accent)' : isLast ? 'var(--color-primary)' : 'none'}
+                strokeWidth={isBest || isLast ? 1 : 0}
+              >
+                <title>{`${p.week}: ${fmtPace(p.avgPace)}/km (avg) | ${fmtPace(p.rawPace)}/km (raw) | ${p.distance.toFixed(1)}km`}</title>
+              </rect>
+
+              {/* Week label on X-axis */}
+              {(i === 0 || i === lastIdx || (points.length > 4 && i === Math.floor(lastIdx / 2))) && (
+                <text x={cx} y={svgH - 2} textAnchor="middle" style={{ fill: 'var(--color-text-muted)' }} fontSize="7" fontFamily="ui-monospace,monospace">
+                  {p.week.length > 6 ? p.week.split(' ').pop() : p.week}
+                </text>
+              )}
+            </g>
           );
         })}
-      </div>
-      <div className="flex justify-between text-[10px] text-text-muted mt-1">
-        <span>{fmtPace(maxPace)}/km</span>
-        <span className="text-accent font-medium">{fmtPace(minPace)}/km</span>
-      </div>
+
+        {/* Trend line (linear regression) */}
+        <line
+          x1={xOf(0)} y1={yOf(trendY0)}
+          x2={xOf(lastIdx)} y2={yOf(trendYN)}
+          stroke={isFaster ? '#10b981' : isSlower ? '#f59e0b' : 'var(--color-text-muted)'}
+          strokeWidth="1.5"
+          strokeDasharray="4,3"
+          opacity="0.7"
+        />
+
+        {/* Smoothed pace line */}
+        <path d={linePath} fill="none" stroke="var(--color-primary)" strokeWidth="1.5" strokeLinecap="round" />
+
+        {/* Dots on best and last */}
+        <circle cx={xOf(bestIdx)} cy={yOf(points[bestIdx].avgPace)} r="3" fill="var(--color-accent)" stroke="var(--color-surface)" strokeWidth="1" />
+        <circle cx={xOf(lastIdx)} cy={yOf(points[lastIdx].avgPace)} r="3" fill="var(--color-primary)" stroke="var(--color-surface)" strokeWidth="1" />
+
+        {/* Pace label on best week */}
+        <text
+          x={xOf(bestIdx)}
+          y={yOf(points[bestIdx].avgPace) - 5}
+          textAnchor={bestIdx < 2 ? 'start' : bestIdx > lastIdx - 2 ? 'end' : 'middle'}
+          style={{ fill: 'var(--color-accent)' }}
+          fontSize="7"
+          fontWeight="700"
+          fontFamily="ui-monospace,monospace"
+        >
+          {fmtPace(points[bestIdx].avgPace)}
+        </text>
+
+        {/* Pace label on most recent week (if different from best) */}
+        {lastIdx !== bestIdx && (
+          <text
+            x={xOf(lastIdx)}
+            y={yOf(points[lastIdx].avgPace) - 5}
+            textAnchor="end"
+            style={{ fill: 'var(--color-primary)' }}
+            fontSize="7"
+            fontWeight="600"
+            fontFamily="ui-monospace,monospace"
+          >
+            {fmtPace(points[lastIdx].avgPace)}
+          </text>
+        )}
+      </svg>
     </div>
   );
 }
@@ -471,10 +644,10 @@ export function WeeklyChallenge({ intel, lang }: { intel: IntelligenceData; lang
 
 // ── Run Heatmap (GitHub-style 52-week calendar) ──
 export function RunHeatmap({ data }: { data: EnrichedRunData }) {
-  // Build a map of date → total km
+  // Build a map of date → total km (use dateFull ISO for YYYY-MM-DD key)
   const dayMap = new Map<string, number>();
   for (const run of data.runs) {
-    const key = run.date; // YYYY-MM-DD
+    const key = run.dateFull.slice(0, 10); // "2025-02-15T..." → "2025-02-15"
     dayMap.set(key, (dayMap.get(key) || 0) + run.distanceKm);
   }
 

@@ -33,14 +33,11 @@ export type WidgetId =
   | 'route-familiarity'
   | 'milestones'
   // Level 1: Run Film
-  | 'ghost-comparison'
   | 'monthly-highlight'
   // Level 2: Segment Sniper
   | 'snipe-missions'
-  | 'segment-xray'
   // Level 3: Shoe Graveyard
   | 'shoe-health'
-  | 'shoe-graveyard'
   // Level 4: DNA Battle
   | 'dna-battle'
   | 'training-twin'
@@ -48,7 +45,6 @@ export type WidgetId =
   // Level 5: Digital Twin
   | 'race-simulation'
   | 'pacing-card'
-  | 'what-if'
   // Story / Visual
   | 'run-heatmap';
 
@@ -86,16 +82,13 @@ export const WIDGET_REGISTRY: WidgetDef[] = [
   { id: 'milestones', titleKey: 'widget.milestones', icon: '🎯', category: 'core', sizes: ['M', 'L'], defaultSize: 'M', dataDeps: ['intelligence'], tier: 'free' },
 
   // ── Level 1: Run Film ──
-  { id: 'ghost-comparison', titleKey: 'widget.ghostComparison', icon: '👻', category: 'film', sizes: ['L'], defaultSize: 'L', dataDeps: ['streams'], tier: 'pro' },
-  { id: 'monthly-highlight', titleKey: 'widget.monthlyHighlight', icon: '🎞️', category: 'film', sizes: ['M', 'L'], defaultSize: 'M', dataDeps: ['runData', 'streams'], tier: 'free' },
+  { id: 'monthly-highlight', titleKey: 'widget.monthlyHighlight', icon: '🎞️', category: 'film', sizes: ['M', 'L'], defaultSize: 'M', dataDeps: ['runData'], tier: 'free' },
 
   // ── Level 2: Segment Sniper ──
   { id: 'snipe-missions', titleKey: 'widget.snipeMissions', icon: '🎯', category: 'segment', sizes: ['M', 'L'], defaultSize: 'M', dataDeps: ['segments'], tier: 'free' },
-  { id: 'segment-xray', titleKey: 'widget.segmentXray', icon: '📉', category: 'segment', sizes: ['L', 'XL'], defaultSize: 'L', dataDeps: ['segments', 'streams'], tier: 'pro' },
 
-  // ── Level 3: Shoe Graveyard ──
+  // ── Level 3: Shoe ──
   { id: 'shoe-health', titleKey: 'widget.shoeHealth', icon: '👟', category: 'shoe', sizes: ['M', 'L'], defaultSize: 'M', dataDeps: ['gear'], tier: 'free' },
-  { id: 'shoe-graveyard', titleKey: 'widget.shoeGraveyard', icon: '🪦', category: 'shoe', sizes: ['L', 'XL'], defaultSize: 'L', dataDeps: ['gear'], tier: 'free' },
 
   // ── Level 4: DNA Battle ──
   { id: 'dna-battle', titleKey: 'widget.dnaBattle', icon: '⚔️', category: 'battle', sizes: ['L', 'XL'], defaultSize: 'L', dataDeps: ['intelligence'], tier: 'free' },
@@ -105,7 +98,6 @@ export const WIDGET_REGISTRY: WidgetDef[] = [
   // ── Level 5: Digital Twin ──
   { id: 'race-simulation', titleKey: 'widget.raceSimulation', icon: '🏁', category: 'twin', sizes: ['L', 'XL'], defaultSize: 'L', dataDeps: ['intelligence', 'streams'], tier: 'pro' },
   { id: 'pacing-card', titleKey: 'widget.pacingCard', icon: '📋', category: 'twin', sizes: ['M', 'L'], defaultSize: 'M', dataDeps: ['intelligence'], tier: 'free' },
-  { id: 'what-if', titleKey: 'widget.whatIf', icon: '🔄', category: 'twin', sizes: ['L'], defaultSize: 'L', dataDeps: ['intelligence', 'streams'], tier: 'pro' },
 
   // ── Story / Visual ──
   { id: 'run-heatmap', titleKey: 'widget.runHeatmap', icon: '🗓️', category: 'core', sizes: ['L', 'XL'], defaultSize: 'L', dataDeps: ['runData'], tier: 'free' },
@@ -160,10 +152,9 @@ export const PRESETS: Preset[] = [
       'race-predictions', 'pace-trend', 'conditions', 'year-comparison',
       'distance-distribution', 'route-familiarity', 'milestones',
       'coach-advice', 'todays-plan', 'run-heatmap',
-      'shoe-health', 'shoe-graveyard', 'weekly-challenge',
+      'shoe-health', 'weekly-challenge', 'feature-nav',
       'dna-battle', 'pacing-card', 'snipe-missions',
-      'ghost-comparison', 'monthly-highlight', 'segment-xray',
-      'training-twin', 'race-simulation', 'what-if',
+      'monthly-highlight', 'training-twin', 'race-simulation',
     ],
   },
   {

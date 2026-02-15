@@ -470,7 +470,7 @@ function renderWidget(id: WidgetId, data: DataSources, lang: 'en' | 'ko'): React
 
     // ── Level 1: Run Film ──
     case 'run-film':
-      return <RunFilmWidget lang={lang} />;
+      return <RunFilmWidget data={runData} lang={lang} />;
     case 'ghost-comparison':
       return <GhostComparisonWidget lang={lang} />;
     case 'monthly-highlight':
@@ -534,23 +534,24 @@ function renderExpandedWidget(id: WidgetId, data: DataSources, lang: 'en' | 'ko'
 // Level 1-5 Widgets (previously Coming Soon)
 // ═══════════════════════════════════════════════
 
-function RunFilmWidget({ lang }: { lang: 'en' | 'ko' }) {
-  const [runs, setRuns] = useState<Array<{ name: string; date: string; distanceKm: number }>>([]);
-  useEffect(() => {
-    fetch('/api/strava/streams').then(r => r.ok ? r.json() : null).then(d => {
-      if (d?.recentStreams) setRuns(d.recentStreams.slice(0, 3));
-    }).catch(() => {});
-  }, []);
+function RunFilmWidget({ data, lang }: { data: EnrichedRunData | null; lang: 'en' | 'ko' }) {
+  const recent = data?.runs.slice(0, 5) ?? [];
   return (
     <div>
       <p className="text-xs text-text-muted mb-3">{lang === 'ko' ? '최근 런 필름' : 'Recent run films'}</p>
-      {runs.length > 0 ? runs.map((r, i) => (
-        <div key={i} className="flex items-center justify-between py-1.5 text-sm">
-          <span className="truncate">{r.name}</span>
-          <span className="text-xs text-text-muted font-mono">{r.distanceKm?.toFixed(1)} km</span>
+      {recent.length > 0 ? recent.map((r) => (
+        <div key={r.id} className="flex items-center justify-between py-1.5 text-sm">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="text-base">{r.locationFlag || '🏃'}</span>
+            <span className="truncate">{r.name}</span>
+          </div>
+          <div className="flex items-center gap-2 shrink-0 ml-2">
+            <span className="text-xs text-text-muted font-mono">{r.distanceKm.toFixed(1)} km</span>
+            <span className="text-xs text-accent font-mono">{r.pace}</span>
+          </div>
         </div>
       )) : (
-        <p className="text-sm text-text-muted">{lang === 'ko' ? '러닝 데이터 로딩...' : 'Loading run data...'}</p>
+        <p className="text-sm text-text-muted">{lang === 'ko' ? '러닝 데이터 없음' : 'No run data'}</p>
       )}
       <a href="/film" className="inline-block mt-3 text-xs text-primary hover:text-primary-hover transition-colors">
         {lang === 'ko' ? '런 필름 보기' : 'View Run Film'} →

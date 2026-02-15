@@ -293,23 +293,23 @@ export function PaceTrend({ intel }: { intel: IntelligenceData }) {
   return (
     <div>
       <p className="text-xs text-text-muted mb-2">{intel.paceImprovement}</p>
-      <div className="flex items-end gap-1 h-24">
+      <div className="flex gap-1 h-24">
         {points.map((p, i) => {
           // Faster (lower pace number) = taller bar
           const height = Math.max(((maxPace - p.avgPace) / range) * 85 + 15, 8);
           const isLast = i === points.length - 1;
           const isBest = i === bestIdx;
           return (
-            <div key={p.weekKey} className="flex-1 flex flex-col items-center gap-0.5 group relative">
-              {isBest && <span className="text-[8px] font-bold text-accent mb-0.5">{fmtPace(p.avgPace)}</span>}
-              <div className="w-full relative h-full">
+            <div key={p.weekKey} className="flex-1 flex flex-col items-center gap-0.5">
+              {isBest && <span className="text-[8px] font-bold text-accent shrink-0">{fmtPace(p.avgPace)}</span>}
+              <div className="flex-1 w-full relative">
                 <div
                   className={`absolute bottom-0 w-full rounded-t transition-colors ${isLast ? 'bg-primary' : isBest ? 'bg-accent' : 'bg-primary/30'}`}
                   style={{ height: `${height}%` }}
                   title={`${p.week}: ${fmtPace(p.avgPace)}/km — ${p.distance.toFixed(1)}km`}
                 />
               </div>
-              {i % 3 === 0 && <span className="text-[8px] text-text-muted">{p.week.split(' ').pop()}</span>}
+              {i % 3 === 0 && <span className="text-[8px] text-text-muted shrink-0">{p.week.split(' ').pop()}</span>}
             </div>
           );
         })}
@@ -361,13 +361,13 @@ export function YearComparison({ intel }: { intel: IntelligenceData }) {
           </span>
         ))}
       </div>
-      <div className="h-20 flex items-end">
+      <div className="h-20 flex gap-px">
         {Array.from({ length: 12 }, (_, m) => (
-          <div key={m} className="flex-1 flex items-end gap-px">
+          <div key={m} className="flex-1 flex items-end gap-px h-full">
             {years.map((y, yi) => {
               const km = y.months[m]?.cumulativeKm ?? 0;
               const h = km > 0 ? Math.max((km / maxKm) * 100, 2) : 0;
-              return <div key={y.year} className="flex-1 rounded-t" style={{ height: `${h}%`, backgroundColor: colors[yi % colors.length], opacity: 0.8 }} />;
+              return <div key={y.year} className="flex-1 rounded-t self-end" style={{ height: `${h}%`, backgroundColor: colors[yi % colors.length], opacity: 0.8 }} />;
             })}
           </div>
         ))}

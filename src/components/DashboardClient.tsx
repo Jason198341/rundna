@@ -48,6 +48,23 @@ export default function DashboardClient({ userName }: Props) {
   const longPressRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const touchStartRef = useRef<{ x: number; y: number } | undefined>(undefined);
 
+  // ── Widget Expansion ──
+  const [expandedWidget, setExpandedWidget] = useState<WidgetId | null>(null);
+  const expandedRef = useRef<HTMLDivElement | null>(null);
+
+  const handleToggleExpand = useCallback((id: WidgetId) => {
+    if (dragWidgetId) return;
+    setExpandedWidget(prev => prev === id ? null : id);
+  }, [dragWidgetId]);
+
+  useEffect(() => {
+    if (expandedWidget && expandedRef.current) {
+      requestAnimationFrame(() => {
+        expandedRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      });
+    }
+  }, [expandedWidget]);
+
   const orderedWidgets = prefs.widgetOrder.filter(id => prefs.enabledWidgets.includes(id));
   const displayOrder = tempOrder ?? orderedWidgets;
 
@@ -115,6 +132,7 @@ export default function DashboardClient({ userName }: Props) {
 
   // ── Unified drag helpers ──
   const startDrag = useCallback((widgetId: WidgetId) => {
+    setExpandedWidget(null);
     setDragWidgetId(widgetId);
     setTempOrder([...orderedWidgets]);
     if (navigator.vibrate) navigator.vibrate(30);
@@ -330,35 +348,47 @@ export default function DashboardClient({ userName }: Props) {
         style={dragWidgetId ? { touchAction: 'none' } : undefined}
         onContextMenu={dragWidgetId ? e => e.preventDefault() : undefined}
       >
-        {displayOrder.map((id, idx) => (
-          <React.Fragment key={id}>
-            <div
-              data-widget-idx={idx}
-              className={`flex-1 basis-[calc(50%-0.625rem)] min-w-[280px] transition-transform duration-200 ${
-                dragWidgetId === id ? 'z-10 relative' : ''
-              }`}
-              draggable
-              onDragStart={e => handleDragStart(id, e)}
-              onDragOver={e => handleDragOver(e, idx)}
-              onDragEnd={handleDragEnd}
-              onTouchStart={e => handleTouchStart(id, e)}
-              onTouchEnd={handleWidgetTouchEnd}
-            >
-              <WidgetShell
-                id={id}
-                lang={lang}
-                index={idx}
-                onRemove={handleRemoveWidget}
-                isDragging={dragWidgetId === id}
+        {displayOrder.map((id, idx) => {
+          const isExpanded = expandedWidget === id;
+          const expContent = renderExpandedWidget(id, data, lang);
+          return (
+            <React.Fragment key={id}>
+              <div
+                data-widget-idx={idx}
+                ref={isExpanded ? expandedRef : undefined}
+                className={[
+                  'transition-[flex-basis,min-width] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]',
+                  isExpanded
+                    ? 'basis-full min-w-0'
+                    : 'flex-1 basis-[calc(50%-0.625rem)] min-w-[280px]',
+                  dragWidgetId === id ? 'z-10 relative' : '',
+                ].join(' ')}
+                draggable={!isExpanded}
+                onDragStart={isExpanded ? undefined : e => handleDragStart(id, e)}
+                onDragOver={e => handleDragOver(e, idx)}
+                onDragEnd={handleDragEnd}
+                onTouchStart={isExpanded ? undefined : e => handleTouchStart(id, e)}
+                onTouchEnd={handleWidgetTouchEnd}
               >
-                {renderWidget(id, data, lang)}
-              </WidgetShell>
-            </div>
-            {(idx + 1) % 8 === 0 && idx + 1 < displayOrder.length && (
-              <div className="w-full basis-full"><AdBreak className="my-4" /></div>
-            )}
-          </React.Fragment>
-        ))}
+                <WidgetShell
+                  id={id}
+                  lang={lang}
+                  index={idx}
+                  onRemove={handleRemoveWidget}
+                  isDragging={dragWidgetId === id}
+                  expanded={isExpanded}
+                  onToggleExpand={handleToggleExpand}
+                  expandedContent={expContent}
+                >
+                  {renderWidget(id, data, lang)}
+                </WidgetShell>
+              </div>
+              {(idx + 1) % 8 === 0 && idx + 1 < displayOrder.length && (
+                <div className="w-full basis-full"><AdBreak className="my-4" /></div>
+              )}
+            </React.Fragment>
+          );
+        })}
       </div>
 
       <AdBreak />
@@ -438,33 +468,549 @@ function renderWidget(id: WidgetId, data: DataSources, lang: 'en' | 'ko'): React
     case 'run-heatmap':
       return runData ? <RunHeatmap data={runData} /> : null;
 
+    // ── Level 1: Run Film ──
     case 'run-film':
+      return <RunFilmWidget lang={lang} />;
     case 'ghost-comparison':
+      return <GhostComparisonWidget lang={lang} />;
     case 'monthly-highlight':
+      return runData ? <MonthlyHighlightWidget data={runData} lang={lang} /> : null;
+
+    // ── Level 2: Segment Sniper ──
     case 'hidden-crowns':
+      return <HiddenCrownsWidget lang={lang} />;
     case 'snipe-missions':
+      return <SnipeMissionsWidget lang={lang} />;
     case 'segment-xray':
+      return <SegmentXrayWidget lang={lang} />;
+
+    // ── Level 3: Shoe Graveyard ──
     case 'shoe-health':
+      return <ShoeHealthWidget lang={lang} />;
     case 'shoe-graveyard':
+      return <ShoeGraveyardWidget lang={lang} />;
+
+    // ── Level 4: DNA Battle ──
     case 'dna-battle':
+      return intelligence ? <DNABattleWidget intel={intelligence} lang={lang} /> : null;
     case 'training-twin':
+      return intelligence ? <TrainingTwinWidget intel={intelligence} lang={lang} /> : null;
+
+    // ── Level 5: Digital Twin ──
     case 'race-simulation':
+      return intelligence ? <RaceSimWidget intel={intelligence} lang={lang} /> : null;
     case 'pacing-card':
+      return intelligence ? <PacingCardWidget intel={intelligence} lang={lang} /> : null;
     case 'what-if':
-      return <ComingSoon lang={lang} />;
+      return intelligence ? <WhatIfWidget intel={intelligence} lang={lang} /> : null;
 
     default:
       return null;
   }
 }
 
-function ComingSoon({ lang }: { lang: 'en' | 'ko' }) {
+// ── Expanded Widget Renderer ──
+function renderExpandedWidget(id: WidgetId, data: DataSources, lang: 'en' | 'ko'): React.ReactNode | null {
+  const { runData, intelligence } = data;
+  switch (id) {
+    case 'stats-overview':
+      return runData ? <StatsOverviewExpanded data={runData} lang={lang} /> : null;
+    case 'recent-activities':
+      return runData ? <RecentActivitiesExpanded data={runData} lang={lang} /> : null;
+    case 'dna-radar':
+      return intelligence ? <DNARadarExpanded intel={intelligence} lang={lang} /> : null;
+    case 'pace-trend':
+      return intelligence ? <PaceTrendExpanded intel={intelligence} lang={lang} /> : null;
+    case 'year-comparison':
+      return intelligence ? <YearComparisonExpanded intel={intelligence} lang={lang} /> : null;
+    case 'run-heatmap':
+      return runData ? <RunHeatmapExpanded data={runData} lang={lang} /> : null;
+    default:
+      return null;
+  }
+}
+
+// ═══════════════════════════════════════════════
+// Level 1-5 Widgets (previously Coming Soon)
+// ═══════════════════════════════════════════════
+
+function RunFilmWidget({ lang }: { lang: 'en' | 'ko' }) {
+  const [runs, setRuns] = useState<Array<{ name: string; date: string; distanceKm: number }>>([]);
+  useEffect(() => {
+    fetch('/api/strava/streams').then(r => r.ok ? r.json() : null).then(d => {
+      if (d?.recentStreams) setRuns(d.recentStreams.slice(0, 3));
+    }).catch(() => {});
+  }, []);
   return (
-    <div className="text-center py-4">
-      <p className="text-2xl mb-2">🚧</p>
-      <p className="text-sm text-text-muted">
-        {lang === 'ko' ? '곧 출시됩니다' : 'Coming Soon'}
+    <div>
+      <p className="text-xs text-text-muted mb-3">{lang === 'ko' ? '최근 런 필름' : 'Recent run films'}</p>
+      {runs.length > 0 ? runs.map((r, i) => (
+        <div key={i} className="flex items-center justify-between py-1.5 text-sm">
+          <span className="truncate">{r.name}</span>
+          <span className="text-xs text-text-muted font-mono">{r.distanceKm?.toFixed(1)} km</span>
+        </div>
+      )) : (
+        <p className="text-sm text-text-muted">{lang === 'ko' ? '러닝 데이터 로딩...' : 'Loading run data...'}</p>
+      )}
+      <a href="/film" className="inline-block mt-3 text-xs text-primary hover:text-primary-hover transition-colors">
+        {lang === 'ko' ? '런 필름 보기' : 'View Run Film'} →
+      </a>
+    </div>
+  );
+}
+
+function GhostComparisonWidget({ lang }: { lang: 'en' | 'ko' }) {
+  return (
+    <div className="text-center py-2">
+      <span className="text-3xl">👻</span>
+      <p className="text-sm font-medium mt-2">{lang === 'ko' ? '고스트 비교' : 'Ghost Comparison'}</p>
+      <p className="text-xs text-text-muted mt-1">{lang === 'ko' ? '과거 나 vs 현재 나' : 'Past you vs Present you'}</p>
+      <a href="/film" className="inline-block mt-3 text-xs text-primary hover:text-primary-hover transition-colors">
+        {lang === 'ko' ? '필름에서 비교' : 'Compare in Film'} →
+      </a>
+    </div>
+  );
+}
+
+function MonthlyHighlightWidget({ data, lang }: { data: EnrichedRunData; lang: 'en' | 'ko' }) {
+  const thisMonth = data.runs.filter(r => {
+    const d = new Date(r.date);
+    const now = new Date();
+    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+  });
+  const best = thisMonth.length > 0
+    ? thisMonth.reduce((a, b) => a.distanceKm > b.distanceKm ? a : b)
+    : null;
+  return (
+    <div>
+      <p className="text-xs text-text-muted mb-2">{lang === 'ko' ? '이번 달 하이라이트' : 'This Month\'s Highlight'}</p>
+      {best ? (
+        <div className="bg-primary/5 border border-primary/10 rounded-lg p-3">
+          <p className="text-sm font-medium">{best.name}</p>
+          <div className="flex gap-3 mt-1 text-xs text-text-muted font-mono">
+            <span className="text-primary font-bold">{best.distance}</span>
+            <span>{best.pace}/km</span>
+            <span>{best.time}</span>
+          </div>
+        </div>
+      ) : (
+        <p className="text-sm text-text-muted">{lang === 'ko' ? '이번 달 러닝 없음' : 'No runs this month'}</p>
+      )}
+    </div>
+  );
+}
+
+function HiddenCrownsWidget({ lang }: { lang: 'en' | 'ko' }) {
+  const [segments, setSegments] = useState<Array<{ segmentName: string; prRank: number | null; athleteCount: number }>>([]);
+  useEffect(() => {
+    fetch('/api/strava/segments').then(r => r.ok ? r.json() : []).then(d => {
+      if (Array.isArray(d)) setSegments(d.filter((s: any) => s.prRank === 1).slice(0, 5));
+    }).catch(() => {});
+  }, []);
+  return (
+    <div>
+      <p className="text-xs text-text-muted mb-2">{lang === 'ko' ? '나의 왕관 세그먼트' : 'Your Crown Segments'}</p>
+      {segments.length > 0 ? segments.map((s, i) => (
+        <div key={i} className="flex items-center justify-between py-1.5">
+          <span className="text-sm truncate flex-1">👑 {s.segmentName}</span>
+          <span className="text-[10px] text-text-muted">{s.athleteCount} athletes</span>
+        </div>
+      )) : (
+        <p className="text-sm text-text-muted">{lang === 'ko' ? '세그먼트 데이터 로딩...' : 'Loading segments...'}</p>
+      )}
+      <a href="/segments" className="inline-block mt-3 text-xs text-primary hover:text-primary-hover transition-colors">
+        {lang === 'ko' ? '세그먼트 보기' : 'View Segments'} →
+      </a>
+    </div>
+  );
+}
+
+function SnipeMissionsWidget({ lang }: { lang: 'en' | 'ko' }) {
+  const [targets, setTargets] = useState<Array<{ segmentName: string; prRank: number | null; komRank: number | null }>>([]);
+  useEffect(() => {
+    fetch('/api/strava/segments').then(r => r.ok ? r.json() : []).then(d => {
+      if (Array.isArray(d)) setTargets(d.filter((s: any) => s.prRank && s.prRank <= 5 && s.prRank > 1).slice(0, 5));
+    }).catch(() => {});
+  }, []);
+  return (
+    <div>
+      <p className="text-xs text-text-muted mb-2">{lang === 'ko' ? '저격 미션 (왕관 근접)' : 'Snipe Missions (Near Crown)'}</p>
+      {targets.length > 0 ? targets.map((s, i) => (
+        <div key={i} className="flex items-center justify-between py-1.5">
+          <span className="text-sm truncate flex-1">🎯 {s.segmentName}</span>
+          <span className="text-[10px] font-mono text-warm">#{s.prRank}</span>
+        </div>
+      )) : (
+        <p className="text-sm text-text-muted">{lang === 'ko' ? '목표 세그먼트 없음' : 'No targets found'}</p>
+      )}
+      <a href="/segments" className="inline-block mt-3 text-xs text-primary hover:text-primary-hover transition-colors">
+        {lang === 'ko' ? '전체 세그먼트' : 'All Segments'} →
+      </a>
+    </div>
+  );
+}
+
+function SegmentXrayWidget({ lang }: { lang: 'en' | 'ko' }) {
+  const [top, setTop] = useState<Array<{ segmentName: string; elapsedTime: number; distance: number }>>([]);
+  useEffect(() => {
+    fetch('/api/strava/segments').then(r => r.ok ? r.json() : []).then(d => {
+      if (Array.isArray(d)) setTop(d.slice(0, 5));
+    }).catch(() => {});
+  }, []);
+  const fmtTime = (s: number) => { const m = Math.floor(s / 60); return `${m}:${String(Math.round(s % 60)).padStart(2, '0')}`; };
+  return (
+    <div>
+      <p className="text-xs text-text-muted mb-2">{lang === 'ko' ? '세그먼트 X-Ray' : 'Segment X-Ray'}</p>
+      {top.map((s, i) => (
+        <div key={i} className="flex items-center justify-between py-1.5 text-sm">
+          <span className="truncate flex-1">{s.segmentName}</span>
+          <span className="text-xs font-mono text-accent">{fmtTime(s.elapsedTime)}</span>
+        </div>
+      ))}
+      <a href="/segments" className="inline-block mt-3 text-xs text-primary hover:text-primary-hover transition-colors">
+        {lang === 'ko' ? '상세 분석' : 'Deep Analysis'} →
+      </a>
+    </div>
+  );
+}
+
+function ShoeHealthWidget({ lang }: { lang: 'en' | 'ko' }) {
+  const [shoes, setShoes] = useState<Array<{ name: string; distanceKm: number; healthPercent: number; retired: boolean }>>([]);
+  useEffect(() => {
+    fetch('/api/strava/gear').then(r => r.ok ? r.json() : []).then(d => {
+      if (Array.isArray(d)) setShoes(d.filter((s: any) => !s.retired).slice(0, 3));
+    }).catch(() => {});
+  }, []);
+  return (
+    <div>
+      <p className="text-xs text-text-muted mb-2">{lang === 'ko' ? '활성 신발 상태' : 'Active Shoe Health'}</p>
+      {shoes.length > 0 ? shoes.map((s, i) => (
+        <div key={i} className="mb-2">
+          <div className="flex justify-between text-sm mb-1">
+            <span className="font-medium truncate">👟 {s.name}</span>
+            <span className="text-xs text-text-muted font-mono">{s.distanceKm.toFixed(0)} km</span>
+          </div>
+          <div className="h-2 rounded-full bg-bg overflow-hidden">
+            <div className="h-full rounded-full transition-all duration-500" style={{
+              width: `${s.healthPercent}%`,
+              backgroundColor: s.healthPercent > 50 ? 'var(--color-primary)' : s.healthPercent > 20 ? 'var(--color-warm)' : 'var(--color-danger)',
+            }} />
+          </div>
+        </div>
+      )) : (
+        <p className="text-sm text-text-muted">{lang === 'ko' ? '신발 데이터 로딩...' : 'Loading shoe data...'}</p>
+      )}
+      <a href="/shoes" className="inline-block mt-2 text-xs text-primary hover:text-primary-hover transition-colors">
+        {lang === 'ko' ? '신발 관리' : 'Manage Shoes'} →
+      </a>
+    </div>
+  );
+}
+
+function ShoeGraveyardWidget({ lang }: { lang: 'en' | 'ko' }) {
+  const [retired, setRetired] = useState<Array<{ name: string; distanceKm: number }>>([]);
+  useEffect(() => {
+    fetch('/api/strava/gear').then(r => r.ok ? r.json() : []).then(d => {
+      if (Array.isArray(d)) setRetired(d.filter((s: any) => s.retired).slice(0, 5));
+    }).catch(() => {});
+  }, []);
+  return (
+    <div>
+      <p className="text-xs text-text-muted mb-2">{lang === 'ko' ? '은퇴한 신발' : 'Retired Shoes'}</p>
+      {retired.length > 0 ? retired.map((s, i) => (
+        <div key={i} className="flex items-center justify-between py-1.5 text-sm">
+          <span className="truncate">🪦 {s.name}</span>
+          <span className="text-xs text-text-muted font-mono">{s.distanceKm.toFixed(0)} km</span>
+        </div>
+      )) : (
+        <p className="text-sm text-text-muted">{lang === 'ko' ? '은퇴 신발 없음' : 'No retired shoes yet'}</p>
+      )}
+      <a href="/shoes" className="inline-block mt-2 text-xs text-primary hover:text-primary-hover transition-colors">
+        {lang === 'ko' ? '신발 묘지' : 'Shoe Graveyard'} →
+      </a>
+    </div>
+  );
+}
+
+function DNABattleWidget({ intel, lang }: { intel: IntelligenceData; lang: 'en' | 'ko' }) {
+  const { personality } = intel;
+  const scores = personality.scores;
+  const code = `RD-${scores.consistency}${scores.speed}${scores.endurance}${scores.variety}${scores.volume}`;
+  return (
+    <div className="text-center">
+      <p className="text-xs text-text-muted mb-2">{lang === 'ko' ? '나의 DNA 코드' : 'My DNA Code'}</p>
+      <p className="text-2xl font-mono font-bold text-primary mb-1">{code}</p>
+      <p className="text-xs text-text-muted mb-3">{personality.type}</p>
+      <a href="/battle" className="inline-block px-4 py-2 rounded-lg bg-primary/10 text-primary text-xs font-medium hover:bg-primary/20 transition-colors">
+        {lang === 'ko' ? '배틀 시작' : 'Start Battle'} →
+      </a>
+    </div>
+  );
+}
+
+function TrainingTwinWidget({ intel, lang }: { intel: IntelligenceData; lang: 'en' | 'ko' }) {
+  const { personality, totalRuns, totalKm } = intel;
+  return (
+    <div className="text-center py-2">
+      <span className="text-3xl">👥</span>
+      <p className="text-sm font-medium mt-2">{personality.type}</p>
+      <p className="text-xs text-text-muted mt-1">
+        {lang === 'ko'
+          ? `${totalRuns}회 · ${Math.round(totalKm)}km 기반 프로필`
+          : `Profile: ${totalRuns} runs · ${Math.round(totalKm)}km`}
       </p>
+      <a href="/battle" className="inline-block mt-3 text-xs text-primary hover:text-primary-hover transition-colors">
+        {lang === 'ko' ? '비슷한 러너 찾기' : 'Find Similar Runners'} →
+      </a>
+    </div>
+  );
+}
+
+function RaceSimWidget({ intel, lang }: { intel: IntelligenceData; lang: 'en' | 'ko' }) {
+  if (intel.racePredictions.length === 0) return <p className="text-sm text-text-muted">Need more data</p>;
+  return (
+    <div>
+      <p className="text-xs text-text-muted mb-2">{lang === 'ko' ? '예상 기록' : 'Race Predictions'}</p>
+      <div className="grid grid-cols-2 gap-2">
+        {intel.racePredictions.map(rp => (
+          <div key={rp.label} className="text-center py-2 rounded-lg bg-primary/5">
+            <p className="text-xs text-text-muted">{rp.label}</p>
+            <p className="text-sm font-bold font-mono text-primary">{rp.time}</p>
+          </div>
+        ))}
+      </div>
+      <a href="/simulation" className="inline-block mt-3 text-xs text-primary hover:text-primary-hover transition-colors">
+        {lang === 'ko' ? '시뮬레이션 실행' : 'Run Simulation'} →
+      </a>
+    </div>
+  );
+}
+
+function PacingCardWidget({ intel, lang }: { intel: IntelligenceData; lang: 'en' | 'ko' }) {
+  const { racePredictions, todaysPlan } = intel;
+  const zones = [
+    { label: lang === 'ko' ? '이지 페이스' : 'Easy Pace', pace: todaysPlan.easyPace, color: 'var(--color-primary)' },
+    { label: lang === 'ko' ? '마라톤 페이스' : 'Marathon Pace', pace: racePredictions.find(r => r.label === 'Full')?.pace ?? '-', color: 'var(--color-accent)' },
+    { label: lang === 'ko' ? '하프 페이스' : 'Half Pace', pace: racePredictions.find(r => r.label === 'Half')?.pace ?? '-', color: 'var(--color-warm)' },
+    { label: lang === 'ko' ? '5K 페이스' : '5K Pace', pace: racePredictions.find(r => r.label === '5K')?.pace ?? '-', color: 'var(--color-danger)' },
+  ];
+  return (
+    <div>
+      <p className="text-xs text-text-muted mb-2">{lang === 'ko' ? '페이싱 존' : 'Pacing Zones'}</p>
+      <div className="space-y-2">
+        {zones.map(z => (
+          <div key={z.label} className="flex items-center justify-between py-1.5 px-2 rounded-lg" style={{ backgroundColor: z.color + '10' }}>
+            <span className="text-xs font-medium">{z.label}</span>
+            <span className="text-xs font-mono font-bold" style={{ color: z.color }}>{z.pace}</span>
+          </div>
+        ))}
+      </div>
+      <a href="/simulation" className="inline-block mt-3 text-xs text-primary hover:text-primary-hover transition-colors">
+        {lang === 'ko' ? '시뮬레이션' : 'Simulation'} →
+      </a>
+    </div>
+  );
+}
+
+function WhatIfWidget({ intel, lang }: { intel: IntelligenceData; lang: 'en' | 'ko' }) {
+  const pred5k = intel.racePredictions.find(r => r.label === '5K');
+  return (
+    <div className="text-center py-2">
+      <span className="text-3xl">🔄</span>
+      <p className="text-sm font-medium mt-2">{lang === 'ko' ? 'What-If 시뮬레이터' : 'What-If Simulator'}</p>
+      {pred5k && (
+        <p className="text-xs text-text-muted mt-1">
+          {lang === 'ko' ? `현재 5K: ${pred5k.time}` : `Current 5K: ${pred5k.time}`}
+        </p>
+      )}
+      <p className="text-[10px] text-text-muted mt-1">
+        {lang === 'ko' ? '체중, 날씨, 코스를 바꿔보세요' : 'Adjust weight, weather, course'}
+      </p>
+      <a href="/simulation" className="inline-block mt-3 text-xs text-primary hover:text-primary-hover transition-colors">
+        {lang === 'ko' ? '시뮬레이터 열기' : 'Open Simulator'} →
+      </a>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════
+// Expanded Views (detail content shown inline)
+// ═══════════════════════════════════════════════
+
+function StatsOverviewExpanded({ data, lang }: { data: EnrichedRunData; lang: 'en' | 'ko' }) {
+  const { monthlyVolume, locations } = data;
+  const recent12 = monthlyVolume.slice(-12);
+  const maxKm = Math.max(...recent12.map(m => m.km), 1);
+  return (
+    <div className="space-y-5">
+      <div>
+        <h4 className="text-xs font-semibold uppercase tracking-wider text-text-muted mb-3">
+          {lang === 'ko' ? '월별 거리 (12개월)' : 'Monthly Distance (12mo)'}
+        </h4>
+        <div className="flex items-end gap-1.5 h-28">
+          {recent12.map((m) => {
+            const h = (m.km / maxKm) * 100;
+            return (
+              <div key={m.month} className="flex-1 flex flex-col items-center gap-1">
+                <span className="text-[9px] font-mono text-text-muted">{m.km.toFixed(0)}</span>
+                <div className="w-full rounded-t bg-primary/70 hover:bg-primary transition-colors" style={{ height: `${Math.max(h, 2)}%` }} />
+                <span className="text-[9px] text-text-muted">{m.month}</span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+      {locations.length > 0 && (
+        <div>
+          <h4 className="text-xs font-semibold uppercase tracking-wider text-text-muted mb-2">
+            {lang === 'ko' ? '러닝 위치' : 'Locations'}
+          </h4>
+          <div className="flex flex-wrap gap-1.5">
+            {locations.slice(0, 10).map(loc => (
+              <span key={loc} className="px-2 py-1 rounded-full text-[10px] bg-primary/10 text-primary border border-primary/20">{loc}</span>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function RecentActivitiesExpanded({ data, lang }: { data: EnrichedRunData; lang: 'en' | 'ko' }) {
+  return (
+    <div>
+      <h4 className="text-xs font-semibold uppercase tracking-wider text-text-muted mb-2">
+        {lang === 'ko' ? '전체 활동 (25개)' : 'All Activities (25)'}
+      </h4>
+      <div className="space-y-0 divide-y divide-border max-h-[400px] overflow-y-auto">
+        {data.runs.slice(0, 25).map((r, i) => (
+          <div key={i} className="flex items-center justify-between py-2 text-sm">
+            <div className="min-w-0 flex-1">
+              <p className="font-medium truncate">{r.name}</p>
+              <p className="text-xs text-text-muted">{r.dateFull} · {r.locationFlag} {r.location}</p>
+            </div>
+            <div className="flex gap-3 shrink-0 text-xs font-mono text-text-muted">
+              <span className="text-primary">{r.distance}</span>
+              <span>{r.pace}/km</span>
+              <span>{r.time}</span>
+              <span>{r.elevation ?? 0}m ↑</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function DNARadarExpanded({ intel, lang }: { intel: IntelligenceData; lang: 'en' | 'ko' }) {
+  const { personality } = intel;
+  const colors = ['#10b981', '#22d3ee', '#818cf8', '#f59e0b', '#ef4444'];
+  const labels = [t('dna.consistency', lang), t('dna.speed', lang), t('dna.endurance', lang), t('dna.variety', lang), t('dna.volume', lang)];
+  const scores = [personality.scores.consistency, personality.scores.speed, personality.scores.endurance, personality.scores.variety, personality.scores.volume];
+  return (
+    <div>
+      <h4 className="text-xs font-semibold uppercase tracking-wider text-text-muted mb-3">
+        {lang === 'ko' ? '특성 상세 분석' : 'Trait Breakdown'}
+      </h4>
+      <div className="space-y-3">
+        {scores.map((score, i) => (
+          <div key={labels[i]}>
+            <div className="flex justify-between text-sm mb-1">
+              <span className="font-medium">{labels[i]}</span>
+              <span className="font-mono font-bold" style={{ color: colors[i] }}>{score.toFixed(1)} / 5</span>
+            </div>
+            <div className="h-2.5 rounded-full bg-bg overflow-hidden">
+              <div className="h-full rounded-full transition-all duration-700" style={{ width: `${(score / 5) * 100}%`, backgroundColor: colors[i] }} />
+            </div>
+            <p className="text-[10px] text-text-muted mt-0.5">
+              {score >= 4 ? (lang === 'ko' ? '매우 우수' : 'Excellent')
+                : score >= 3 ? (lang === 'ko' ? '양호' : 'Good')
+                : score >= 2 ? (lang === 'ko' ? '개선 여지' : 'Room for improvement')
+                : (lang === 'ko' ? '집중 훈련 필요' : 'Needs focus')}
+            </p>
+          </div>
+        ))}
+      </div>
+      <a href="/dna" className="inline-block mt-4 text-xs text-primary hover:text-primary-hover transition-colors">
+        {lang === 'ko' ? 'DNA 상세 보기' : 'View Full DNA'} →
+      </a>
+    </div>
+  );
+}
+
+function PaceTrendExpanded({ intel, lang }: { intel: IntelligenceData; lang: 'en' | 'ko' }) {
+  const points = intel.paceTrend;
+  if (points.length < 2) return null;
+  return (
+    <div>
+      <h4 className="text-xs font-semibold uppercase tracking-wider text-text-muted mb-2">
+        {lang === 'ko' ? '전체 페이스 추이' : 'Full Pace Trend'}
+      </h4>
+      <p className="text-sm text-primary font-medium mb-3">{intel.paceImprovement}</p>
+      <div className="space-y-0 divide-y divide-border max-h-[300px] overflow-y-auto">
+        {points.map((p) => (
+          <div key={p.weekKey} className="flex items-center justify-between py-1.5 text-xs">
+            <span className="text-text-muted">{p.week}</span>
+            <div className="flex gap-3 font-mono">
+              <span className="text-primary">{Math.floor(p.avgPace / 60)}:{String(Math.round(p.avgPace % 60)).padStart(2, '0')}/km</span>
+              <span className="text-accent">{p.distance.toFixed(1)} km</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function YearComparisonExpanded({ intel, lang }: { intel: IntelligenceData; lang: 'en' | 'ko' }) {
+  const years = intel.yearComparison;
+  return (
+    <div>
+      <h4 className="text-xs font-semibold uppercase tracking-wider text-text-muted mb-3">
+        {lang === 'ko' ? '연도별 상세 비교' : 'Year-by-Year Detail'}
+      </h4>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        {years.map(y => (
+          <div key={y.year} className="rounded-lg border border-border p-3">
+            <p className="text-sm font-bold mb-1">{y.year}</p>
+            <div className="grid grid-cols-2 gap-1 text-xs">
+              <span className="text-text-muted">{lang === 'ko' ? '총 거리' : 'Distance'}</span>
+              <span className="font-mono text-right text-primary">{y.totalKm.toFixed(0)} km</span>
+              <span className="text-text-muted">{lang === 'ko' ? '총 러닝' : 'Runs'}</span>
+              <span className="font-mono text-right">{y.totalRuns}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function RunHeatmapExpanded({ data, lang }: { data: EnrichedRunData; lang: 'en' | 'ko' }) {
+  // Monthly summary
+  const monthMap = new Map<string, { km: number; count: number }>();
+  for (const run of data.runs) {
+    const key = run.date.slice(0, 7); // YYYY-MM
+    const prev = monthMap.get(key) || { km: 0, count: 0 };
+    monthMap.set(key, { km: prev.km + run.distanceKm, count: prev.count + 1 });
+  }
+  const months = Array.from(monthMap.entries()).sort((a, b) => b[0].localeCompare(a[0])).slice(0, 12);
+  return (
+    <div>
+      <h4 className="text-xs font-semibold uppercase tracking-wider text-text-muted mb-3">
+        {lang === 'ko' ? '월별 요약 (12개월)' : 'Monthly Summary (12mo)'}
+      </h4>
+      <div className="space-y-0 divide-y divide-border">
+        {months.map(([month, d]) => (
+          <div key={month} className="flex items-center justify-between py-2 text-sm">
+            <span className="font-medium">{month}</span>
+            <div className="flex gap-4 text-xs font-mono text-text-muted">
+              <span className="text-primary">{d.km.toFixed(1)} km</span>
+              <span>{d.count} runs</span>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

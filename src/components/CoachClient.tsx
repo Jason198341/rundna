@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { downloadCard } from '@/lib/share';
 import { t } from '@/lib/i18n';
 import { useLang } from '@/lib/useLang';
+import AdBanner from '@/components/AdBanner';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -83,6 +84,11 @@ export default function CoachClient({ userName }: Props) {
 
   return (
     <div className="flex-1 flex flex-col max-w-3xl mx-auto w-full">
+      {/* Ad */}
+      <div className="px-4 pt-4">
+        <AdBanner format="horizontal" />
+      </div>
+
       {/* Chat area */}
       <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4">
         {messages.length === 0 ? (

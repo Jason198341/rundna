@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { downloadCard } from '@/lib/share';
 import { t } from '@/lib/i18n';
 import { useLang } from '@/lib/useLang';
+import AdBanner from '@/components/AdBanner';
 
 interface Props {
   userName: string;
@@ -411,6 +412,9 @@ export default function PlannerClient({ userName }: Props) {
           })}
         </div>
       </div>
+
+      {/* Ad */}
+      <AdBanner format="rectangle" className="mb-6" />
 
       <div className="text-center">
         <button

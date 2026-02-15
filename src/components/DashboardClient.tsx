@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import type { EnrichedRunData } from '@/lib/strava';
 import { t } from '@/lib/i18n';
 import { useLang } from '@/lib/useLang';
+import AdBanner from '@/components/AdBanner';
 
 interface Props {
   userName: string;
@@ -124,6 +125,9 @@ export default function DashboardClient({ userName }: Props) {
         <FeatureCard icon="🏁" title={t('dash.planner', lang)} desc={t('dash.plannerDesc', lang)} href="/planner" color="warm" />
         <FeatureCard icon="📊" title={t('dash.report', lang)} desc={t('dash.reportDesc', lang)} href="/report" color="primary" />
       </div>
+
+      {/* Ad */}
+      <AdBanner format="horizontal" />
 
       {/* Recent Activities */}
       <div>

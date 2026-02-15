@@ -71,6 +71,8 @@ const dict: Record<string, { en: string; ko: string }> = {
   'dash.plannerDesc': { en: 'Get an AI-generated training plan', ko: 'AI 훈련 계획 생성' },
   'dash.report': { en: 'Weekly Report', ko: '주간 리포트' },
   'dash.reportDesc': { en: 'Your shareable weekly running card', ko: '공유 가능한 주간 러닝 카드' },
+  'dash.wrapped': { en: 'Year Wrapped', ko: '연간 돌아보기' },
+  'dash.wrappedDesc': { en: 'Your Spotify Wrapped, but for running', ko: '올해 러닝 총결산' },
   'dash.loading': { en: 'Analyzing your runs...', ko: '러닝 분석 중...' },
   'dash.loadingSub': { en: 'Fetching data from Strava', ko: 'Strava 데이터 가져오는 중' },
   'dash.noRunsSub': { en: 'Start running with Strava and come back to see your DNA!', ko: 'Strava로 뛰고 와서 DNA를 확인하세요!' },
@@ -90,6 +92,7 @@ const dict: Record<string, { en: string; ko: string }> = {
   'dna.recovery': { en: 'Recovery Pattern', ko: '회복 패턴' },
   'dna.conditions': { en: 'Best Conditions', ko: '최적 조건' },
   'dna.download': { en: 'Download DNA Card', ko: 'DNA 카드 저장' },
+  'dna.share': { en: 'Share DNA Card', ko: 'DNA 카드 공유' },
   'dna.loading': { en: 'Decoding your Running DNA...', ko: '러닝 DNA 해독 중...' },
   'dna.loadingPatterns': { en: 'Analyzing patterns', ko: '패턴 분석 중' },
   'dna.loadingActivities': { en: 'Analyzing activities', ko: '활동 분석 중' },
@@ -138,6 +141,7 @@ const dict: Record<string, { en: string; ko: string }> = {
   'plan.weeklyVolume': { en: 'Weekly Volume', ko: '주간 볼륨' },
   'plan.weeklyPlan': { en: 'Weekly Plan', ko: '주간 계획' },
   'plan.download': { en: 'Download Plan Card', ko: '플랜 카드 저장' },
+  'plan.share': { en: 'Share Plan', ko: '플랜 공유' },
   'plan.another': { en: 'Create Another Plan', ko: '새 플랜 만들기' },
   'plan.weeksAway': { en: 'weeks away', ko: '주 남음' },
   'plan.headsUp': { en: 'Heads Up', ko: '주의사항' },
@@ -174,6 +178,7 @@ const dict: Record<string, { en: string; ko: string }> = {
   'report.chatCoach': { en: 'Chat with Coach', ko: '코치와 대화' },
   'report.viewDNA': { en: 'View Full DNA', ko: 'DNA 전체 보기' },
   'report.downloadCard': { en: 'Download Card', ko: '카드 저장' },
+  'report.share': { en: 'Share Report', ko: '리포트 공유' },
   'report.failed': { en: 'Failed to generate report', ko: '리포트 생성 실패' },
 
   // ── Common ──
@@ -182,6 +187,7 @@ const dict: Record<string, { en: string; ko: string }> = {
   'common.noRuns': { en: 'No runs found', ko: '러닝 기록 없음' },
   'common.noRunsSub': { en: 'Start running with Strava and come back to see your DNA!', ko: 'Strava로 뛰고 와서 DNA를 확인하세요!' },
   'common.saving': { en: 'Saving...', ko: '저장 중...' },
+  'common.sharing': { en: 'Sharing...', ko: '공유 중...' },
 };
 
 export function t(key: string, lang: Lang): string {

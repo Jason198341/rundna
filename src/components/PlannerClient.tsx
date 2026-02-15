@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { downloadCard } from '@/lib/share';
+import { shareCard } from '@/lib/share';
 import { t } from '@/lib/i18n';
 import { useLang } from '@/lib/useLang';
 import AdBanner from '@/components/AdBanner';
@@ -331,16 +331,16 @@ export default function PlannerClient({ userName }: Props) {
           onClick={async () => {
             if (!shareRef.current || saving) return;
             setSaving(true);
-            try { await downloadCard(shareRef.current, `rundna-plan-${raceDistance.toLowerCase()}`); }
+            try { await shareCard(shareRef.current, `rundna-plan-${raceDistance.toLowerCase()}`, `My ${raceDistance} Training Plan from RunDNA`, 'https://rundna.online'); }
             finally { setSaving(false); }
           }}
           disabled={saving}
           className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-primary/30 bg-primary/10 text-primary text-sm font-medium hover:bg-primary/20 transition-all disabled:opacity-50"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
           </svg>
-          {saving ? t('common.saving', lang) : t('plan.download', lang)}
+          {saving ? t('common.sharing', lang) : t('plan.share', lang)}
         </button>
       </div>
 

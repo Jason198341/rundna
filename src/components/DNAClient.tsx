@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import type { IntelligenceData } from '@/lib/strava-analytics';
-import { downloadCard } from '@/lib/share';
+import { shareCard } from '@/lib/share';
 import { t } from '@/lib/i18n';
 import { useLang } from '@/lib/useLang';
 import AdBanner from '@/components/AdBanner';
@@ -23,6 +23,7 @@ export default function DNAClient({ userName }: Props) {
   const [progress, setProgress] = useState(0);
   const [revealed, setRevealed] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
+  const storyRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -99,6 +100,10 @@ export default function DNAClient({ userName }: Props) {
           <div className="text-5xl mb-3">🧬</div>
           <p className="text-sm text-text-muted mb-2">{userName}&apos;s {t('dna.title', lang)}</p>
           <h1 className="text-2xl sm:text-3xl font-bold text-primary">{personality.type}</h1>
+          <div className="inline-flex items-center gap-1.5 mt-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20">
+            <span className="text-xs font-bold text-primary">Top {personality.percentile}%</span>
+            <span className="text-xs text-text-muted">{lang === 'ko' ? '러너' : 'of runners'}</span>
+          </div>
           <p className="text-sm text-text-muted mt-2 max-w-md mx-auto">{personality.description}</p>
         </div>
 
@@ -172,14 +177,78 @@ export default function DNAClient({ userName }: Props) {
         </div>
       </div>
 
-      {/* Share Button */}
-      <div className={`flex justify-center mb-6 transition-all duration-700 delay-200 ${revealed ? 'opacity-100' : 'opacity-0'}`}>
+      {/* Share Buttons */}
+      <div className={`flex justify-center gap-3 mb-6 transition-all duration-700 delay-200 ${revealed ? 'opacity-100' : 'opacity-0'}`}>
         <ShareButton
           targetRef={cardRef}
           filename={`rundna-${userName.replace(/\s+/g, '-').toLowerCase()}`}
-          label={t('dna.download', lang)}
+          shareText={`My Running DNA: ${personality.type}`}
+          label={t('dna.share', lang)}
           savingLabel={t('common.saving', lang)}
         />
+        <ShareButton
+          targetRef={storyRef}
+          filename={`rundna-story-${userName.replace(/\s+/g, '-').toLowerCase()}`}
+          shareText={`My Running DNA: ${personality.type}`}
+          label="Story"
+          savingLabel="..."
+        />
+      </div>
+
+      {/* Hidden Instagram Story Card (9:16) */}
+      <div className="fixed -left-[9999px] top-0">
+        <div ref={storyRef} className="w-[1080px] h-[1920px] bg-[#060a0e] flex flex-col items-center justify-center p-16 relative overflow-hidden">
+          {/* Background pattern */}
+          <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 50% 30%, #10b981 0%, transparent 50%)' }} />
+
+          <div className="text-[80px] mb-8">🧬</div>
+          <p className="text-[28px] text-[#7d8590] mb-4">{userName}&apos;s Running DNA</p>
+          <h2 className="text-[56px] font-extrabold text-[#10b981] text-center mb-4">{personality.type}</h2>
+          <div className="inline-flex items-center gap-3 px-6 py-2 rounded-full bg-[#10b981]/10 border border-[#10b981]/20 mb-6">
+            <span className="text-[28px] font-bold text-[#10b981]">Top {personality.percentile}%</span>
+            <span className="text-[22px] text-[#7d8590]">of runners</span>
+          </div>
+          <p className="text-[24px] text-[#7d8590] text-center max-w-[800px] mb-16 leading-relaxed">{personality.description}</p>
+
+          {/* Trait Bars */}
+          <div className="w-full max-w-[800px] space-y-6 mb-16">
+            {traitLabels.map((label, i) => (
+              <div key={label} className="flex items-center gap-6">
+                <span className="text-[36px] w-12 text-center">{TRAIT_ICONS[i]}</span>
+                <span className="text-[28px] font-medium text-[#e6edf3] w-40">{label}</span>
+                <div className="flex-1 h-8 rounded-full bg-[#1e2a3a] overflow-hidden">
+                  <div className="h-full rounded-full" style={{ width: `${(scoreArr[i] / 5) * 100}%`, backgroundColor: TRAIT_COLORS[i] }} />
+                </div>
+                <span className="text-[32px] font-mono font-bold w-12 text-right" style={{ color: TRAIT_COLORS[i] }}>{scoreArr[i]}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Stats row */}
+          <div className="flex gap-8 mb-16">
+            <div className="bg-[#0d1117] border border-[#1e2a3a] rounded-2xl px-8 py-6 text-center">
+              <p className="text-[20px] text-[#7d8590]">Total Runs</p>
+              <p className="text-[36px] font-bold font-mono text-[#e6edf3]">{totalRuns}</p>
+            </div>
+            <div className="bg-[#0d1117] border border-[#1e2a3a] rounded-2xl px-8 py-6 text-center">
+              <p className="text-[20px] text-[#7d8590]">Total KM</p>
+              <p className="text-[36px] font-bold font-mono text-[#e6edf3]">{totalKm.toFixed(0)}</p>
+            </div>
+            <div className="bg-[#0d1117] border border-[#1e2a3a] rounded-2xl px-8 py-6 text-center">
+              <p className="text-[20px] text-[#7d8590]">ACWR</p>
+              <p className="text-[36px] font-bold font-mono" style={{ color: trainingLoad.zoneColor }}>{trainingLoad.ratio.toFixed(2)}</p>
+            </div>
+          </div>
+
+          {/* Branding */}
+          <div className="absolute bottom-16 flex items-center gap-4">
+            <img src="/logo.png" alt="" className="w-10 h-10 rounded-lg" />
+            <div>
+              <p className="text-[28px] font-bold text-[#e6edf3]">RunDNA</p>
+              <p className="text-[20px] text-[#7d8590]">rundna.online</p>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Training Load Detail */}
@@ -303,19 +372,20 @@ function MiniStat({ label, value, color }: { label: string; value: string; color
   );
 }
 
-function ShareButton({ targetRef, filename, label, savingLabel }: {
+function ShareButton({ targetRef, filename, shareText, label, savingLabel }: {
   targetRef: React.RefObject<HTMLDivElement | null>;
   filename: string;
+  shareText: string;
   label: string;
   savingLabel: string;
 }) {
   const [saving, setSaving] = useState(false);
 
-  async function handleDownload() {
+  async function handleShare() {
     if (!targetRef.current || saving) return;
     setSaving(true);
     try {
-      await downloadCard(targetRef.current, filename);
+      await shareCard(targetRef.current, filename, shareText, 'https://rundna.online');
     } finally {
       setSaving(false);
     }
@@ -323,12 +393,12 @@ function ShareButton({ targetRef, filename, label, savingLabel }: {
 
   return (
     <button
-      onClick={handleDownload}
+      onClick={handleShare}
       disabled={saving}
       className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-primary/30 bg-primary/10 text-primary text-sm font-medium hover:bg-primary/20 transition-all disabled:opacity-50"
     >
       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
       </svg>
       {saving ? savingLabel : label}
     </button>

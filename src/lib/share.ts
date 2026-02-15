@@ -1,13 +1,51 @@
 export async function downloadCard(element: HTMLElement, filename: string) {
+  const canvas = await renderCanvas(element);
+  const link = document.createElement('a');
+  link.download = `${filename}.png`;
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+}
+
+export async function shareCard(element: HTMLElement, filename: string, text: string, url: string) {
+  const canvas = await renderCanvas(element);
+
+  // Try Web Share API first (mobile-friendly)
+  try {
+    const blob = await new Promise<Blob>((resolve, reject) => {
+      canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('toBlob failed'))), 'image/png');
+    });
+    const file = new File([blob], `${filename}.png`, { type: 'image/png' });
+
+    if (navigator.canShare?.({ files: [file] })) {
+      await navigator.share({ files: [file], text, url });
+      return;
+    }
+  } catch (e: any) {
+    // User cancelled or share failed — fall through to download
+    if (e?.name === 'AbortError') return;
+  }
+
+  // Fallback: copy URL to clipboard + download image
+  try {
+    await navigator.clipboard.writeText(`${text}\n${url}`);
+  } catch { /* clipboard not available */ }
+
+  const link = document.createElement('a');
+  link.download = `${filename}.png`;
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+}
+
+async function renderCanvas(element: HTMLElement): Promise<HTMLCanvasElement> {
   const html2canvas = (await import('html2canvas')).default;
 
-  const canvas = await html2canvas(element, {
+  return html2canvas(element, {
     backgroundColor: '#060a0e',
     scale: 2,
     useCORS: true,
     logging: false,
     onclone: (doc) => {
-      // 1. Remove lab()/oklch()/oklab() from all stylesheets — html2canvas can't parse them
+      // 1. Remove lab()/oklch()/oklab() from all stylesheets
       for (const sheet of Array.from(doc.styleSheets)) {
         try {
           for (let i = sheet.cssRules.length - 1; i >= 0; i--) {
@@ -23,7 +61,7 @@ export async function downloadCard(element: HTMLElement, filename: string) {
         } catch { /* cross-origin stylesheets */ }
       }
 
-      // 2. Inject CSS custom properties with hex colors (overrides Tailwind v4)
+      // 2. Inject CSS custom properties with hex colors
       const style = doc.createElement('style');
       style.textContent = `
         *, *::before, *::after {
@@ -52,7 +90,6 @@ export async function downloadCard(element: HTMLElement, filename: string) {
         for (const prop of props) {
           const val = cs[prop];
           if (val && (val.includes('lab(') || val.includes('oklch(') || val.includes('oklab('))) {
-            // Use canvas 2D context to convert to hex
             const cvs = document.createElement('canvas');
             const ctx = cvs.getContext('2d');
             if (ctx) {
@@ -65,9 +102,4 @@ export async function downloadCard(element: HTMLElement, filename: string) {
       });
     },
   });
-
-  const link = document.createElement('a');
-  link.download = `${filename}.png`;
-  link.href = canvas.toDataURL('image/png');
-  link.click();
 }

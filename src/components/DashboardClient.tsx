@@ -124,6 +124,7 @@ export default function DashboardClient({ userName }: Props) {
         <FeatureCard icon="🤖" title={t('dash.coach', lang)} desc={t('dash.coachDesc', lang)} href="/coach" color="accent" />
         <FeatureCard icon="🏁" title={t('dash.planner', lang)} desc={t('dash.plannerDesc', lang)} href="/planner" color="warm" />
         <FeatureCard icon="📊" title={t('dash.report', lang)} desc={t('dash.reportDesc', lang)} href="/report" color="primary" />
+        <FeatureCard icon="🎁" title={t('dash.wrapped', lang)} desc={t('dash.wrappedDesc', lang)} href="/wrapped" color="accent" />
       </div>
 
       {/* Ad */}

@@ -41,6 +41,7 @@ export interface ConditionAnalysis {
 export interface RunningPersonality {
   type: string;
   description: string;
+  percentile: number; // estimated "Top X%" based on score profile
   scores: {
     consistency: number;
     speed: number;
@@ -387,7 +388,7 @@ function computeConditions(runs: RunEntry[]): ConditionAnalysis {
 
 function computePersonality(runs: RunEntry[]): RunningPersonality {
   if (runs.length === 0) {
-    return { type: 'The Beginner', description: 'Start running to discover your style!', scores: { consistency: 1, speed: 1, endurance: 1, variety: 1, volume: 1 } };
+    return { type: 'The Beginner', description: 'Start running to discover your style!', percentile: 50, scores: { consistency: 1, speed: 1, endurance: 1, variety: 1, volume: 1 } };
   }
 
   // Consistency: coefficient of variation of weekly distance
@@ -421,19 +422,61 @@ function computePersonality(runs: RunEntry[]): RunningPersonality {
 
   const scores = { consistency, speed, endurance, variety, volume };
 
-  // Determine personality type from dominant trait
+  // Multi-axis personality classification (16 types)
   const entries = Object.entries(scores) as [keyof typeof scores, number][];
-  const dominant = entries.reduce((a, b) => a[1] >= b[1] ? a : b)[0];
+  entries.sort((a, b) => b[1] - a[1]);
+  const [top, second] = entries;
+  const total = Object.values(scores).reduce((a, b) => a + b, 0);
+  const avg = total / 5;
 
-  const types: Record<string, { type: string; description: string }> = {
-    consistency: { type: 'The Consistent Cruiser', description: 'You show up week after week. Consistency is the #1 predictor of running success.' },
-    speed: { type: 'The Speed Demon', description: 'Your pace is impressive. You push the limits every time you lace up.' },
-    endurance: { type: 'The Distance Seeker', description: 'You love going long. Marathons and beyond are your playground.' },
-    variety: { type: 'The Explorer', description: 'Different cities, different routes, different distances. Every run is an adventure.' },
-    volume: { type: 'The High Mileage Runner', description: 'You stack up serious weekly kilometers. Your legs are built for the long haul.' },
-  };
+  type PersonalityDef = { type: string; description: string };
+  let result: PersonalityDef;
 
-  return { ...types[dominant], scores };
+  // All-rounder: all scores within 1 of each other
+  const min = Math.min(...Object.values(scores));
+  const max = Math.max(...Object.values(scores));
+  if (max - min <= 1 && avg >= 3) {
+    result = { type: 'The Complete Runner', description: 'Balanced across every dimension — speed, endurance, consistency, variety, and volume. A true all-rounder.' };
+  } else if (max - min <= 1 && avg < 3) {
+    result = { type: 'The Rising Runner', description: 'Your foundation is solid and balanced. With more training, all dimensions will grow together.' };
+  }
+  // Dual-trait combos
+  else if (top[0] === 'speed' && second[0] === 'endurance' || top[0] === 'endurance' && second[0] === 'speed') {
+    result = { type: 'The Iron Racer', description: 'Fast AND long — a rare and dangerous combo. You eat race PRs for breakfast.' };
+  } else if (top[0] === 'consistency' && second[0] === 'volume' || top[0] === 'volume' && second[0] === 'consistency') {
+    result = { type: 'The Mileage Machine', description: 'Relentless weekly volume with clock-like consistency. You build fitness through sheer dedication.' };
+  } else if (top[0] === 'speed' && second[0] === 'consistency' || top[0] === 'consistency' && second[0] === 'speed') {
+    result = { type: 'The Steady Sprinter', description: 'Consistently fast. Your discipline keeps your speed sharp week after week.' };
+  } else if (top[0] === 'endurance' && second[0] === 'volume' || top[0] === 'volume' && second[0] === 'endurance') {
+    result = { type: 'The Ultra Mind', description: 'Born for distance. High mileage and long runs are your comfort zone.' };
+  } else if (top[0] === 'variety' && second[0] === 'speed' || top[0] === 'speed' && second[0] === 'variety') {
+    result = { type: 'The Trail Blazer', description: 'Fast on different terrain. You seek new routes and conquer them at pace.' };
+  } else if (top[0] === 'variety' && second[0] === 'endurance' || top[0] === 'endurance' && second[0] === 'variety') {
+    result = { type: 'The Wandering Wolf', description: 'You explore far and wide on long runs. Every new path is an adventure.' };
+  } else if (top[0] === 'consistency' && second[0] === 'endurance' || top[0] === 'endurance' && second[0] === 'consistency') {
+    result = { type: 'The Marathon Monk', description: 'Disciplined long-distance training, week in, week out. Built for marathon glory.' };
+  } else if (top[0] === 'variety' && second[0] === 'volume' || top[0] === 'volume' && second[0] === 'variety') {
+    result = { type: 'The Global Runner', description: 'Massive mileage across diverse routes and locations. The world is your running track.' };
+  } else if (top[0] === 'variety' && second[0] === 'consistency' || top[0] === 'consistency' && second[0] === 'variety') {
+    result = { type: 'The Routine Explorer', description: 'Consistently adventurous — you never run the same route twice, but you never miss a week.' };
+  }
+  // Single dominant trait fallback
+  else {
+    const singles: Record<string, PersonalityDef> = {
+      consistency: { type: 'The Consistent Cruiser', description: 'You show up week after week. Consistency is the #1 predictor of running success.' },
+      speed: { type: 'The Speed Demon', description: 'Your pace is impressive. You push the limits every time you lace up.' },
+      endurance: { type: 'The Distance Seeker', description: 'You love going long. Marathons and beyond are your playground.' },
+      variety: { type: 'The Explorer', description: 'Different cities, different routes, different distances. Every run is an adventure.' },
+      volume: { type: 'The High Mileage Runner', description: 'You stack up serious weekly kilometers. Your legs are built for the long haul.' },
+    };
+    result = singles[top[0]];
+  }
+
+  // Percentile estimate: map total score (5-25) to a percentile using a sigmoid-like curve.
+  // Most casual runners score ~10-12, so center the curve there.
+  const percentile = Math.max(1, Math.min(99, Math.round(100 - 100 / (1 + Math.exp((total - 12) / 3)))));
+
+  return { ...result, percentile, scores };
 }
 
 // ============================================================

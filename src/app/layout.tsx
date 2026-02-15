@@ -17,6 +17,18 @@ export const metadata: Metadata = {
   title: "RunDNA — AI Running Intelligence",
   description: "Connect your Strava. Discover your Running DNA. Get AI-powered coaching, race plans, and weekly reports.",
   keywords: ["running", "AI", "Strava", "analytics", "coaching", "marathon", "training"],
+  metadataBase: new URL("https://rundna.online"),
+  openGraph: {
+    title: "RunDNA — AI Running Intelligence",
+    description: "Connect your Strava. Discover your Running DNA.",
+    siteName: "RunDNA",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "RunDNA — AI Running Intelligence",
+    description: "Connect your Strava. Discover your Running DNA.",
+  },
 };
 
 export default function RootLayout({

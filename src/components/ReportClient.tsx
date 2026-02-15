@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import type { IntelligenceData } from '@/lib/strava-analytics';
 import type { EnrichedRunData } from '@/lib/strava';
-import { downloadCard } from '@/lib/share';
+import { shareCard } from '@/lib/share';
 import { t } from '@/lib/i18n';
 import { useLang } from '@/lib/useLang';
 import AdBanner from '@/components/AdBanner';
@@ -329,11 +329,11 @@ function ShareBtn({ targetRef, filename, lang }: {
 }) {
   const [saving, setSaving] = useState(false);
 
-  async function handleDownload() {
+  async function handleShare() {
     if (!targetRef.current || saving) return;
     setSaving(true);
     try {
-      await downloadCard(targetRef.current, filename);
+      await shareCard(targetRef.current, filename, 'My Weekly Running Report', 'https://rundna.online');
     } finally {
       setSaving(false);
     }
@@ -341,14 +341,14 @@ function ShareBtn({ targetRef, filename, lang }: {
 
   return (
     <button
-      onClick={handleDownload}
+      onClick={handleShare}
       disabled={saving}
       className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-primary/30 bg-primary/10 text-primary text-sm font-medium hover:bg-primary/20 transition-all disabled:opacity-50"
     >
       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
       </svg>
-      {saving ? t('common.saving', lang) : t('report.downloadCard', lang)}
+      {saving ? t('common.sharing', lang) : t('report.share', lang)}
     </button>
   );
 }

@@ -46,7 +46,8 @@ export type WidgetId =
   | 'race-simulation'
   | 'pacing-card'
   // Story / Visual
-  | 'run-heatmap';
+  | 'run-heatmap'
+  | 'run-world-map';
 
 // ── Widget Definition ──
 export interface WidgetDef {
@@ -101,6 +102,7 @@ export const WIDGET_REGISTRY: WidgetDef[] = [
 
   // ── Story / Visual ──
   { id: 'run-heatmap', titleKey: 'widget.runHeatmap', icon: '🗓️', category: 'core', sizes: ['L', 'XL'], defaultSize: 'L', dataDeps: ['runData'], tier: 'free' },
+  { id: 'run-world-map', titleKey: 'widget.runWorldMap', icon: '🌍', category: 'core', sizes: ['L', 'XL'], defaultSize: 'L', dataDeps: ['runData'], tier: 'free' },
 ];
 
 export function getWidgetDef(id: WidgetId): WidgetDef | undefined {
@@ -108,7 +110,7 @@ export function getWidgetDef(id: WidgetId): WidgetDef | undefined {
 }
 
 // ── Presets ──
-export type PresetId = 'speed-demon' | 'ultra-beast' | 'data-nerd' | 'beginner' | 'custom';
+export type PresetId = 'speed-demon' | 'ultra-beast' | 'globe-trotter' | 'data-nerd' | 'beginner' | 'custom';
 
 export interface Preset {
   id: PresetId;
@@ -142,6 +144,17 @@ export const PRESETS: Preset[] = [
     ],
   },
   {
+    id: 'globe-trotter',
+    titleKey: 'preset.globeTrotter',
+    icon: '🌍',
+    description: 'Visual explorer with maps & charts',
+    widgets: [
+      'stats-overview', 'run-world-map', 'route-familiarity', 'run-heatmap',
+      'year-comparison', 'pace-trend', 'monthly-highlight',
+      'conditions', 'milestones', 'feature-nav',
+    ],
+  },
+  {
     id: 'data-nerd',
     titleKey: 'preset.dataNerd',
     icon: '📊',
@@ -151,7 +164,7 @@ export const PRESETS: Preset[] = [
       'dna-radar', 'trait-bars', 'training-load', 'recovery-stats',
       'race-predictions', 'pace-trend', 'conditions', 'year-comparison',
       'distance-distribution', 'route-familiarity', 'milestones',
-      'coach-advice', 'todays-plan', 'run-heatmap',
+      'coach-advice', 'todays-plan', 'run-heatmap', 'run-world-map',
       'shoe-health', 'weekly-challenge', 'feature-nav',
       'dna-battle', 'pacing-card', 'snipe-missions',
       'monthly-highlight', 'training-twin', 'race-simulation',

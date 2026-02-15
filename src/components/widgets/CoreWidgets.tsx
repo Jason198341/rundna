@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import type { EnrichedRunData } from '@/lib/strava';
 import type { IntelligenceData } from '@/lib/strava-analytics';
 import { t, type Lang } from '@/lib/i18n';
+import { WORLD_LAND_PATH } from '@/data/world-land-paths';
 
 // ── Stats Overview ──
 export function StatsOverview({ data, lang }: { data: EnrichedRunData; lang: Lang }) {
@@ -714,6 +715,154 @@ export function RunHeatmap({ data }: { data: EnrichedRunData }) {
           <div key={i} className="w-[10px] h-[10px] rounded-[2px]" style={getColor(i * maxKm)} />
         ))}
         <span>More</span>
+      </div>
+    </div>
+  );
+}
+
+// ── Run World Map (cities connected on map) ──
+
+const CITY_COORDS: Record<string, { lat: number; lng: number }> = {
+  Seoul: { lat: 37.5, lng: 127.0 }, Busan: { lat: 35.2, lng: 129.1 },
+  Hyderabad: { lat: 17.4, lng: 78.4 }, Chennai: { lat: 13.1, lng: 80.3 },
+  London: { lat: 51.5, lng: -0.1 }, Lisbon: { lat: 38.7, lng: -9.1 },
+  Porto: { lat: 41.1, lng: -8.6 }, Jakarta: { lat: -6.2, lng: 106.8 },
+  Yantai: { lat: 37.6, lng: 121.2 }, 'New York': { lat: 40.7, lng: -74.0 },
+  Tokyo: { lat: 35.7, lng: 139.7 }, Berlin: { lat: 52.5, lng: 13.4 },
+  Paris: { lat: 48.9, lng: 2.3 }, Sydney: { lat: -33.9, lng: 151.2 },
+};
+
+const MAP_W = 1080, MAP_H = 600;
+function mapLerp(val: number, inMin: number, inMax: number, outMin: number, outMax: number): number {
+  return outMin + (outMax - outMin) * Math.max(0, Math.min(1, (val - inMin) / (inMax - inMin)));
+}
+function mapProject(lat: number, lng: number): [number, number] {
+  const x = mapLerp(lng, -30, 150, 40, MAP_W - 40);
+  const latRad = (lat * Math.PI) / 180;
+  const mercY = Math.log(Math.tan(Math.PI / 4 + latRad / 2));
+  const y = mapLerp(mercY, -0.2, 1.2, MAP_H - 40, 40);
+  return [x, y];
+}
+
+export function RunWorldMap({ data, lang }: { data: EnrichedRunData; lang: Lang }) {
+  // Aggregate runs by city
+  const cityStats = useMemo(() => {
+    const map = new Map<string, { count: number; totalKm: number; firstDate: string; flag: string }>();
+    for (const r of data.runs) {
+      if (r.location === 'Unknown' || r.location === 'Other') continue;
+      if (!CITY_COORDS[r.location]) continue;
+      const existing = map.get(r.location);
+      if (existing) {
+        existing.count += 1;
+        existing.totalKm += r.distanceKm;
+        if (r.dateFull < existing.firstDate) existing.firstDate = r.dateFull;
+      } else {
+        map.set(r.location, { count: 1, totalKm: r.distanceKm, firstDate: r.dateFull, flag: r.locationFlag });
+      }
+    }
+    return map;
+  }, [data.runs]);
+
+  // Sort cities by first run date (chronological journey)
+  const activeCities = useMemo(() => {
+    return Array.from(cityStats.entries())
+      .sort((a, b) => a[1].firstDate.localeCompare(b[1].firstDate))
+      .map(([name, stats]) => ({ name, ...stats, ...CITY_COORDS[name] }));
+  }, [cityStats]);
+
+  if (activeCities.length === 0) {
+    return (
+      <div className="text-center py-4">
+        <span className="text-2xl">🌍</span>
+        <p className="text-xs text-text-muted mt-2">{lang === 'ko' ? '러닝 데이터 없음' : 'No run data'}</p>
+      </div>
+    );
+  }
+
+  // Build route path
+  const routePath = activeCities
+    .map((c, i) => {
+      const [x, y] = mapProject(c.lat, c.lng);
+      return `${i === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${y.toFixed(1)}`;
+    })
+    .join(' ');
+
+  // Grid lines
+  const latLines = [0, 20, 40, 60].map(lat => ({ lat, y: mapProject(lat, 0)[1] }));
+  const lngLines = [-20, 0, 30, 60, 90, 120].map(lng => ({ lng, x: mapProject(0, lng)[0] }));
+
+  const totalCountries = new Set(activeCities.map(c => c.flag)).size;
+  const totalKm = activeCities.reduce((s, c) => s + c.totalKm, 0);
+
+  return (
+    <div>
+      <svg
+        width="100%"
+        viewBox={`0 0 ${MAP_W} ${MAP_H}`}
+        preserveAspectRatio="xMidYMid meet"
+        className="block"
+      >
+        {/* Grid lines */}
+        {latLines.map(l => (
+          <line key={`lat-${l.lat}`} x1={0} y1={l.y} x2={MAP_W} y2={l.y} stroke="var(--color-border)" strokeWidth={0.5} opacity={0.3} />
+        ))}
+        {lngLines.map(l => (
+          <line key={`lng-${l.lng}`} x1={l.x} y1={0} x2={l.x} y2={MAP_H} stroke="var(--color-border)" strokeWidth={0.5} opacity={0.3} />
+        ))}
+
+        {/* Land masses */}
+        <path d={WORLD_LAND_PATH} fill="var(--color-border)" fillOpacity={0.15} stroke="var(--color-text-muted)" strokeWidth={0.8} strokeLinejoin="round" opacity={0.4} />
+
+        {/* Route glow */}
+        {routePath && activeCities.length > 1 && (
+          <path d={routePath} fill="none" stroke="var(--color-primary)" strokeWidth={8} strokeLinecap="round" opacity={0.15} style={{ filter: 'blur(4px)' }} />
+        )}
+
+        {/* Route line */}
+        {routePath && activeCities.length > 1 && (
+          <path d={routePath} fill="none" stroke="var(--color-primary)" strokeWidth={2.5} strokeLinecap="round" opacity={0.8} />
+        )}
+
+        {/* City markers + labels */}
+        {activeCities.map((city, i) => {
+          const [cx, cy] = mapProject(city.lat, city.lng);
+          // Pulse ring for most-visited city
+          const maxRuns = Math.max(...activeCities.map(c => c.count));
+          const isMax = city.count === maxRuns;
+          return (
+            <g key={city.name}>
+              {/* Ping for top city */}
+              {isMax && <circle cx={cx} cy={cy} r={18} fill="none" stroke="var(--color-primary)" strokeWidth={1} opacity={0.3} />}
+
+              {/* Marker dot — size scales with run count */}
+              <circle cx={cx} cy={cy} r={Math.min(5 + city.count * 0.5, 12)} fill="var(--color-primary)" stroke="var(--color-surface)" strokeWidth={2} />
+
+              {/* Order number inside dot */}
+              <text x={cx} y={cy + 1} textAnchor="middle" dominantBaseline="middle" fill="var(--color-surface)" fontSize={10} fontWeight={700} fontFamily="ui-monospace,monospace">
+                {i + 1}
+              </text>
+
+              {/* City name label */}
+              <text x={cx} y={cy - 18} textAnchor="middle" fill="var(--color-text)" fontSize={16} fontWeight={600} fontFamily="system-ui, sans-serif">
+                {city.flag} {city.name}
+              </text>
+
+              {/* Run stats */}
+              <text x={cx} y={cy - 18 + 16} textAnchor="middle" fill="var(--color-text-muted)" fontSize={12} fontFamily="ui-monospace,monospace">
+                {city.count} runs · {city.totalKm.toFixed(0)}km
+              </text>
+            </g>
+          );
+        })}
+      </svg>
+
+      {/* Summary */}
+      <div className="flex items-center justify-center gap-3 mt-1 text-[10px] text-text-muted">
+        <span>{activeCities.length} {lang === 'ko' ? '도시' : 'cities'}</span>
+        <span className="opacity-30">·</span>
+        <span>{totalCountries} {lang === 'ko' ? '국가' : 'countries'}</span>
+        <span className="opacity-30">·</span>
+        <span>{totalKm.toFixed(0)} km</span>
       </div>
     </div>
   );

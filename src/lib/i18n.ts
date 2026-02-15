@@ -221,6 +221,7 @@ const dict: Record<string, { en: string; ko: string }> = {
   'widget.routeFamiliarity': { en: 'Route Familiarity', ko: '루트 친숙도' },
   'widget.milestones': { en: 'Milestones', ko: '마일스톤' },
   'widget.runHeatmap': { en: 'Run Heatmap', ko: '러닝 히트맵' },
+  'widget.runWorldMap': { en: 'Run World Map', ko: '러닝 세계지도' },
 
   // Level 1: Run Film
   'widget.monthlyHighlight': { en: 'Monthly Highlight', ko: '월간 하이라이트' },
@@ -289,6 +290,7 @@ const dict: Record<string, { en: string; ko: string }> = {
   // Presets
   'preset.speedDemon': { en: 'Speed Demon', ko: '스피드 데몬' },
   'preset.ultraBeast': { en: 'Ultra Beast', ko: '울트라 비스트' },
+  'preset.globeTrotter': { en: 'Globe Trotter', ko: '세계 러너' },
   'preset.dataNerd': { en: 'Data Nerd', ko: '데이터 덕후' },
   'preset.beginner': { en: 'Beginner', ko: '입문 러너' },
   'preset.custom': { en: 'Custom', ko: '커스텀' },

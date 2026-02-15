@@ -18,6 +18,7 @@ import {
   RecoveryStats, CoachAdvice, TodaysPlanWidget, PaceTrend,
   ConditionsWidget, YearComparison, DistributionWidget,
   RouteFamiliarityWidget, MilestonesWidget, WeeklyChallenge, RunHeatmap,
+  RunWorldMap,
 } from '@/components/widgets/CoreWidgets';
 
 const CustomizePanel = dynamic(() => import('@/components/widgets/CustomizePanel'), {
@@ -467,6 +468,8 @@ function renderWidget(id: WidgetId, data: DataSources, lang: 'en' | 'ko'): React
 
     case 'run-heatmap':
       return runData ? <RunHeatmap data={runData} /> : null;
+    case 'run-world-map':
+      return runData ? <RunWorldMap data={runData} lang={lang} /> : null;
 
     // ── Level 1: Run Film ──
     case 'monthly-highlight':

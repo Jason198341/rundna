@@ -35,7 +35,7 @@ export default async function PlannerPage() {
           </div>
         </div>
       </nav>
-      <main className="pt-14 px-6 py-8 max-w-3xl mx-auto">
+      <main className="pt-20 pb-28 px-6 max-w-3xl mx-auto">
         <PlannerClient userName={user.name} />
       </main>
     </div>

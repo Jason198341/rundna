@@ -11,12 +11,13 @@ import { loadPreferences, savePreferences } from '@/lib/widget-store';
 import { t } from '@/lib/i18n';
 import { useLang } from '@/lib/useLang';
 import WidgetShell from '@/components/widgets/WidgetShell';
+import AdBanner from '@/components/AdBanner';
 import {
   StatsOverview, PersonalRecords, FeatureNav, RecentActivities,
   DNARadar, TraitBars, TrainingLoadWidget, RacePredictions,
   RecoveryStats, CoachAdvice, TodaysPlanWidget, PaceTrend,
   ConditionsWidget, YearComparison, DistributionWidget,
-  RouteFamiliarityWidget, MilestonesWidget, WeeklyChallenge,
+  RouteFamiliarityWidget, MilestonesWidget, WeeklyChallenge, RunHeatmap,
 } from '@/components/widgets/CoreWidgets';
 
 const CustomizePanel = dynamic(() => import('@/components/widgets/CustomizePanel'), {
@@ -305,12 +306,12 @@ export default function DashboardClient({ userName }: Props) {
   return (
     <div>
       {/* Welcome + Customize Button */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-10">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold">
             {t('dash.welcome', lang)} {userName.split(' ')[0]}
           </h1>
-          <p className="text-text-muted mt-1">{t('dash.overview', lang)}</p>
+          <p className="text-text-muted mt-1.5 text-sm">{t('dash.overview', lang)}</p>
         </div>
         <button
           onClick={() => setShowCustomize(true)}
@@ -325,7 +326,7 @@ export default function DashboardClient({ userName }: Props) {
 
       {/* Widget Grid — Flexbox + Magnetic Drag-and-Drop */}
       <div
-        className="flex flex-wrap gap-4 items-stretch"
+        className="flex flex-wrap gap-5 items-stretch"
         style={dragWidgetId ? { touchAction: 'none' } : undefined}
         onContextMenu={dragWidgetId ? e => e.preventDefault() : undefined}
       >
@@ -333,7 +334,7 @@ export default function DashboardClient({ userName }: Props) {
           <div
             key={id}
             data-widget-idx={idx}
-            className={`flex-1 basis-[calc(50%-0.5rem)] min-w-[280px] transition-transform duration-200 ${
+            className={`flex-1 basis-[calc(50%-0.625rem)] min-w-[280px] transition-transform duration-200 ${
               dragWidgetId === id ? 'z-10 relative' : ''
             }`}
             draggable
@@ -346,6 +347,7 @@ export default function DashboardClient({ userName }: Props) {
             <WidgetShell
               id={id}
               lang={lang}
+              index={idx}
               onRemove={handleRemoveWidget}
               isDragging={dragWidgetId === id}
             >
@@ -354,6 +356,8 @@ export default function DashboardClient({ userName }: Props) {
           </div>
         ))}
       </div>
+
+      <AdBanner format="horizontal" />
 
       {/* Empty state */}
       {orderedWidgets.length === 0 && (
@@ -426,6 +430,9 @@ function renderWidget(id: WidgetId, data: DataSources, lang: 'en' | 'ko'): React
       return intelligence ? <MilestonesWidget intel={intelligence} /> : null;
     case 'weekly-challenge':
       return intelligence ? <WeeklyChallenge intel={intelligence} lang={lang} /> : null;
+
+    case 'run-heatmap':
+      return runData ? <RunHeatmap data={runData} /> : null;
 
     case 'run-film':
     case 'ghost-comparison':

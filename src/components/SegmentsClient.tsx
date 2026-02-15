@@ -5,6 +5,7 @@ import type { EnrichedRunData } from '@/lib/strava';
 import type { SegmentEffort } from '@/lib/strava-extended';
 import { t } from '@/lib/i18n';
 import { useLang } from '@/lib/useLang';
+import AdBanner from '@/components/AdBanner';
 
 function formatTime(secs: number): string {
   const m = Math.floor(secs / 60);
@@ -132,6 +133,8 @@ export default function SegmentsClient() {
           </p>
         </div>
       )}
+
+      <AdBanner format="horizontal" />
     </div>
   );
 }

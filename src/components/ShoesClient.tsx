@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import type { ShoeData } from '@/lib/strava-extended';
 import { t } from '@/lib/i18n';
 import { useLang } from '@/lib/useLang';
+import AdBanner from '@/components/AdBanner';
 
 export default function ShoesClient() {
   const [lang] = useLang();
@@ -61,6 +62,8 @@ export default function ShoesClient() {
       )}
 
       {/* Shoe Graveyard */}
+      <AdBanner format="horizontal" />
+
       {retired.length > 0 && (
         <div>
           <h2 className="text-sm font-bold text-text-muted uppercase tracking-wider mb-3 flex items-center gap-2">

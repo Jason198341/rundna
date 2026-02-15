@@ -1,18 +1,21 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import type { EnrichedRunData } from '@/lib/strava';
 import type { IntelligenceData } from '@/lib/strava-analytics';
 import { t, type Lang } from '@/lib/i18n';
 
 // ── Stats Overview ──
 export function StatsOverview({ data, lang }: { data: EnrichedRunData; lang: Lang }) {
-  const { stats, locations } = data;
+  const { stats, locations, monthlyVolume } = data;
+  const recentKm = monthlyVolume.slice(-8).map(m => m.km);
+  const recentCount = monthlyVolume.slice(-8).map(m => m.count);
   return (
     <div className="grid grid-cols-2 gap-3">
-      <Stat label={t('dash.totalRuns', lang)} value={stats.totalRuns.toString()} />
-      <Stat label={t('dash.totalDist', lang)} value={`${stats.totalDistance} km`} />
+      <Stat label={t('dash.totalRuns', lang)} value={stats.totalRuns.toString()} numericValue={stats.totalRuns} sparkData={recentCount} color="var(--color-primary)" />
+      <Stat label={t('dash.totalDist', lang)} value={`${stats.totalDistance} km`} numericValue={stats.totalDistanceKm} sparkData={recentKm} color="var(--color-accent)" />
       <Stat label={t('dash.avgPace', lang)} value={stats.avgPace} />
-      <Stat label={t('dash.locations', lang)} value={locations.length.toString()} />
+      <Stat label={t('dash.locations', lang)} value={locations.length.toString()} numericValue={locations.length} />
     </div>
   );
 }
@@ -448,12 +451,131 @@ export function WeeklyChallenge({ intel, lang }: { intel: IntelligenceData; lang
   );
 }
 
+// ── Run Heatmap (GitHub-style 52-week calendar) ──
+export function RunHeatmap({ data }: { data: EnrichedRunData }) {
+  // Build a map of date → total km
+  const dayMap = new Map<string, number>();
+  for (const run of data.runs) {
+    const key = run.date; // YYYY-MM-DD
+    dayMap.set(key, (dayMap.get(key) || 0) + run.distanceKm);
+  }
+
+  // Generate 52 weeks x 7 days grid (most recent Sunday → today)
+  const today = new Date();
+  const weeks: { date: string; km: number }[][] = [];
+
+  // Find the most recent Sunday
+  const startDay = new Date(today);
+  startDay.setDate(startDay.getDate() - startDay.getDay() - 52 * 7 + 1);
+
+  let currentWeek: { date: string; km: number }[] = [];
+  const cursor = new Date(startDay);
+
+  while (cursor <= today) {
+    const key = cursor.toISOString().slice(0, 10);
+    currentWeek.push({ date: key, km: dayMap.get(key) || 0 });
+    if (currentWeek.length === 7) {
+      weeks.push(currentWeek);
+      currentWeek = [];
+    }
+    cursor.setDate(cursor.getDate() + 1);
+  }
+  if (currentWeek.length > 0) weeks.push(currentWeek);
+
+  // Max km for color scaling
+  const allKms = weeks.flat().map(d => d.km);
+  const maxKm = Math.max(...allKms, 1);
+
+  function getColor(km: number): string {
+    if (km === 0) return 'var(--color-border)';
+    const intensity = Math.min(km / maxKm, 1);
+    if (intensity < 0.25) return 'var(--color-primary-dim)';
+    if (intensity < 0.5) return 'color-mix(in srgb, var(--color-primary) 40%, transparent)';
+    if (intensity < 0.75) return 'color-mix(in srgb, var(--color-primary) 70%, transparent)';
+    return 'var(--color-primary)';
+  }
+
+  const totalDaysRun = allKms.filter(k => k > 0).length;
+
+  return (
+    <div>
+      <div className="flex items-center gap-2 mb-3">
+        <span className="text-xs text-text-muted">{totalDaysRun} days in 52 weeks</span>
+      </div>
+      <div className="flex gap-[3px] overflow-x-auto pb-1">
+        {weeks.map((week, wi) => (
+          <div key={wi} className="flex flex-col gap-[3px]">
+            {week.map((day, di) => (
+              <div
+                key={di}
+                className="w-[10px] h-[10px] rounded-[2px] transition-colors"
+                style={{ backgroundColor: getColor(day.km) }}
+                title={`${day.date}: ${day.km > 0 ? day.km.toFixed(1) + ' km' : 'Rest'}`}
+              />
+            ))}
+          </div>
+        ))}
+      </div>
+      <div className="flex items-center gap-1 mt-2 text-[10px] text-text-muted">
+        <span>Less</span>
+        {[0, 0.25, 0.5, 0.75, 1].map(i => (
+          <div key={i} className="w-[10px] h-[10px] rounded-[2px]" style={{ backgroundColor: getColor(i * maxKm) }} />
+        ))}
+        <span>More</span>
+      </div>
+    </div>
+  );
+}
+
 // ── Shared components ──
-function Stat({ label, value }: { label: string; value: string }) {
+// ── Sparkline: tiny 40x16 SVG chart ──
+function Sparkline({ data, color = 'var(--color-primary)' }: { data: number[]; color?: string }) {
+  if (data.length < 2) return null;
+  const max = Math.max(...data);
+  const min = Math.min(...data);
+  const range = max - min || 1;
+  const w = 40;
+  const h = 16;
+  const points = data.map((v, i) => `${(i / (data.length - 1)) * w},${h - ((v - min) / range) * h}`).join(' ');
+  return (
+    <svg width={w} height={h} className="shrink-0">
+      <polyline points={points} fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+// ── AnimatedNumber: counts up from 0 ──
+function AnimatedNumber({ value, duration = 800 }: { value: number; duration?: number }) {
+  const [display, setDisplay] = useState(0);
+  useEffect(() => {
+    const start = performance.now();
+    const step = (now: number) => {
+      const progress = Math.min((now - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3); // ease-out cubic
+      setDisplay(Math.round(eased * value));
+      if (progress < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  }, [value, duration]);
+  return <>{display.toLocaleString()}</>;
+}
+
+function Stat({ label, value, numericValue, sparkData, color }: {
+  label: string;
+  value: string;
+  numericValue?: number;
+  sparkData?: number[];
+  color?: string;
+}) {
   return (
     <div>
       <p className="text-xs text-text-muted">{label}</p>
-      <p className="text-lg font-bold font-mono">{value}</p>
+      <div className="flex items-center gap-2">
+        <p className="text-lg font-bold font-mono">
+          {numericValue != null ? <AnimatedNumber value={numericValue} /> : value}
+        </p>
+        {sparkData && sparkData.length > 1 && <Sparkline data={sparkData} color={color} />}
+      </div>
     </div>
   );
 }

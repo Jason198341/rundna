@@ -220,6 +220,7 @@ const dict: Record<string, { en: string; ko: string }> = {
   'widget.distDistribution': { en: 'Distance Distribution', ko: '거리 분포' },
   'widget.routeFamiliarity': { en: 'Route Familiarity', ko: '루트 친숙도' },
   'widget.milestones': { en: 'Milestones', ko: '마일스톤' },
+  'widget.runHeatmap': { en: 'Run Heatmap', ko: '러닝 히트맵' },
 
   // Level 1: Run Film
   'widget.runFilm': { en: 'Run Film', ko: '런 필름' },
@@ -259,6 +260,16 @@ const dict: Record<string, { en: string; ko: string }> = {
   'battle.compare': { en: 'Compare DNA', ko: 'DNA 비교' },
   'battle.challenge': { en: 'This Week\'s Challenge', ko: '이번 주 챌린지' },
   'battle.twin': { en: 'Your Running Twin', ko: '러닝 쌍둥이' },
+  'battle.myCode': { en: 'My DNA Code', ko: '내 DNA 코드' },
+  'battle.copied': { en: 'Copied!', ko: '복사됨!' },
+  'battle.invalidCode': { en: 'Invalid code. Format: RD-XXXXX (digits 1-5)', ko: '잘못된 코드. 형식: RD-XXXXX (숫자 1-5)' },
+  'battle.youWin': { en: 'You Win!', ko: '승리!' },
+  'battle.youLose': { en: 'Rival Wins!', ko: '상대 승리!' },
+  'battle.tie': { en: "It's a Tie!", ko: '무승부!' },
+  'battle.traitWin': { en: 'wins', ko: '승' },
+  'battle.overall': { en: 'Overall', ko: '종합' },
+  'battle.rivalDNA': { en: 'Rival DNA', ko: '상대 DNA' },
+  'battle.reset': { en: 'New Battle', ko: '새 대전' },
 
   // Level 5: Digital Twin
   'widget.raceSimulation': { en: 'Race Simulation', ko: '레이스 시뮬레이션' },
@@ -294,6 +305,29 @@ const dict: Record<string, { en: string; ko: string }> = {
   'cat.shoe': { en: 'Shoes', ko: '신발' },
   'cat.battle': { en: 'Battle', ko: '배틀' },
   'cat.twin': { en: 'Digital Twin', ko: '디지털 트윈' },
+
+  // ── Story Mode ──
+  'story.title': { en: 'Your Running Story', ko: '나의 러닝 스토리' },
+  'story.loading': { en: 'Composing your story...', ko: '스토리 구성 중...' },
+  'story.ch1': { en: 'The Origin', ko: '시작' },
+  'story.ch1sub': { en: 'Where it all began', ko: '모든 것이 시작된 곳' },
+  'story.firstRun': { en: 'First recorded run', ko: '첫 러닝 기록' },
+  'story.ch2': { en: 'The Journey', ko: '여정' },
+  'story.ch2sub': { en: 'The miles that shaped you', ko: '나를 만든 거리' },
+  'story.totalDistance': { en: 'Total Distance', ko: '총 거리' },
+  'story.totalRuns': { en: 'Total Runs', ko: '총 러닝' },
+  'story.totalHours': { en: 'Total Hours', ko: '총 시간' },
+  'story.ch3': { en: 'The DNA', ko: 'DNA' },
+  'story.ch3sub': { en: 'What makes you unique', ko: '나만의 러닝 유전자' },
+  'story.ch4': { en: 'The Records', ko: '기록' },
+  'story.ch4sub': { en: 'Personal bests that define you', ko: '나를 정의하는 개인 기록' },
+  'story.fastest5k': { en: 'Fastest 5K', ko: '최고 5K' },
+  'story.fastest10k': { en: 'Fastest 10K', ko: '최고 10K' },
+  'story.longestRun': { en: 'Longest Run', ko: '최장 거리' },
+  'story.ch5': { en: 'The Future', ko: '미래' },
+  'story.ch5sub': { en: "What's next for you", ko: '다음 목표' },
+  'story.explore': { en: 'Explore Your Data', ko: '데이터 탐색' },
+  'story.noData': { en: 'Connect Strava to see your story', ko: 'Strava를 연결해 스토리를 확인하세요' },
 
   // New pages
   'nav.film': { en: 'Run Film', ko: '런 필름' },

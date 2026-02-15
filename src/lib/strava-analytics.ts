@@ -386,43 +386,8 @@ function computeConditions(runs: RunEntry[]): ConditionAnalysis {
 // 5. Running Personality
 // ============================================================
 
-function computePersonality(runs: RunEntry[]): RunningPersonality {
-  if (runs.length === 0) {
-    return { type: 'The Beginner', description: 'Start running to discover your style!', percentile: 50, scores: { consistency: 1, speed: 1, endurance: 1, variety: 1, volume: 1 } };
-  }
-
-  // Consistency: coefficient of variation of weekly distance
-  const weeklyKm = new Map<string, number>();
-  for (const r of runs) {
-    const key = toDateKey(getMonday(new Date(r.dateFull)));
-    weeklyKm.set(key, (weeklyKm.get(key) || 0) + r.distanceKm);
-  }
-  const weeklyVals = Array.from(weeklyKm.values());
-  const mean = weeklyVals.reduce((a, b) => a + b, 0) / weeklyVals.length;
-  const std = Math.sqrt(weeklyVals.reduce((s, v) => s + (v - mean) ** 2, 0) / weeklyVals.length);
-  const cv = mean > 0 ? std / mean : 1;
-  const consistency = Math.max(1, Math.min(5, Math.round(5 - cv * 2.5)));
-
-  // Speed: average pace
-  const avgPace = runs.reduce((s, r) => s + r.timeSeconds / r.distanceKm, 0) / runs.length;
-  const speed = avgPace < 270 ? 5 : avgPace < 330 ? 4 : avgPace < 390 ? 3 : avgPace < 450 ? 2 : 1;
-
-  // Endurance: % of runs ≥ 10km
-  const longPct = runs.filter(r => r.distanceKm >= 10).length / runs.length;
-  const endurance = longPct > 0.4 ? 5 : longPct > 0.3 ? 4 : longPct > 0.2 ? 3 : longPct > 0.1 ? 2 : 1;
-
-  // Variety: unique locations + distance range spread
-  const locs = new Set(runs.map(r => r.location).filter(l => l !== 'Unknown' && l !== 'Other'));
-  const distRange = Math.max(...runs.map(r => r.distanceKm)) - Math.min(...runs.map(r => r.distanceKm));
-  const variety = Math.max(1, Math.min(5, Math.round(locs.size / 2 + distRange / 15)));
-
-  // Volume: weekly average km
-  const weeklyAvg = mean;
-  const volume = weeklyAvg > 50 ? 5 : weeklyAvg > 35 ? 4 : weeklyAvg > 20 ? 3 : weeklyAvg > 10 ? 2 : 1;
-
-  const scores = { consistency, speed, endurance, variety, volume };
-
-  // Multi-axis personality classification (16 types)
+/** Classify personality type & percentile from raw trait scores (reusable). */
+export function classifyPersonality(scores: RunningPersonality['scores']): Omit<RunningPersonality, 'scores'> {
   const entries = Object.entries(scores) as [keyof typeof scores, number][];
   entries.sort((a, b) => b[1] - a[1]);
   const [top, second] = entries;
@@ -432,7 +397,6 @@ function computePersonality(runs: RunEntry[]): RunningPersonality {
   type PersonalityDef = { type: string; description: string };
   let result: PersonalityDef;
 
-  // All-rounder: all scores within 1 of each other
   const min = Math.min(...Object.values(scores));
   const max = Math.max(...Object.values(scores));
   if (max - min <= 1 && avg >= 3) {
@@ -440,7 +404,6 @@ function computePersonality(runs: RunEntry[]): RunningPersonality {
   } else if (max - min <= 1 && avg < 3) {
     result = { type: 'The Rising Runner', description: 'Your foundation is solid and balanced. With more training, all dimensions will grow together.' };
   }
-  // Dual-trait combos
   else if (top[0] === 'speed' && second[0] === 'endurance' || top[0] === 'endurance' && second[0] === 'speed') {
     result = { type: 'The Iron Racer', description: 'Fast AND long — a rare and dangerous combo. You eat race PRs for breakfast.' };
   } else if (top[0] === 'consistency' && second[0] === 'volume' || top[0] === 'volume' && second[0] === 'consistency') {
@@ -460,7 +423,6 @@ function computePersonality(runs: RunEntry[]): RunningPersonality {
   } else if (top[0] === 'variety' && second[0] === 'consistency' || top[0] === 'consistency' && second[0] === 'variety') {
     result = { type: 'The Routine Explorer', description: 'Consistently adventurous — you never run the same route twice, but you never miss a week.' };
   }
-  // Single dominant trait fallback
   else {
     const singles: Record<string, PersonalityDef> = {
       consistency: { type: 'The Consistent Cruiser', description: 'You show up week after week. Consistency is the #1 predictor of running success.' },
@@ -472,11 +434,43 @@ function computePersonality(runs: RunEntry[]): RunningPersonality {
     result = singles[top[0]];
   }
 
-  // Percentile estimate: map total score (5-25) to a percentile using a sigmoid-like curve.
-  // Most casual runners score ~10-12, so center the curve there.
   const percentile = Math.max(1, Math.min(99, Math.round(100 - 100 / (1 + Math.exp((total - 12) / 3)))));
 
-  return { ...result, percentile, scores };
+  return { ...result, percentile };
+}
+
+function computePersonality(runs: RunEntry[]): RunningPersonality {
+  if (runs.length === 0) {
+    return { type: 'The Beginner', description: 'Start running to discover your style!', percentile: 50, scores: { consistency: 1, speed: 1, endurance: 1, variety: 1, volume: 1 } };
+  }
+
+  const weeklyKm = new Map<string, number>();
+  for (const r of runs) {
+    const key = toDateKey(getMonday(new Date(r.dateFull)));
+    weeklyKm.set(key, (weeklyKm.get(key) || 0) + r.distanceKm);
+  }
+  const weeklyVals = Array.from(weeklyKm.values());
+  const mean = weeklyVals.reduce((a, b) => a + b, 0) / weeklyVals.length;
+  const std = Math.sqrt(weeklyVals.reduce((s, v) => s + (v - mean) ** 2, 0) / weeklyVals.length);
+  const cv = mean > 0 ? std / mean : 1;
+  const consistency = Math.max(1, Math.min(5, Math.round(5 - cv * 2.5)));
+
+  const avgPace = runs.reduce((s, r) => s + r.timeSeconds / r.distanceKm, 0) / runs.length;
+  const speed = avgPace < 270 ? 5 : avgPace < 330 ? 4 : avgPace < 390 ? 3 : avgPace < 450 ? 2 : 1;
+
+  const longPct = runs.filter(r => r.distanceKm >= 10).length / runs.length;
+  const endurance = longPct > 0.4 ? 5 : longPct > 0.3 ? 4 : longPct > 0.2 ? 3 : longPct > 0.1 ? 2 : 1;
+
+  const locs = new Set(runs.map(r => r.location).filter(l => l !== 'Unknown' && l !== 'Other'));
+  const distRange = Math.max(...runs.map(r => r.distanceKm)) - Math.min(...runs.map(r => r.distanceKm));
+  const variety = Math.max(1, Math.min(5, Math.round(locs.size / 2 + distRange / 15)));
+
+  const weeklyAvg = mean;
+  const volume = weeklyAvg > 50 ? 5 : weeklyAvg > 35 ? 4 : weeklyAvg > 20 ? 3 : weeklyAvg > 10 ? 2 : 1;
+
+  const scores = { consistency, speed, endurance, variety, volume };
+
+  return { ...classifyPersonality(scores), scores };
 }
 
 // ============================================================
@@ -905,6 +899,37 @@ export function computeTodaysPlan(runs: RunEntry[]): TodaysPlan {
     headline,
     advice,
   };
+}
+
+// ============================================================
+// DNA Code: encode/decode for battle sharing
+// ============================================================
+
+const TRAIT_ORDER: (keyof RunningPersonality['scores'])[] = ['consistency', 'speed', 'endurance', 'variety', 'volume'];
+
+/** Encode trait scores into a shareable DNA code: "RD-43524" */
+export function encodeDNA(scores: RunningPersonality['scores']): string {
+  const digits = TRAIT_ORDER.map(k => scores[k]).join('');
+  return `RD-${digits}`;
+}
+
+/** Decode a DNA code back into scores + derived personality. Returns null if invalid. */
+export function decodeDNA(code: string): (RunningPersonality & { code: string }) | null {
+  const match = code.trim().toUpperCase().match(/^RD-(\d{5})$/);
+  if (!match) return null;
+
+  const digits = match[1].split('').map(Number);
+  if (digits.some(d => d < 1 || d > 5)) return null;
+
+  const scores: RunningPersonality['scores'] = {
+    consistency: digits[0],
+    speed: digits[1],
+    endurance: digits[2],
+    variety: digits[3],
+    volume: digits[4],
+  };
+
+  return { ...classifyPersonality(scores), scores, code: `RD-${match[1]}` };
 }
 
 // ============================================================

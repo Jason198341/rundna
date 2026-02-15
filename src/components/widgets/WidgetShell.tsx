@@ -9,25 +9,28 @@ interface Props {
   lang: Lang;
   onRemove?: (id: WidgetId) => void;
   isDragging?: boolean;
+  index?: number;
   children: React.ReactNode;
 }
 
-export default function WidgetShell({ id, lang, onRemove, isDragging, children }: Props) {
+export default function WidgetShell({ id, lang, onRemove, isDragging, index = 0, children }: Props) {
   const def = getWidgetDef(id);
   if (!def) return null;
 
   return (
-    <div className={`h-full rounded-xl border overflow-hidden transition-all duration-200 ${
-      isDragging
-        ? 'scale-[1.03] shadow-xl shadow-primary/25 border-primary ring-2 ring-primary/40 bg-surface'
-        : 'border-border hover:border-primary/20 bg-surface'
-    }`}>
-      <div className="flex items-center justify-between px-4 py-2.5 border-b border-border">
-        <div className="flex items-center gap-2 min-w-0">
+    <div
+      className={`h-full rounded-xl border overflow-hidden transition-all duration-200 animate-widget-enter ${
+        isDragging
+          ? 'scale-[1.03] shadow-xl shadow-primary/25 border-primary ring-2 ring-primary/40 bg-surface'
+          : 'border-border hover:border-primary/20 bg-surface'
+      } ${index > 0 ? `delay-${Math.min(index, 8)}` : ''}`}
+    >
+      <div className="flex items-center justify-between px-5 py-3 border-b border-border">
+        <div className="flex items-center gap-2.5 min-w-0">
           <span className="text-base cursor-grab active:cursor-grabbing select-none" title="Drag to reorder">
             {def.icon}
           </span>
-          <h3 className="text-sm font-semibold truncate">{t(def.titleKey, lang)}</h3>
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-text-muted truncate">{t(def.titleKey, lang)}</h3>
           {def.tier === 'pro' && (
             <span className="text-[10px] px-1.5 py-0.5 rounded bg-warm/10 text-warm font-bold shrink-0">PRO</span>
           )}
@@ -44,7 +47,7 @@ export default function WidgetShell({ id, lang, onRemove, isDragging, children }
           </button>
         )}
       </div>
-      <div className="p-4">{children}</div>
+      <div className="p-5">{children}</div>
     </div>
   );
 }

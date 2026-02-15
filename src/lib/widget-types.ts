@@ -50,7 +50,9 @@ export type WidgetId =
   // Level 5: Digital Twin
   | 'race-simulation'
   | 'pacing-card'
-  | 'what-if';
+  | 'what-if'
+  // Story / Visual
+  | 'run-heatmap';
 
 // ── Widget Definition ──
 export interface WidgetDef {
@@ -108,6 +110,9 @@ export const WIDGET_REGISTRY: WidgetDef[] = [
   { id: 'race-simulation', titleKey: 'widget.raceSimulation', icon: '🏁', category: 'twin', sizes: ['L', 'XL'], defaultSize: 'L', dataDeps: ['intelligence', 'streams'], tier: 'pro' },
   { id: 'pacing-card', titleKey: 'widget.pacingCard', icon: '📋', category: 'twin', sizes: ['M', 'L'], defaultSize: 'M', dataDeps: ['intelligence'], tier: 'free' },
   { id: 'what-if', titleKey: 'widget.whatIf', icon: '🔄', category: 'twin', sizes: ['L'], defaultSize: 'L', dataDeps: ['intelligence', 'streams'], tier: 'pro' },
+
+  // ── Story / Visual ──
+  { id: 'run-heatmap', titleKey: 'widget.runHeatmap', icon: '🗓️', category: 'core', sizes: ['L', 'XL'], defaultSize: 'L', dataDeps: ['runData'], tier: 'free' },
 ];
 
 export function getWidgetDef(id: WidgetId): WidgetDef | undefined {
@@ -218,13 +223,13 @@ export const SKINS: Skin[] = [
     titleKey: 'skin.darkRunner',
     icon: '🌑',
     colorScheme: 'dark',
-    preview: ['#060a0e', '#0d1117', '#10b981', '#22d3ee', '#f59e0b', '#ef4444'],
+    preview: ['#09090b', '#18181b', '#10b981', '#22d3ee', '#f59e0b', '#ef4444'],
     colors: {
-      bg: '#060a0e', surface: '#0d1117', 'surface-hover': '#161b22', border: '#1e2a3a',
-      text: '#e6edf3', 'text-muted': '#7d8590',
-      primary: '#10b981', 'primary-hover': '#34d399', 'primary-dim': '#10b98120',
-      accent: '#22d3ee', 'accent-dim': '#22d3ee20',
-      warm: '#f59e0b', danger: '#ef4444', glow: '#10b98140',
+      bg: '#09090b', surface: '#18181b', 'surface-hover': '#27272a', border: '#3f3f46',
+      text: '#fafafa', 'text-muted': '#a1a1aa',
+      primary: '#10b981', 'primary-hover': '#34d399', 'primary-dim': '#10b98118',
+      accent: '#22d3ee', 'accent-dim': '#22d3ee18',
+      warm: '#f59e0b', danger: '#ef4444', glow: '#10b98130',
     },
   },
   {

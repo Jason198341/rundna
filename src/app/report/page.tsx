@@ -35,7 +35,7 @@ export default async function ReportPage() {
           </div>
         </div>
       </nav>
-      <main className="pt-14 px-6 py-8 max-w-3xl mx-auto">
+      <main className="pt-20 pb-28 px-6 max-w-3xl mx-auto">
         <ReportClient userName={user.name} avatarUrl={user.avatar_url} />
       </main>
     </div>

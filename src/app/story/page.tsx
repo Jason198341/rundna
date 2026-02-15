@@ -1,10 +1,10 @@
 import { redirect } from 'next/navigation';
 import { getSession } from '@/lib/session';
 import { createServerClient } from '@/lib/supabase';
-import ShoesClient from '@/components/ShoesClient';
+import StoryClient from '@/components/StoryClient';
 import LangToggle from '@/components/LangToggle';
 
-export default async function ShoesPage() {
+export default async function StoryPage() {
   const userId = await getSession();
   if (!userId) redirect('/');
 
@@ -35,10 +35,8 @@ export default async function ShoesPage() {
           </div>
         </div>
       </nav>
-      <main className="pt-20 pb-28 px-6">
-        <div className="mx-auto max-w-3xl">
-          <ShoesClient />
-        </div>
+      <main className="pt-20 pb-28">
+        <StoryClient userName={user.name} avatarUrl={user.avatar_url} />
       </main>
     </div>
   );

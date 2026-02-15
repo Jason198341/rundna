@@ -5,6 +5,7 @@ import type { EnrichedRunData } from '@/lib/strava';
 import type { ActivityStream, StreamPoint } from '@/lib/strava-extended';
 import { t } from '@/lib/i18n';
 import { useLang } from '@/lib/useLang';
+import AdBanner from '@/components/AdBanner';
 
 // ── Mercator projection ──
 function projectPoints(points: StreamPoint[], width: number, height: number, padding = 40) {
@@ -386,6 +387,8 @@ export default function FilmClient() {
           <span>{(stream.totalDistance / 1000).toFixed(1)} km</span>
         </div>
       </div>
+
+      <AdBanner format="horizontal" className="mt-4" />
 
       {/* Run Summary */}
       <div className="mt-4 grid grid-cols-4 gap-3">

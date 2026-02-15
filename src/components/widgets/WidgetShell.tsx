@@ -9,25 +9,22 @@ interface Props {
   lang: Lang;
   onRemove?: (id: WidgetId) => void;
   isDragging?: boolean;
-  isDragOver?: boolean;
   children: React.ReactNode;
 }
 
-export default function WidgetShell({ id, lang, onRemove, isDragging, isDragOver, children }: Props) {
+export default function WidgetShell({ id, lang, onRemove, isDragging, children }: Props) {
   const def = getWidgetDef(id);
   if (!def) return null;
 
   return (
     <div className={`h-full rounded-xl border overflow-hidden transition-all duration-200 ${
       isDragging
-        ? 'opacity-40 scale-95 border-primary/50'
-        : isDragOver
-          ? 'border-primary shadow-[0_0_20px_var(--color-glow)]'
-          : 'border-border hover:border-primary/20'
-    } bg-surface`}>
+        ? 'scale-[1.03] shadow-xl shadow-primary/25 border-primary ring-2 ring-primary/40 bg-surface'
+        : 'border-border hover:border-primary/20 bg-surface'
+    }`}>
       <div className="flex items-center justify-between px-4 py-2.5 border-b border-border">
         <div className="flex items-center gap-2 min-w-0">
-          <span className="text-base cursor-grab active:cursor-grabbing" title="Drag to reorder">
+          <span className="text-base cursor-grab active:cursor-grabbing select-none" title="Drag to reorder">
             {def.icon}
           </span>
           <h3 className="text-sm font-semibold truncate">{t(def.titleKey, lang)}</h3>

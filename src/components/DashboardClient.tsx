@@ -7,7 +7,7 @@ import type { IntelligenceData } from '@/lib/strava-analytics';
 import type { WidgetId } from '@/lib/widget-types';
 import { getWidgetDef } from '@/lib/widget-types';
 import type { WidgetPreferences } from '@/lib/widget-store';
-import { loadPreferences, savePreferences, reorderWidgets } from '@/lib/widget-store';
+import { loadPreferences, savePreferences } from '@/lib/widget-store';
 import { t } from '@/lib/i18n';
 import { useLang } from '@/lib/useLang';
 import WidgetShell from '@/components/widgets/WidgetShell';
@@ -19,7 +19,6 @@ import {
   RouteFamiliarityWidget, MilestonesWidget, WeeklyChallenge,
 } from '@/components/widgets/CoreWidgets';
 
-// Lazy-load the customize panel (bundle-dynamic-imports best practice)
 const CustomizePanel = dynamic(() => import('@/components/widgets/CustomizePanel'), {
   ssr: false,
 });
@@ -42,19 +41,23 @@ export default function DashboardClient({ userName }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
 
-  // ── Drag & Drop State ──
-  const [dragIdx, setDragIdx] = useState<number | null>(null);
-  const [overIdx, setOverIdx] = useState<number | null>(null);
-  const dragCounter = useRef(0);
+  // ── Drag & Drop (unified mouse + touch) ──
+  const [dragWidgetId, setDragWidgetId] = useState<WidgetId | null>(null);
+  const [tempOrder, setTempOrder] = useState<WidgetId[] | null>(null);
+  const longPressRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const touchStartRef = useRef<{ x: number; y: number } | undefined>(undefined);
 
-  // Compute which data sources are needed (js-set-map-lookups best practice)
+  const orderedWidgets = prefs.widgetOrder.filter(id => prefs.enabledWidgets.includes(id));
+  const displayOrder = tempOrder ?? orderedWidgets;
+
+  // Compute data deps
   const neededDeps = new Set(
     prefs.widgetOrder
       .filter(id => prefs.enabledWidgets.includes(id))
       .flatMap(id => getWidgetDef(id)?.dataDeps ?? [])
   );
 
-  // Fetch data based on widget dependencies (async-parallel best practice)
+  // Fetch data (async-parallel best practice)
   useEffect(() => {
     const interval = setInterval(() => {
       setProgress(p => Math.min(p + Math.random() * 15, 90));
@@ -109,38 +112,152 @@ export default function DashboardClient({ userName }: Props) {
     });
   }, []);
 
-  // ── Drag Handlers ──
-  const handleDragStart = useCallback((idx: number) => {
-    setDragIdx(idx);
+  // ── Unified drag helpers ──
+  const startDrag = useCallback((widgetId: WidgetId) => {
+    setDragWidgetId(widgetId);
+    setTempOrder([...orderedWidgets]);
+    if (navigator.vibrate) navigator.vibrate(30);
+  }, [orderedWidgets]);
+
+  const moveToIdx = useCallback((targetIdx: number) => {
+    setTempOrder(prev => {
+      if (!prev || !dragWidgetId) return prev;
+      const fromIdx = prev.indexOf(dragWidgetId);
+      if (fromIdx === targetIdx || fromIdx === -1) return prev;
+      const arr = [...prev];
+      arr.splice(fromIdx, 1);
+      arr.splice(targetIdx, 0, dragWidgetId);
+      return arr;
+    });
+  }, [dragWidgetId]);
+
+  const commitDrag = useCallback(() => {
+    // Use functional setTempOrder to read current tempOrder
+    setTempOrder(currentTemp => {
+      if (currentTemp) {
+        setPrefs(currentPrefs => {
+          const next: WidgetPreferences = {
+            ...currentPrefs,
+            widgetOrder: currentTemp,
+            preset: 'custom',
+          };
+          savePreferences(next);
+          return next;
+        });
+      }
+      return null;
+    });
+    setDragWidgetId(null);
   }, []);
 
-  const handleDragEnter = useCallback((idx: number) => {
-    dragCounter.current++;
-    setOverIdx(idx);
+  const cancelDrag = useCallback(() => {
+    setTempOrder(null);
+    setDragWidgetId(null);
   }, []);
 
-  const handleDragLeave = useCallback(() => {
-    dragCounter.current--;
-    if (dragCounter.current <= 0) {
-      dragCounter.current = 0;
-      setOverIdx(null);
+  // ── Touch: long-press detection ──
+  const handleTouchStart = useCallback((widgetId: WidgetId, e: React.TouchEvent) => {
+    if (longPressRef.current) clearTimeout(longPressRef.current);
+    const touch = e.touches[0];
+    touchStartRef.current = { x: touch.clientX, y: touch.clientY };
+    longPressRef.current = setTimeout(() => {
+      longPressRef.current = undefined;
+      startDrag(widgetId);
+    }, 400);
+  }, [startDrag]);
+
+  const handleWidgetTouchEnd = useCallback(() => {
+    if (longPressRef.current) {
+      clearTimeout(longPressRef.current);
+      longPressRef.current = undefined;
     }
   }, []);
 
-  const handleDrop = useCallback((toIdx: number) => {
-    if (dragIdx === null || dragIdx === toIdx) return;
-    const next = reorderWidgets(dragIdx, toIdx);
-    setPrefs(next);
-    setDragIdx(null);
-    setOverIdx(null);
-    dragCounter.current = 0;
-  }, [dragIdx]);
+  // ── Touch: cancel long-press on scroll ──
+  useEffect(() => {
+    const onMove = (e: TouchEvent) => {
+      if (!longPressRef.current || !touchStartRef.current) return;
+      const touch = e.touches[0];
+      const dx = Math.abs(touch.clientX - touchStartRef.current.x);
+      const dy = Math.abs(touch.clientY - touchStartRef.current.y);
+      if (dx > 8 || dy > 8) {
+        clearTimeout(longPressRef.current);
+        longPressRef.current = undefined;
+      }
+    };
+    document.addEventListener('touchmove', onMove, { passive: true });
+    return () => document.removeEventListener('touchmove', onMove);
+  }, []);
+
+  // ── Touch: drag tracking (non-passive to prevent scroll) ──
+  // dragWidgetId is stable during a single drag session
+  useEffect(() => {
+    if (!dragWidgetId) return;
+
+    const onMove = (e: TouchEvent) => {
+      e.preventDefault();
+      const touch = e.touches[0];
+      const el = document.elementFromPoint(touch.clientX, touch.clientY);
+      const wrapper = el?.closest('[data-widget-idx]') as HTMLElement | null;
+      if (!wrapper) return;
+      const targetIdx = Number(wrapper.dataset.widgetIdx);
+
+      setTempOrder(prev => {
+        if (!prev) return prev;
+        const fromIdx = prev.indexOf(dragWidgetId);
+        if (fromIdx === targetIdx || fromIdx === -1) return prev;
+        const arr = [...prev];
+        arr.splice(fromIdx, 1);
+        arr.splice(targetIdx, 0, dragWidgetId);
+        return arr;
+      });
+    };
+
+    const onEnd = () => {
+      setTempOrder(currentTemp => {
+        if (currentTemp) {
+          setPrefs(currentPrefs => {
+            const next: WidgetPreferences = {
+              ...currentPrefs,
+              widgetOrder: currentTemp,
+              preset: 'custom',
+            };
+            savePreferences(next);
+            return next;
+          });
+        }
+        return null;
+      });
+      setDragWidgetId(null);
+    };
+
+    document.addEventListener('touchmove', onMove, { passive: false });
+    document.addEventListener('touchend', onEnd);
+    return () => {
+      document.removeEventListener('touchmove', onMove);
+      document.removeEventListener('touchend', onEnd);
+    };
+  }, [dragWidgetId]);
+
+  // ── Desktop DnD: real-time magnetic reorder ──
+  const handleDragStart = useCallback((widgetId: WidgetId, e: React.DragEvent) => {
+    // Set minimal drag image (transparent)
+    const ghost = document.createElement('div');
+    ghost.style.opacity = '0';
+    document.body.appendChild(ghost);
+    e.dataTransfer.setDragImage(ghost, 0, 0);
+    setTimeout(() => ghost.remove(), 0);
+    startDrag(widgetId);
+  }, [startDrag]);
+
+  const handleDragOver = useCallback((e: React.DragEvent, targetIdx: number) => {
+    e.preventDefault();
+    moveToIdx(targetIdx);
+  }, [moveToIdx]);
 
   const handleDragEnd = useCallback(() => {
-    setDragIdx(null);
-    setOverIdx(null);
-    dragCounter.current = 0;
-  }, []);
+    commitDrag();
+  }, [commitDrag]);
 
   // ── Loading State ──
   if (loading) {
@@ -185,8 +302,6 @@ export default function DashboardClient({ userName }: Props) {
     );
   }
 
-  const orderedWidgets = prefs.widgetOrder.filter(id => prefs.enabledWidgets.includes(id));
-
   return (
     <div>
       {/* Welcome + Customize Button */}
@@ -208,26 +323,31 @@ export default function DashboardClient({ userName }: Props) {
         </button>
       </div>
 
-      {/* Widget Grid — Flexbox: 2/row default, equal height, drag-and-drop */}
-      <div className="flex flex-wrap gap-4 items-stretch">
-        {orderedWidgets.map((id, idx) => (
+      {/* Widget Grid — Flexbox + Magnetic Drag-and-Drop */}
+      <div
+        className="flex flex-wrap gap-4 items-stretch"
+        style={dragWidgetId ? { touchAction: 'none' } : undefined}
+        onContextMenu={dragWidgetId ? e => e.preventDefault() : undefined}
+      >
+        {displayOrder.map((id, idx) => (
           <div
             key={id}
-            className="flex-1 basis-[calc(50%-0.5rem)] min-w-[280px]"
+            data-widget-idx={idx}
+            className={`flex-1 basis-[calc(50%-0.5rem)] min-w-[280px] transition-transform duration-200 ${
+              dragWidgetId === id ? 'z-10 relative' : ''
+            }`}
             draggable
-            onDragStart={() => handleDragStart(idx)}
-            onDragEnter={() => handleDragEnter(idx)}
-            onDragLeave={handleDragLeave}
-            onDragOver={e => e.preventDefault()}
-            onDrop={() => handleDrop(idx)}
+            onDragStart={e => handleDragStart(id, e)}
+            onDragOver={e => handleDragOver(e, idx)}
             onDragEnd={handleDragEnd}
+            onTouchStart={e => handleTouchStart(id, e)}
+            onTouchEnd={handleWidgetTouchEnd}
           >
             <WidgetShell
               id={id}
               lang={lang}
               onRemove={handleRemoveWidget}
-              isDragging={dragIdx === idx}
-              isDragOver={overIdx === idx && dragIdx !== idx}
+              isDragging={dragWidgetId === id}
             >
               {renderWidget(id, data, lang)}
             </WidgetShell>

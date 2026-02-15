@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/session';
 import { fetchUserRunData } from '@/lib/strava';
 import { computeIntelligence } from '@/lib/strava-analytics';
+import { checkAndUse } from '@/lib/usage';
 
 export async function POST(request: NextRequest) {
   const userId = await getSession();
@@ -12,6 +13,16 @@ export async function POST(request: NextRequest) {
   const { raceDistance, raceDate, raceGoal } = await request.json();
   if (!raceDistance || !raceDate) {
     return NextResponse.json({ error: 'Missing race info' }, { status: 400 });
+  }
+
+  // Check daily limit
+  const usage = await checkAndUse(userId, 'planner');
+  if (!usage.allowed) {
+    return NextResponse.json({
+      error: 'Daily limit reached',
+      message: "You've used all 3 plan generations today. Your limit resets at midnight UTC.",
+      remaining: 0,
+    }, { status: 429 });
   }
 
   try {

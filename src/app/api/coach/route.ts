@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/session';
 import { fetchUserRunData } from '@/lib/strava';
 import { computeIntelligence } from '@/lib/strava-analytics';
+import { checkAndUse } from '@/lib/usage';
 
 export async function POST(request: NextRequest) {
   const userId = await getSession();
@@ -12,6 +13,16 @@ export async function POST(request: NextRequest) {
   const { messages } = await request.json();
   if (!messages || !Array.isArray(messages)) {
     return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
+  }
+
+  // Check daily limit
+  const usage = await checkAndUse(userId, 'coach');
+  if (!usage.allowed) {
+    return NextResponse.json({
+      error: 'Daily limit reached',
+      message: "You've used all 10 coach messages today. Your limit resets at midnight UTC. Try your Running DNA or Weekly Report in the meantime!",
+      remaining: 0,
+    }, { status: 429 });
   }
 
   try {
@@ -49,7 +60,7 @@ export async function POST(request: NextRequest) {
     const data = await res.json();
     const reply = data.choices?.[0]?.message?.content || 'Sorry, I could not generate a response.';
 
-    return NextResponse.json({ reply });
+    return NextResponse.json({ reply, remaining: usage.remaining });
   } catch (err) {
     console.error('Coach API error:', err);
     return NextResponse.json({ error: 'Internal error' }, { status: 500 });

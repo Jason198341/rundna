@@ -25,6 +25,7 @@ export default function CoachClient({ userName }: Props) {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [remaining, setRemaining] = useState<number | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const shareRef = useRef<HTMLDivElement>(null);
@@ -33,8 +34,17 @@ export default function CoachClient({ userName }: Props) {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  // Fetch initial usage on mount
+  useEffect(() => {
+    fetch('/api/usage?feature=coach')
+      .then(r => r.json())
+      .then(d => setRemaining(d.remaining ?? 10))
+      .catch(() => {});
+  }, []);
+
   async function sendMessage(text: string) {
     if (!text.trim() || loading) return;
+    if (remaining !== null && remaining <= 0) return;
 
     const userMsg: Message = { role: 'user', content: text.trim() };
     const updated = [...messages, userMsg];
@@ -49,9 +59,17 @@ export default function CoachClient({ userName }: Props) {
         body: JSON.stringify({ messages: updated }),
       });
 
+      if (res.status === 429) {
+        const data = await res.json();
+        setRemaining(0);
+        setMessages([...updated, { role: 'assistant', content: data.message || 'Daily limit reached. Try again tomorrow!' }]);
+        return;
+      }
+
       if (!res.ok) throw new Error('Failed');
-      const { reply } = await res.json();
+      const { reply, remaining: r } = await res.json();
       setMessages([...updated, { role: 'assistant', content: reply }]);
+      if (r !== undefined) setRemaining(r);
     } catch {
       setMessages([...updated, { role: 'assistant', content: 'Sorry, something went wrong. Please try again.' }]);
     } finally {
@@ -127,6 +145,18 @@ export default function CoachClient({ userName }: Props) {
 
       {/* Input */}
       <div className="border-t border-border bg-bg px-4 py-3">
+        {remaining !== null && (
+          <div className="max-w-3xl mx-auto mb-2">
+            <div className="flex items-center justify-between text-[10px] text-text-muted">
+              <span>{remaining > 0 ? `${remaining} messages left today` : 'Daily limit reached — resets at midnight UTC'}</span>
+              <div className="flex gap-0.5">
+                {Array.from({ length: 10 }, (_, i) => (
+                  <div key={i} className={`w-1.5 h-1.5 rounded-full ${i < (10 - (remaining ?? 0)) ? 'bg-primary' : 'bg-border'}`} />
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
         <div className="max-w-3xl mx-auto flex gap-2">
           <textarea
             ref={inputRef}

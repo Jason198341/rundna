@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { downloadCard } from '@/lib/share';
 
 interface Props {
@@ -72,12 +72,25 @@ export default function PlannerClient({ userName }: Props) {
   const [expandedWeek, setExpandedWeek] = useState<number | null>(null);
   const [progress, setProgress] = useState(0);
   const [saving, setSaving] = useState(false);
+  const [remaining, setRemaining] = useState<number | null>(null);
   const shareRef = useRef<HTMLDivElement>(null);
 
   const minDate = new Date(Date.now() + 14 * 86400000).toISOString().split('T')[0];
 
+  // Fetch initial usage
+  useEffect(() => {
+    fetch('/api/usage?feature=planner')
+      .then(r => r.json())
+      .then(d => setRemaining(d.remaining ?? 3))
+      .catch(() => {});
+  }, []);
+
   async function generatePlan() {
     if (!raceDistance || !raceDate) return;
+    if (remaining !== null && remaining <= 0) {
+      setError("You've used all 3 plan generations today. Resets at midnight UTC.");
+      return;
+    }
 
     setStep('loading');
     setError(null);
@@ -94,10 +107,18 @@ export default function PlannerClient({ userName }: Props) {
         body: JSON.stringify({ raceDistance, raceDate, raceGoal }),
       });
 
+      if (res.status === 429) {
+        const data = await res.json();
+        setRemaining(0);
+        setError(data.message || 'Daily limit reached.');
+        setStep('form');
+        return;
+      }
       if (!res.ok) throw new Error('Failed to generate plan');
       const { plan: p } = await res.json();
       setPlan(p);
       setProgress(100);
+      if (remaining !== null) setRemaining(remaining - 1);
       setTimeout(() => setStep('result'), 400);
     } catch {
       setError('Failed to generate your plan. Please try again.');
@@ -185,11 +206,16 @@ export default function PlannerClient({ userName }: Props) {
 
           <button
             onClick={generatePlan}
-            disabled={!raceDistance || !raceDate}
+            disabled={!raceDistance || !raceDate || (remaining !== null && remaining <= 0)}
             className="w-full py-3 rounded-xl bg-primary text-white font-semibold text-sm hover:bg-primary-hover transition-colors disabled:opacity-40"
           >
-            Generate My Plan
+            {remaining !== null && remaining <= 0 ? 'Daily Limit Reached' : 'Generate My Plan'}
           </button>
+          {remaining !== null && (
+            <p className="text-[10px] text-text-muted text-center mt-2">
+              {remaining} of 3 generations remaining today
+            </p>
+          )}
         </div>
       </div>
     );

@@ -5,7 +5,7 @@ import type { IntelligenceData, RunningPersonality } from '@/lib/strava-analytic
 import { encodeDNA, decodeDNA } from '@/lib/strava-analytics';
 import { t } from '@/lib/i18n';
 import { useLang } from '@/lib/useLang';
-import AdBanner from '@/components/AdBanner';
+import AdBreak from '@/components/AdBreak';
 
 const TRAIT_COLORS = ['#10b981', '#22d3ee', '#818cf8', '#f59e0b', '#ef4444'];
 const TRAIT_ICONS = ['📅', '⚡', '🏔️', '🗺️', '📈'];
@@ -403,7 +403,7 @@ export default function BattleClient() {
       )}
 
       {/* ── Inner Battle (shown when no rival) ── */}
-      <AdBanner format="horizontal" />
+      <AdBreak />
 
       {!rival && (
         <>

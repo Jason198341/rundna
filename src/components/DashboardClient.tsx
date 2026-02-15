@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import type { EnrichedRunData } from '@/lib/strava';
 import type { IntelligenceData } from '@/lib/strava-analytics';
@@ -11,7 +11,7 @@ import { loadPreferences, savePreferences } from '@/lib/widget-store';
 import { t } from '@/lib/i18n';
 import { useLang } from '@/lib/useLang';
 import WidgetShell from '@/components/widgets/WidgetShell';
-import AdBanner from '@/components/AdBanner';
+import AdBreak from '@/components/AdBreak';
 import {
   StatsOverview, PersonalRecords, FeatureNav, RecentActivities,
   DNARadar, TraitBars, TrainingLoadWidget, RacePredictions,
@@ -331,33 +331,37 @@ export default function DashboardClient({ userName }: Props) {
         onContextMenu={dragWidgetId ? e => e.preventDefault() : undefined}
       >
         {displayOrder.map((id, idx) => (
-          <div
-            key={id}
-            data-widget-idx={idx}
-            className={`flex-1 basis-[calc(50%-0.625rem)] min-w-[280px] transition-transform duration-200 ${
-              dragWidgetId === id ? 'z-10 relative' : ''
-            }`}
-            draggable
-            onDragStart={e => handleDragStart(id, e)}
-            onDragOver={e => handleDragOver(e, idx)}
-            onDragEnd={handleDragEnd}
-            onTouchStart={e => handleTouchStart(id, e)}
-            onTouchEnd={handleWidgetTouchEnd}
-          >
-            <WidgetShell
-              id={id}
-              lang={lang}
-              index={idx}
-              onRemove={handleRemoveWidget}
-              isDragging={dragWidgetId === id}
+          <React.Fragment key={id}>
+            <div
+              data-widget-idx={idx}
+              className={`flex-1 basis-[calc(50%-0.625rem)] min-w-[280px] transition-transform duration-200 ${
+                dragWidgetId === id ? 'z-10 relative' : ''
+              }`}
+              draggable
+              onDragStart={e => handleDragStart(id, e)}
+              onDragOver={e => handleDragOver(e, idx)}
+              onDragEnd={handleDragEnd}
+              onTouchStart={e => handleTouchStart(id, e)}
+              onTouchEnd={handleWidgetTouchEnd}
             >
-              {renderWidget(id, data, lang)}
-            </WidgetShell>
-          </div>
+              <WidgetShell
+                id={id}
+                lang={lang}
+                index={idx}
+                onRemove={handleRemoveWidget}
+                isDragging={dragWidgetId === id}
+              >
+                {renderWidget(id, data, lang)}
+              </WidgetShell>
+            </div>
+            {(idx + 1) % 8 === 0 && idx + 1 < displayOrder.length && (
+              <div className="w-full basis-full"><AdBreak className="my-4" /></div>
+            )}
+          </React.Fragment>
         ))}
       </div>
 
-      <AdBanner format="horizontal" />
+      <AdBreak />
 
       {/* Empty state */}
       {orderedWidgets.length === 0 && (

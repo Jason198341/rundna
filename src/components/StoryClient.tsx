@@ -6,7 +6,7 @@ import type { IntelligenceData } from '@/lib/strava-analytics';
 import { encodeDNA } from '@/lib/strava-analytics';
 import { t } from '@/lib/i18n';
 import { useLang } from '@/lib/useLang';
-import AdBanner from '@/components/AdBanner';
+import AdBreak from '@/components/AdBreak';
 
 interface Props {
   userName: string;
@@ -163,9 +163,7 @@ export default function StoryClient({ userName, avatarUrl }: Props) {
         </div>
       </section>
 
-      <div className="max-w-3xl mx-auto px-6">
-        <AdBanner format="horizontal" />
-      </div>
+      <AdBreak />
 
       {/* ── Chapter 3: The DNA ── */}
       <section className="px-6 py-20 sm:py-28 border-t border-border/50">
@@ -252,9 +250,7 @@ export default function StoryClient({ userName, avatarUrl }: Props) {
         </div>
       </section>
 
-      <div className="max-w-3xl mx-auto px-6">
-        <AdBanner format="rectangle" />
-      </div>
+      <AdBreak />
 
       {/* ── Chapter 5: The Future ── */}
       <section className="px-6 py-20 sm:py-28 border-t border-border/50">

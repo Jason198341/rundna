@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import type { ShoeData } from '@/lib/strava-extended';
 import { t } from '@/lib/i18n';
 import { useLang } from '@/lib/useLang';
-import AdBanner from '@/components/AdBanner';
+import AdBreak from '@/components/AdBreak';
 
 export default function ShoesClient() {
   const [lang] = useLang();
@@ -62,7 +62,7 @@ export default function ShoesClient() {
       )}
 
       {/* Shoe Graveyard */}
-      <AdBanner format="horizontal" />
+      <AdBreak />
 
       {retired.length > 0 && (
         <div>

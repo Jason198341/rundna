@@ -5,7 +5,7 @@ import type { IntelligenceData } from '@/lib/strava-analytics';
 import { shareCard } from '@/lib/share';
 import { t } from '@/lib/i18n';
 import { useLang } from '@/lib/useLang';
-import AdBanner from '@/components/AdBanner';
+import AdBreak from '@/components/AdBreak';
 
 interface Props {
   userName: string;
@@ -332,7 +332,7 @@ export default function DNAClient({ userName }: Props) {
       </div>}
 
       {/* Ad */}
-      <AdBanner format="rectangle" className="mt-6" />
+      <AdBreak />
     </div>
   );
 }

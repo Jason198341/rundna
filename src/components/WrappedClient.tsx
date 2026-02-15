@@ -6,7 +6,7 @@ import type { EnrichedRunData } from '@/lib/strava';
 import { shareCard } from '@/lib/share';
 import { t } from '@/lib/i18n';
 import { useLang } from '@/lib/useLang';
-import AdBanner from '@/components/AdBanner';
+import AdBreak from '@/components/AdBreak';
 
 interface Props {
   userName: string;
@@ -287,7 +287,7 @@ function WrappedCards({
       </div>
 
       {/* Ad between cards and CTA */}
-      <AdBanner format="rectangle" className="mt-6" />
+      <AdBreak />
 
       {/* Bottom CTA */}
       <div className="text-center mt-8 mb-12">

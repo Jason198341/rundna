@@ -5,7 +5,7 @@ import type { IntelligenceData } from '@/lib/strava-analytics';
 import { simulateRace, type RaceSimulation } from '@/lib/strava-extended';
 import { t } from '@/lib/i18n';
 import { useLang } from '@/lib/useLang';
-import AdBanner from '@/components/AdBanner';
+import AdBreak from '@/components/AdBreak';
 
 function formatTime(secs: number): string {
   const h = Math.floor(secs / 3600);
@@ -174,7 +174,7 @@ export default function SimulationClient() {
             </div>
           </div>
 
-          <AdBanner format="horizontal" />
+          <AdBreak />
 
           {/* Summary stats */}
           <div className="grid grid-cols-3 gap-3">

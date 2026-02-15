@@ -6,7 +6,7 @@ import type { EnrichedRunData } from '@/lib/strava';
 import { shareCard } from '@/lib/share';
 import { t } from '@/lib/i18n';
 import { useLang } from '@/lib/useLang';
-import AdBanner from '@/components/AdBanner';
+import AdBreak from '@/components/AdBreak';
 
 interface Props {
   userName: string;
@@ -301,7 +301,7 @@ export default function ReportClient({ userName, avatarUrl }: Props) {
       </div>
 
       {/* Ad */}
-      <AdBanner format="horizontal" />
+      <AdBreak />
 
       {/* Actions */}
       <div className="flex items-center justify-center gap-3 flex-wrap">

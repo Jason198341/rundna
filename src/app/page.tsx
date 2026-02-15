@@ -3,7 +3,7 @@
 import { t } from '@/lib/i18n';
 import { useLang } from '@/lib/useLang';
 import LangToggle from '@/components/LangToggle';
-import AdBanner from '@/components/AdBanner';
+import AdBreak from '@/components/AdBreak';
 
 export default function LandingPage() {
   const [lang] = useLang();
@@ -104,10 +104,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Ad */}
-      <div className="max-w-4xl mx-auto px-6">
-        <AdBanner format="horizontal" />
-      </div>
+      <AdBreak />
 
       {/* How it works */}
       <section className="py-20 px-6 border-t border-border/50">

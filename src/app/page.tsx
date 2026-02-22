@@ -135,11 +135,65 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-border/50 py-8 px-6">
-        <div className="mx-auto max-w-4xl flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-text-muted">
-          <span>RunDNA — {t('landing.footer', lang)}</span>
-          <div className="flex items-center gap-4">
-            <span>{t('landing.powered', lang)}</span>
+      <footer className="border-t border-border/50 py-10 px-6">
+        <div className="mx-auto max-w-4xl space-y-6">
+          {/* Top row: brand + links */}
+          <div className="flex flex-col sm:flex-row items-center sm:items-start justify-between gap-6">
+            {/* Brand */}
+            <div className="flex flex-col items-center sm:items-start gap-2">
+              <div className="flex items-center gap-2 font-bold text-base">
+                <img src="/logo.png" alt="RunDNA" className="w-6 h-6 rounded" />
+                RunDNA
+              </div>
+              <p className="text-xs text-text-muted text-center sm:text-left max-w-[220px]">
+                {t('landing.footer', lang)}
+              </p>
+            </div>
+
+            {/* Links */}
+            <div className="flex items-center gap-6 text-sm text-text-muted">
+              <a href="/support" className="hover:text-text transition-colors">
+                {t('footer.support', lang)}
+              </a>
+              <a href="/privacy" className="hover:text-text transition-colors">
+                {t('footer.privacy', lang)}
+              </a>
+              <a
+                href="mailto:skypeople41@gmail.com"
+                className="hover:text-text transition-colors"
+              >
+                Contact
+              </a>
+            </div>
+          </div>
+
+          {/* Divider */}
+          <div className="border-t border-border/30" />
+
+          {/* Bottom row: copyright + Strava attribution */}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-text-muted/70">
+            <span>© {new Date().getFullYear()} RunDNA. {t('footer.rights', lang)}</span>
+
+            {/* Strava Attribution — required by Strava Brand Guidelines */}
+            <a
+              href="https://www.strava.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border/40 hover:border-strava/50 hover:bg-strava/5 transition-all group"
+              aria-label="Data provided by Strava"
+            >
+              <svg
+                className="w-4 h-4 text-strava"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                aria-hidden="true"
+              >
+                <path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169" />
+              </svg>
+              <span className="text-xs font-medium group-hover:text-text transition-colors">
+                {t('footer.attribution', lang)}
+              </span>
+            </a>
           </div>
         </div>
       </footer>

@@ -9,9 +9,17 @@ export default function PrivacyPage() {
   return (
     <div className="min-h-screen bg-bg text-text">
       <div className="mx-auto max-w-3xl px-6 py-16">
-        <a href="/" className="inline-flex items-center gap-2 text-sm text-muted hover:text-text mb-8">
-          ← Back
-        </a>
+        <div className="flex items-center justify-between mb-8">
+          <a href="/" className="inline-flex items-center gap-2 text-sm text-text-muted hover:text-text">
+            ← Back
+          </a>
+          <a
+            href="/support"
+            className="inline-flex items-center gap-1.5 text-sm text-primary hover:text-primary/80 transition-colors"
+          >
+            Support →
+          </a>
+        </div>
 
         <h1 className="text-3xl font-bold mb-2">Privacy Policy</h1>
         <p className="text-muted mb-10">Last updated: February 15, 2026</p>
@@ -133,6 +141,25 @@ export default function PrivacyPage() {
               Website: <a href="https://jasonmoon.dev" className="text-primary underline" target="_blank" rel="noopener noreferrer">jasonmoon.dev</a>
             </p>
           </section>
+        </div>
+
+        {/* Footer */}
+        <div className="mt-12 pt-8 border-t border-border/30 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-text-muted/70">
+          <div className="flex items-center gap-4">
+            <span>© {new Date().getFullYear()} RunDNA</span>
+            <a href="/support" className="hover:text-text transition-colors">Support</a>
+          </div>
+          <a
+            href="https://www.strava.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5"
+          >
+            <svg className="w-3.5 h-3.5 text-strava" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169" />
+            </svg>
+            <span>Data provided by Strava</span>
+          </a>
         </div>
       </div>
     </div>

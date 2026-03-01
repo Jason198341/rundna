@@ -16,7 +16,7 @@ export default function AppNav({ userName, avatarUrl }: Props) {
           <LangToggle />
           <div className="flex items-center gap-2">
             {avatarUrl && (
-              <img src={avatarUrl} alt="" className="w-7 h-7 rounded-full" />
+              <img src={avatarUrl} alt={`${userName} profile picture`} className="w-7 h-7 rounded-full" />
             )}
             <span className="text-sm font-medium hidden sm:block">{userName}</span>
           </div>

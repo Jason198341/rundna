@@ -5,6 +5,7 @@ import { shareCard } from '@/lib/share';
 import { t } from '@/lib/i18n';
 import { useLang } from '@/lib/useLang';
 import AdBreak from '@/components/AdBreak';
+import { safeFetch, ApiError } from '@/lib/api-error';
 
 interface Props {
   userName: string;
@@ -81,16 +82,16 @@ export default function PlannerClient({ userName }: Props) {
   const minDate = new Date(Date.now() + 14 * 86400000).toISOString().split('T')[0];
 
   useEffect(() => {
-    fetch('/api/usage?feature=planner')
+    safeFetch('/api/usage?feature=planner')
       .then(r => r.json())
-      .then(d => setRemaining(d.remaining ?? 3))
+      .then(d => setRemaining(d.remaining ?? 1))
       .catch(() => {});
   }, []);
 
   async function generatePlan() {
     if (!raceDistance || !raceDate) return;
     if (remaining !== null && remaining <= 0) {
-      setError(lang === 'ko' ? '오늘 3회 플랜 생성을 모두 사용했습니다. UTC 자정에 초기화됩니다.' : "You've used all 3 plan generations today. Resets at midnight UTC.");
+      setError(lang === 'ko' ? '일일 AI 사용 한도(1회)를 초과했습니다. 내일 다시 시도해주세요.' : 'Daily AI limit (1 per day) exceeded. Please try again tomorrow.');
       return;
     }
 
@@ -103,27 +104,24 @@ export default function PlannerClient({ userName }: Props) {
     }, 300);
 
     try {
-      const res = await fetch('/api/planner', {
+      const res = await safeFetch('/api/planner', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ raceDistance, raceDate, raceGoal, lang }),
       });
 
-      if (res.status === 429) {
-        const data = await res.json();
-        setRemaining(0);
-        setError(data.message || 'Daily limit reached.');
-        setStep('form');
-        return;
-      }
-      if (!res.ok) throw new Error('Failed to generate plan');
       const { plan: p } = await res.json();
       setPlan(p);
       setProgress(100);
       if (remaining !== null) setRemaining(remaining - 1);
       setTimeout(() => setStep('result'), 400);
-    } catch {
-      setError(lang === 'ko' ? '플랜 생성에 실패했습니다. 다시 시도해주세요.' : 'Failed to generate your plan. Please try again.');
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 429) {
+        setRemaining(0);
+        setError(lang === 'ko' ? '일일 AI 사용 한도를 초과했습니다. 내일 다시 시도해주세요.' : 'Daily limit reached. Try again tomorrow.');
+      } else {
+        setError(lang === 'ko' ? '플랜 생성에 실패했습니다. 다시 시도해주세요.' : 'Failed to generate your plan. Please try again.');
+      }
       setStep('form');
     } finally {
       clearInterval(interval);
@@ -197,7 +195,7 @@ export default function PlannerClient({ userName }: Props) {
             />
           </div>
 
-          {error && <p className="text-sm text-danger">{error}</p>}
+          {error && <p className="text-sm text-danger" role="alert">{error}</p>}
 
           <button
             onClick={generatePlan}
@@ -335,9 +333,10 @@ export default function PlannerClient({ userName }: Props) {
             finally { setSaving(false); }
           }}
           disabled={saving}
+          aria-label={saving ? t('common.sharing', lang) : t('plan.share', lang)}
           className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-primary/30 bg-primary/10 text-primary text-sm font-medium hover:bg-primary/20 transition-all disabled:opacity-50"
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
           </svg>
           {saving ? t('common.sharing', lang) : t('plan.share', lang)}

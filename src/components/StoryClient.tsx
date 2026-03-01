@@ -7,6 +7,7 @@ import { encodeDNA } from '@/lib/strava-analytics';
 import { t } from '@/lib/i18n';
 import { useLang } from '@/lib/useLang';
 import AdBreak from '@/components/AdBreak';
+import { safeFetch } from '@/lib/api-error';
 
 interface Props {
   userName: string;
@@ -30,8 +31,8 @@ export default function StoryClient({ userName, avatarUrl }: Props) {
     }, 200);
 
     Promise.all([
-      fetch('/api/strava/data').then(r => r.ok ? r.json() : null),
-      fetch('/api/strava/intelligence').then(r => r.ok ? r.json() : null),
+      safeFetch('/api/strava/data').then(r => r.json()).catch(() => null),
+      safeFetch('/api/strava/intelligence').then(r => r.json()).catch(() => null),
     ])
       .then(([rd, id]) => {
         setRunData(rd);

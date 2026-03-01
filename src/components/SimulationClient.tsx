@@ -6,6 +6,7 @@ import { simulateRace, type RaceSimulation } from '@/lib/strava-extended';
 import { t } from '@/lib/i18n';
 import { useLang } from '@/lib/useLang';
 import AdBreak from '@/components/AdBreak';
+import { safeFetch } from '@/lib/api-error';
 
 function formatTime(secs: number): string {
   const h = Math.floor(secs / 3600);
@@ -38,7 +39,7 @@ export default function SimulationClient() {
   const [activeStrategy, setActiveStrategy] = useState(1); // 0=conservative, 1=even, 2=aggressive
 
   useEffect(() => {
-    fetch('/api/strava/intelligence')
+    safeFetch('/api/strava/intelligence')
       .then(r => r.json())
       .then(d => { setIntel(d); setLoading(false); })
       .catch(() => setLoading(false));

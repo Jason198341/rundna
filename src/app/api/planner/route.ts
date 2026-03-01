@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
   if (!usage.allowed) {
     return NextResponse.json({
       error: 'Daily limit reached',
-      message: "You've used all 2 plan generations today. Your limit resets at midnight UTC.",
+      message: '일일 AI 사용 한도(1회)를 초과했습니다. 내일 다시 시도해주세요.',
       remaining: 0,
     }, { status: 429 });
   }

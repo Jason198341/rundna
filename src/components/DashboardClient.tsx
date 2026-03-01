@@ -10,6 +10,7 @@ import type { WidgetPreferences } from '@/lib/widget-store';
 import { loadPreferences, savePreferences } from '@/lib/widget-store';
 import { t } from '@/lib/i18n';
 import { useLang } from '@/lib/useLang';
+import { safeFetch } from '@/lib/api-error';
 import WidgetShell from '@/components/widgets/WidgetShell';
 import AdBreak from '@/components/AdBreak';
 import {
@@ -90,14 +91,8 @@ export default function DashboardClient({ userName }: Props) {
     const fetches: Promise<void>[] = [];
 
     if (needsRun) {
-      const runPromise = fetch('/api/strava/data').then(r => {
-        if (!r.ok) throw new Error('Failed to load run data');
-        return r.json();
-      });
-      const intelPromise = fetch('/api/strava/intelligence').then(r => {
-        if (!r.ok) throw new Error('Failed to load intelligence');
-        return r.json();
-      });
+      const runPromise = safeFetch('/api/strava/data').then(r => r.json());
+      const intelPromise = safeFetch('/api/strava/intelligence').then(r => r.json());
 
       fetches.push(
         Promise.all([runPromise, intelPromise]).then(([runData, intelligence]) => {
@@ -303,7 +298,7 @@ export default function DashboardClient({ userName }: Props) {
 
   if (error) {
     return (
-      <div className="text-center py-32">
+      <div className="text-center py-32" role="alert">
         <p className="text-danger text-lg mb-2">{t('common.error', lang)}</p>
         <p className="text-text-muted text-sm mb-4">{error}</p>
         <button
@@ -338,9 +333,10 @@ export default function DashboardClient({ userName }: Props) {
         </div>
         <button
           onClick={() => setShowCustomize(true)}
+          aria-label={t('widget.customize', lang)}
           className="flex items-center gap-2 px-3 py-2 rounded-xl border border-border hover:border-primary/30 bg-surface text-sm font-medium transition-all hover:bg-primary/5"
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
           </svg>
           <span className="hidden sm:inline">{t('widget.customize', lang)}</span>
@@ -361,6 +357,7 @@ export default function DashboardClient({ userName }: Props) {
               <div
                 data-widget-idx={idx}
                 ref={isExpanded ? expandedRef : undefined}
+                aria-label={lang === 'ko' ? '드래그하여 위젯 순서 변경' : 'Drag to reorder widget'}
                 className={[
                   'transition-[flex-basis,min-width] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]',
                   isExpanded

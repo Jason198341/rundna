@@ -5,6 +5,7 @@ import type { ShoeData } from '@/lib/strava-extended';
 import { t } from '@/lib/i18n';
 import { useLang } from '@/lib/useLang';
 import AdBreak from '@/components/AdBreak';
+import { safeFetch } from '@/lib/api-error';
 
 export default function ShoesClient() {
   const [lang] = useLang();
@@ -12,7 +13,7 @@ export default function ShoesClient() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('/api/strava/gear')
+    safeFetch('/api/strava/gear')
       .then(r => r.json())
       .then(d => { setShoes(Array.isArray(d) ? d : []); setLoading(false); })
       .catch(() => setLoading(false));

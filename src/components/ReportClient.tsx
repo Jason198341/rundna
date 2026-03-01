@@ -7,6 +7,7 @@ import { shareCard } from '@/lib/share';
 import { t } from '@/lib/i18n';
 import { useLang } from '@/lib/useLang';
 import AdBreak from '@/components/AdBreak';
+import { safeFetch } from '@/lib/api-error';
 
 interface Props {
   userName: string;
@@ -80,8 +81,8 @@ export default function ReportClient({ userName, avatarUrl }: Props) {
     }, 200);
 
     Promise.all([
-      fetch('/api/strava/intelligence').then(r => { if (!r.ok) throw new Error('Failed'); return r.json(); }),
-      fetch('/api/strava/data').then(r => { if (!r.ok) throw new Error('Failed'); return r.json(); }),
+      safeFetch('/api/strava/intelligence').then(r => r.json()),
+      safeFetch('/api/strava/data').then(r => r.json()),
     ])
       .then(([intel, rd]) => {
         setData(intel);
@@ -112,7 +113,7 @@ export default function ReportClient({ userName, avatarUrl }: Props) {
 
   if (error || !data || !runData) {
     return (
-      <div className="text-center py-32">
+      <div className="text-center py-32" role="alert">
         <p className="text-danger mb-4">{t('report.failed', lang)}</p>
         <button onClick={() => window.location.reload()} className="px-4 py-2 rounded-lg bg-primary text-white text-sm font-medium">
           {t('common.retry', lang)}
@@ -154,7 +155,7 @@ export default function ReportClient({ userName, avatarUrl }: Props) {
         <div className="bg-gradient-to-r from-primary/20 to-accent/20 px-6 py-5">
           <div className="flex items-center gap-3 mb-3">
             {avatarUrl ? (
-              <img src={avatarUrl} alt="" className="w-10 h-10 rounded-full border-2 border-primary/30" />
+              <img src={avatarUrl} alt={`${userName} profile picture`} className="w-10 h-10 rounded-full border-2 border-primary/30" />
             ) : (
               <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-lg">🏃</div>
             )}
@@ -344,9 +345,10 @@ function ShareBtn({ targetRef, filename, lang }: {
     <button
       onClick={handleShare}
       disabled={saving}
+      aria-label={saving ? t('common.sharing', lang) : t('report.share', lang)}
       className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-primary/30 bg-primary/10 text-primary text-sm font-medium hover:bg-primary/20 transition-all disabled:opacity-50"
     >
-      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
       </svg>
       {saving ? t('common.sharing', lang) : t('report.share', lang)}

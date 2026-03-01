@@ -6,6 +6,7 @@ import { encodeDNA, decodeDNA, generateDNACodex } from '@/lib/strava-analytics';
 import { t } from '@/lib/i18n';
 import { useLang } from '@/lib/useLang';
 import AdBreak from '@/components/AdBreak';
+import { safeFetch } from '@/lib/api-error';
 
 const TRAIT_COLORS = ['#10b981', '#22d3ee', '#818cf8', '#f59e0b', '#ef4444'];
 const TRAIT_ICONS = ['📅', '⚡', '🏔️', '🗺️', '📈'];
@@ -95,7 +96,7 @@ export default function BattleClient() {
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    fetch('/api/strava/intelligence')
+    safeFetch('/api/strava/intelligence')
       .then(r => r.json())
       .then(d => { setIntel(d); setLoading(false); })
       .catch(() => setLoading(false));
@@ -223,10 +224,11 @@ export default function BattleClient() {
           <p className="text-xs font-medium text-text-muted">{t('battle.myCode', lang)}</p>
           <button
             onClick={handleCopy}
+            aria-label={copied ? 'DNA code copied' : 'Copy DNA code'}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 hover:bg-primary/20 border border-primary/20 transition-colors"
           >
             <span className="font-mono font-bold text-sm text-primary tracking-wider">{myCode}</span>
-            <span className="text-xs">{copied ? '✅' : '📋'}</span>
+            <span className="text-xs" aria-hidden="true">{copied ? '✅' : '📋'}</span>
           </button>
           {copied && <span className="text-xs text-primary animate-pulse">{t('battle.copied', lang)}</span>}
         </div>
@@ -287,7 +289,7 @@ export default function BattleClient() {
             </button>
           )}
         </div>
-        {error && <p className="text-xs text-danger mt-2">{error}</p>}
+        {error && <p className="text-xs text-danger mt-2" role="alert">{error}</p>}
       </div>
 
       {/* ── Battle Comparison ── */}

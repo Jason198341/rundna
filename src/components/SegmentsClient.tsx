@@ -6,6 +6,7 @@ import type { SegmentEffort } from '@/lib/strava-extended';
 import { t } from '@/lib/i18n';
 import { useLang } from '@/lib/useLang';
 import AdBreak from '@/components/AdBreak';
+import { safeFetch } from '@/lib/api-error';
 
 function formatTime(secs: number): string {
   const m = Math.floor(secs / 60);
@@ -22,7 +23,7 @@ export default function SegmentsClient() {
 
   // Fetch runs list
   useEffect(() => {
-    fetch('/api/strava/data')
+    safeFetch('/api/strava/data')
       .then(r => r.json())
       .then(d => { setRuns(d); setLoading(false); })
       .catch(() => setLoading(false));
@@ -31,7 +32,8 @@ export default function SegmentsClient() {
   const loadSegments = async (activityId: number) => {
     setSegLoading(true);
     try {
-      const r = await fetch(`/api/strava/segments?action=efforts&activityId=${activityId}`);
+      const params = new URLSearchParams({ action: 'efforts', activityId: activityId.toString() });
+      const r = await safeFetch(`/api/strava/segments?${params.toString()}`);
       const data = await r.json();
       setSegments(Array.isArray(data) ? data : []);
     } catch {

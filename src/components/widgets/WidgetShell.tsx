@@ -60,15 +60,20 @@ export default function WidgetShell({
           <button
             type="button"
             onClick={() => onToggleExpand(id)}
+            aria-label={expanded
+              ? (lang === 'ko' ? `${t(def.titleKey, lang)} 접기` : `Collapse ${t(def.titleKey, lang)}`)
+              : (lang === 'ko' ? `${t(def.titleKey, lang)} 펼치기` : `Expand ${t(def.titleKey, lang)}`)}
+            aria-expanded={expanded}
             className="flex items-center gap-2.5 min-w-0 cursor-pointer group"
           >
-            <span className="text-base select-none">{def.icon}</span>
+            <span className="text-base select-none" aria-hidden="true">{def.icon}</span>
             <h3 className="text-xs font-semibold uppercase tracking-wider text-text-muted truncate group-hover:text-primary transition-colors">
               {t(def.titleKey, lang)}
             </h3>
             <svg
               className={`w-3 h-3 text-text-muted shrink-0 transition-transform duration-300 ${expanded ? 'rotate-180' : ''}`}
               fill="none" stroke="currentColor" viewBox="0 0 24 24"
+              aria-hidden="true"
             >
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
             </svg>
@@ -93,15 +98,16 @@ export default function WidgetShell({
         <div className="flex items-center gap-1">
           <button
             onClick={handleShare}
+            aria-label={sharing ? t('widget.share', lang) + ' ✓' : t('widget.share', lang)}
             className={`text-xs p-1 transition-colors ${sharing ? 'text-primary' : 'text-text-muted hover:text-primary'}`}
             title={sharing ? '✓' : t('widget.share', lang)}
           >
             {sharing ? (
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
             ) : (
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
               </svg>
             )}
@@ -109,10 +115,11 @@ export default function WidgetShell({
           {expanded && onToggleExpand && (
             <button
               onClick={() => onToggleExpand(id)}
+              aria-label={lang === 'ko' ? '위젯 접기' : 'Collapse widget'}
               className="text-text-muted hover:text-primary text-xs p-1 transition-colors"
               title="Collapse"
             >
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
               </svg>
             </button>
@@ -120,10 +127,11 @@ export default function WidgetShell({
           {onRemove && !expanded && (
             <button
               onClick={() => onRemove(id)}
+              aria-label={t('widget.removeWidget', lang)}
               className="text-text-muted hover:text-danger text-xs p-1 transition-colors"
               title={t('widget.removeWidget', lang)}
             >
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>

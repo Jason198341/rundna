@@ -53,15 +53,24 @@ export default function CustomizePanel({ lang, prefs, onUpdate, onClose }: Props
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} aria-hidden="true" />
 
       {/* Panel */}
-      <div className="relative w-full sm:max-w-lg max-h-[85vh] overflow-hidden rounded-t-2xl sm:rounded-2xl border border-border bg-surface flex flex-col">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="customize-panel-title"
+        className="relative w-full sm:max-w-lg max-h-[85vh] overflow-hidden rounded-t-2xl sm:rounded-2xl border border-border bg-surface flex flex-col"
+      >
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-border shrink-0">
-          <h2 className="text-base font-bold">{t('widget.customize', lang)}</h2>
-          <button onClick={onClose} className="text-text-muted hover:text-text p-1 transition-colors">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <h2 id="customize-panel-title" className="text-base font-bold">{t('widget.customize', lang)}</h2>
+          <button
+            onClick={onClose}
+            aria-label={lang === 'ko' ? '패널 닫기' : 'Close panel'}
+            className="text-text-muted hover:text-text p-1 transition-colors"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>

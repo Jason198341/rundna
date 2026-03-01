@@ -5,6 +5,7 @@ import { shareCard } from '@/lib/share';
 import { t } from '@/lib/i18n';
 import { useLang } from '@/lib/useLang';
 import AdBanner from '@/components/AdBanner';
+import { safeFetch, ApiError } from '@/lib/api-error';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -33,9 +34,9 @@ export default function CoachClient({ userName }: Props) {
   }, [messages]);
 
   useEffect(() => {
-    fetch('/api/usage?feature=coach')
+    safeFetch('/api/usage?feature=coach')
       .then(r => r.json())
-      .then(d => setRemaining(d.remaining ?? 10))
+      .then(d => setRemaining(d.remaining ?? 1))
       .catch(() => {});
   }, []);
 
@@ -50,25 +51,24 @@ export default function CoachClient({ userName }: Props) {
     setLoading(true);
 
     try {
-      const res = await fetch('/api/coach', {
+      const res = await safeFetch('/api/coach', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ messages: updated, lang }),
       });
 
-      if (res.status === 429) {
-        const data = await res.json();
-        setRemaining(0);
-        setMessages([...updated, { role: 'assistant', content: data.message || 'Daily limit reached. Try again tomorrow!' }]);
-        return;
-      }
-
-      if (!res.ok) throw new Error('Failed');
-      const { reply, remaining: r } = await res.json();
+      const data = await res.json();
+      const reply = typeof data.reply === 'string' ? data.reply : '';
+      const r = data.remaining;
       setMessages([...updated, { role: 'assistant', content: reply }]);
       if (r !== undefined) setRemaining(r);
-    } catch {
-      setMessages([...updated, { role: 'assistant', content: 'Sorry, something went wrong. Please try again.' }]);
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 429) {
+        setRemaining(0);
+        setMessages([...updated, { role: 'assistant', content: 'Daily limit reached. Try again tomorrow!' }]);
+      } else {
+        setMessages([...updated, { role: 'assistant', content: 'Sorry, something went wrong. Please try again.' }]);
+      }
     } finally {
       setLoading(false);
       inputRef.current?.focus();
@@ -150,8 +150,8 @@ export default function CoachClient({ userName }: Props) {
             <div className="flex items-center justify-between text-[10px] text-text-muted">
               <span>{remaining > 0 ? `${remaining} ${t('coach.left', lang)}` : t('coach.limitReached', lang)}</span>
               <div className="flex gap-0.5">
-                {Array.from({ length: 10 }, (_, i) => (
-                  <div key={i} className={`w-1.5 h-1.5 rounded-full ${i < (10 - (remaining ?? 0)) ? 'bg-primary' : 'bg-border'}`} />
+                {Array.from({ length: 1 }, (_, i) => (
+                  <div key={i} className={`w-1.5 h-1.5 rounded-full ${i < (1 - (remaining ?? 0)) ? 'bg-primary' : 'bg-border'}`} />
                 ))}
               </div>
             </div>
@@ -184,10 +184,11 @@ export default function CoachClient({ userName }: Props) {
                 finally { setSaving(false); }
               }}
               disabled={saving}
+              aria-label="Share coach advice"
               className="px-3 py-2.5 rounded-xl border border-primary/30 text-primary text-sm hover:bg-primary/10 transition-all disabled:opacity-50 shrink-0"
               title="Share coach advice"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
               </svg>
             </button>

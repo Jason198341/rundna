@@ -7,6 +7,7 @@ import { shareCard } from '@/lib/share';
 import { t } from '@/lib/i18n';
 import { useLang } from '@/lib/useLang';
 import AdBreak from '@/components/AdBreak';
+import { safeFetch } from '@/lib/api-error';
 
 interface Props {
   userName: string;
@@ -90,8 +91,8 @@ export default function WrappedClient({ userName, avatarUrl }: Props) {
 
   useEffect(() => {
     Promise.all([
-      fetch('/api/strava/intelligence').then(r => { if (!r.ok) throw new Error('Failed'); return r.json(); }),
-      fetch('/api/strava/data').then(r => { if (!r.ok) throw new Error('Failed'); return r.json(); }),
+      safeFetch('/api/strava/intelligence').then(r => r.json()),
+      safeFetch('/api/strava/data').then(r => r.json()),
     ])
       .then(([intel, rd]) => { setData(intel); setRunData(rd); })
       .catch(e => setError(e.message))
@@ -109,7 +110,7 @@ export default function WrappedClient({ userName, avatarUrl }: Props) {
 
   if (error || !data || !runData) {
     return (
-      <div className="text-center py-32">
+      <div className="text-center py-32" role="alert">
         <p className="text-danger mb-4">{lang === 'ko' ? '데이터 로딩 실패' : 'Failed to load'}</p>
         <button onClick={() => window.location.reload()} className="px-4 py-2 rounded-lg bg-primary text-white text-sm font-medium">
           {t('common.retry', lang)}
@@ -248,7 +249,7 @@ function WrappedCards({
     <div className="px-4 sm:px-6 py-8 max-w-lg mx-auto">
       {/* Header */}
       <div className="text-center mb-8">
-        {avatarUrl && <img src={avatarUrl} alt="" className="w-14 h-14 rounded-full border-2 border-primary/30 mx-auto mb-3" />}
+        {avatarUrl && <img src={avatarUrl} alt={`${userName} profile picture`} className="w-14 h-14 rounded-full border-2 border-primary/30 mx-auto mb-3" />}
         <h1 className="text-2xl sm:text-3xl font-extrabold">
           {lang === 'ko' ? `${currentYear}년 러닝 돌아보기` : `${currentYear} Running Wrapped`}
         </h1>
@@ -329,9 +330,10 @@ function CardShareButton({ cardRef, filename, shareText, lang }: {
     <button
       onClick={handleShare}
       disabled={saving}
+      aria-label={saving ? (lang === 'ko' ? '저장 중...' : 'Saving...') : (lang === 'ko' ? '카드 공유' : 'Share card')}
       className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-medium text-text-muted hover:text-primary hover:bg-primary/5 transition-all disabled:opacity-50"
     >
-      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
       </svg>
       {saving ? '...' : lang === 'ko' ? '공유' : 'Share'}

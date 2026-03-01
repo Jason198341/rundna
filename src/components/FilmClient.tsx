@@ -6,6 +6,7 @@ import type { ActivityStream, StreamPoint } from '@/lib/strava-extended';
 import { t } from '@/lib/i18n';
 import { useLang } from '@/lib/useLang';
 import AdBreak from '@/components/AdBreak';
+import { safeFetch } from '@/lib/api-error';
 
 // ── Mercator projection ──
 function projectPoints(points: StreamPoint[], width: number, height: number, padding = 40) {
@@ -66,7 +67,7 @@ export default function FilmClient() {
 
   // Fetch recent runs
   useEffect(() => {
-    fetch('/api/strava/data')
+    safeFetch('/api/strava/data')
       .then(r => r.json())
       .then(d => { setRuns(d); setLoading(false); })
       .catch(() => setLoading(false));
@@ -80,8 +81,8 @@ export default function FilmClient() {
     setPlaying(false);
 
     try {
-      const r = await fetch(`/api/strava/streams?activityId=${activityId}`);
-      if (!r.ok) throw new Error('Failed');
+      const params = new URLSearchParams({ activityId: activityId.toString() });
+      const r = await safeFetch(`/api/strava/streams?${params.toString()}`);
       const data: ActivityStream = await r.json();
       setStream(data);
     } catch {
@@ -325,9 +326,10 @@ export default function FilmClient() {
         <div className="absolute bottom-0 inset-x-0 bg-black/70 backdrop-blur-sm px-4 py-2 flex items-center gap-3">
           <button
             onClick={() => setPlaying(!playing)}
+            aria-label={playing ? 'Pause' : 'Play'}
             className="w-8 h-8 flex items-center justify-center rounded-full bg-primary/20 text-primary hover:bg-primary/30 transition-colors"
           >
-            {playing ? '⏸' : '▶️'}
+            <span aria-hidden="true">{playing ? '⏸' : '▶️'}</span>
           </button>
 
           {/* Progress bar */}

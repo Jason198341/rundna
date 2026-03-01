@@ -28,7 +28,7 @@ export default async function SegmentsPage() {
             <LangToggle />
             <div className="flex items-center gap-2">
               {user.avatar_url && (
-                <img src={user.avatar_url} alt="" className="w-7 h-7 rounded-full" />
+                <img src={user.avatar_url} alt={`${user.name} profile picture`} className="w-7 h-7 rounded-full" />
               )}
               <span className="text-sm font-medium hidden sm:block">{user.name}</span>
             </div>

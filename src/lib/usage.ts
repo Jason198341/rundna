@@ -1,8 +1,8 @@
 import { createServerClient } from './supabase';
 
 export const DAILY_LIMITS = {
-  coach: 2,
-  planner: 2,
+  coach: 1,
+  planner: 1,
 } as const;
 
 export type Feature = keyof typeof DAILY_LIMITS;
